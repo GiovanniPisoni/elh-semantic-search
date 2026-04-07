@@ -1,0 +1,25 @@
+# Credenziali — MAI committare
+.env
+
+# Ambiente virtuale
+venv/
+.venv/
+
+# Dati locali e vector store
+data/
+*.csv
+*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
