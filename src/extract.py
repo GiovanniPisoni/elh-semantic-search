@@ -54,39 +54,6 @@ EXTRACTION_QUERY = """
     ORDER BY rv.datereview DESC
 """
 
-# Document enrichment
-
-def build_enriched_text(row: dict) -> str:
-    parts = []
-
-    location_parts = [p for p in [row.get("city"), row.get("zone")] if p]
-    if location_parts:
-        location = ", ".join(p.strip() for p in location_parts)
-        parts.append(location)
-
-    flatname = (row.get("flatname") or "").strip()
-    roomname = (row.get("roomname") or "").strip()
-    if flatname and roomname:
-        parts.append(f"{flatname} - {roomname}")
-    elif flatname:
-        parts.append(flatname)
-
-    title = (row.get("review_title") or "").strip()
-    if title:
-        parts.append(f"Review: {title}")
-
-
-    text = (row.get("review_text") or "").strip()
-    if text:
-        parts.append(text)
-
-    return ". ".join(filter(None, parts))
-
-def json_serializer(obj):
-    if isinstance(obj, date):
-        return obj.isoformat()
-    raise TypeError(f"Type {type(obj)} not serializable")
-
 def extract():
     print("=" * 55)
     print("ELH PROJECT: Data Extraction")
@@ -94,12 +61,12 @@ def extract():
 
     os.makedirs(DATA_PATH, exist_ok=True)
 
-    print(f"\nConnecting to Supabase...")
+    print(f"Connecting to Supabase...")
     conn = psycopg2.connect(DB_URI)
     cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     print("  Connected.")
 
-    print(f"\nExtracting reviews (status='{REVIEW_STATUS}', "
+    print(f"Extracting reviews (status='{REVIEW_STATUS}', "
           f"min_length={MIN_TEXT_LENGTH})...")
     cur.execute(EXTRACTION_QUERY, (REVIEW_STATUS, MIN_TEXT_LENGTH))
     rows = cur.fetchall()
@@ -109,10 +76,10 @@ def extract():
     conn.close()
 
     if not rows:
-        print("\nERROR: No reviews found. Check DB connection and filters.")
+        print("ERROR: No reviews found. Check DB connection and filters.")
         return
     
-    print(f"\nBuilding enriched documents...")
+    print(f"Building enriched documents...")
     documents = []
     skipped   = 0
 
@@ -150,8 +117,8 @@ def extract():
         }
         documents.append(doc)
 
-    print(f"  Documents built  : {len(documents)}")
-    print(f"  Skipped (too short): {skipped}")
+    print(f"Documents built  : {len(documents)}")
+    print(f"Skipped (too short): {skipped}")
 
     cities = {}
     ratings = []
@@ -161,7 +128,7 @@ def extract():
         r = doc["metadata"]["overall_rating"]
         if r: ratings.append(r)
  
-    print(f"\nBreakdown by city:")
+    print(f"Breakdown by city:")
     for city, count in sorted(cities.items(), key=lambda x: -x[1]):
         print(f"  {city:<15} {count} reviews")
  
@@ -181,9 +148,42 @@ def extract():
                   default=json_serializer)
  
     size_kb = os.path.getsize(OUTPUT) / 1024
-    print(f"  Saved {len(documents)} documents ({size_kb:.1f} KB)")
-    print(f"\n✓  Extraction complete. Run indexer.py next.")
+    print(f"Saved {len(documents)} documents ({size_kb:.1f} KB)")
+    print(f"Extraction complete. Run indexer.py next.")
     print("=" * 55)
+
+# Document enrichment
+
+def build_enriched_text(row: dict) -> str:
+    parts = []
+
+    location_parts = [p for p in [row.get("city"), row.get("zone")] if p]
+    if location_parts:
+        location = ", ".join(p.strip() for p in location_parts)
+        parts.append(location)
+
+    flatname = (row.get("flatname") or "").strip()
+    roomname = (row.get("roomname") or "").strip()
+    if flatname and roomname:
+        parts.append(f"{flatname} - {roomname}")
+    elif flatname:
+        parts.append(flatname)
+
+    title = (row.get("review_title") or "").strip()
+    if title:
+        parts.append(f"Review: {title}")
+
+
+    text = (row.get("review_text") or "").strip()
+    if text:
+        parts.append(text)
+
+    return ". ".join(filter(None, parts))
+
+def json_serializer(obj):
+    if isinstance(obj, date):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
 
 if __name__ == "__main__":
     extract()
