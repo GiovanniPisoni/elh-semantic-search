@@ -1,5 +1,7 @@
 # Credenziali — MAI committare
 .env
+.streamlit
+.streamlit/
 
 # Ambiente virtuale
 venv/
