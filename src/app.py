@@ -406,7 +406,7 @@ if not has_result:
         if st.session_state.get("auto"): st.session_state["auto"]=False; submitted=True
 
         # Chips
-        st.markdown('<p style="text-align:center;font-size:.83rem;color:#94A3B8;margin:1.4rem 1.4rem;">Oppure prova una di queste domande:</p>', unsafe_allow_html=True)
+        st.markdown('<p style="text-align:center;font-size:.83rem;color:#94A3B8;margin:1.4rem 1.4rem;">Or try one of these questions:</p>', unsafe_allow_html=True)
         col1, col2 = st.columns(2, gap="medium")
         for idx, sug in enumerate(SUGGESTIONS):
             col = col1 if idx % 2 == 0 else col2
