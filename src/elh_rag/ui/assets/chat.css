@@ -10,8 +10,11 @@
   height: 100vh !important;
 }
 
+[data-testid="stColumn"],
 [data-testid="stColumn"] > div,
-[data-testid="stVerticalBlock"] {
+[data-testid="stColumn"] > div > div,
+[data-testid="stVerticalBlock"],
+div[class*="st-emotion-cache"] {
   padding: 0 !important;
   gap: 0 !important;
 }
@@ -121,8 +124,9 @@
   bottom: 16px !important;
   left: 16px !important;
   width: calc(50% - 32px) !important;
-  max-height: 56px !important;
-  padding: 6px 8px 6px 16px !important;
+  height: 56px !important;
+  padding: 8px 8px 8px 16px !important;
+  justify-content: center !important;
   margin: 0 !important;
   background: var(--white) !important;
   z-index: 9999 !important;
@@ -131,15 +135,16 @@
   align-items: center !important;
 }
 
-[data-testid="stForm"] > div {
+[data-testid="stForm"] > div,
+[data-testid="stForm"] [data-testid="stVerticalBlock"],
+[data-testid="stForm"] [data-testid="stVerticalBlockBorderWrapper"] {
   width: 100% !important;
   padding: 0 !important;
   margin: 0 !important;
-}
-
-[data-testid="stForm"] [data-testid="stVerticalBlock"] {
   gap: 0 !important;
-  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
 }
 
 [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
@@ -148,23 +153,32 @@
   align-items: center !important;
   margin: 0 !important;
   padding: 0 !important;
+  width: 100% !important;
+  flex: 1 !important;
 }
 
 [data-testid="stForm"] [data-testid="stHorizontalBlock"] > div {
   height: 40px !important;
   padding: 0 !important;
   margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 [data-testid="stForm"] [data-testid="stTextInput"],
 [data-testid="stForm"] [data-testid="stTextInput"] > div {
   height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 [data-testid="stForm"] [data-testid="stTextInput"] input {
   height: 40px !important;
+  line-height: 40px !important;
   padding: 0 !important;
   font-size: 0.95rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 [data-testid="stFormSubmitButton"] button {
