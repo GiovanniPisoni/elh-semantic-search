@@ -1,27 +1,61 @@
-# Credenziali — MAI committare
+# Credentials — NEVER commit
 .env
-.streamlit
-.streamlit/
+.env.local
+.env.*.local
+.streamlit/secrets.toml
 
-# Ambiente virtuale
+# Virtual environments
 venv/
 .venv/
-
-# Dati locali e vector store
-data/
-*.csv
-*.json
+env/
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Testing & coverage
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+
+# Type checking & linting
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# Local data & vector store dumps
+/data/
+*.csv
+*.json
+!evaluation/golden_set.jsonl
+
+# ChromaDB local persistence
+chroma_db/
+.chroma/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Jupyter
+.ipynb_checkpoints/
