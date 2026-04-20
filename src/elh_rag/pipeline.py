@@ -11,6 +11,7 @@ from elh_rag.generation.prompts import SYSTEM_PROMPT, build_user_prompt
 from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.pinecone_store import PineconeVectorStore
 from elh_rag.indexing.vector_store import VectorStore
+from elh_rag.retrieval.query_rewriter import QueryRewriter
 from elh_rag.schemas import RAGResponse, RetrievalResult, ReviewMetadata
 
 logger = logging.getLogger(__name__)
@@ -18,9 +19,16 @@ logger = logging.getLogger(__name__)
 
 class RAGPipeline:
     """
-    Naive RAG pipeline (Phase 1).
+    RAG pipeline with optional query rewriting.
 
-    Steps: embed query → retrieve top-k → build context → generate answer.
+    Steps:
+        (optional) rewrite query  ← Phase 2, Step 1
+        embed query
+        retrieve top-k
+        build context
+        generate answer
+    
+    Query rewriting can be toggled via the ENABLE_QUERY_REWRITING env var
     """
 
     def __init__(
@@ -28,10 +36,12 @@ class RAGPipeline:
         vector_store: VectorStore | None = None,
         embedder: Embedder | None = None,
         llm_client: LLMClient | None = None,
+        query_rewriter: QueryRewriter | None = None,
     ) -> None:
         self._store = vector_store or PineconeVectorStore()
         self._embedder = embedder or Embedder()
         self._llm = llm_client or LLMClient()
+        self._rewriter = query_rewriter or QueryRewriter()
 
     # Public API
 
@@ -45,8 +55,10 @@ class RAGPipeline:
         """Run the full RAG pipeline on a single question."""
         top_k = top_k or settings.retrieval_top_k
 
+        retrival_query, rewritten = self._maybe_rewrite(question)
+
         sources = self._retrieve(
-            question,
+            retrival_query,
             top_k=top_k,
             city_filter=city_filter,
             min_rating=min_rating,
@@ -57,14 +69,39 @@ class RAGPipeline:
                 query=question,
                 answer="No relevant reviews found for your question.",
                 sources=[],
+                mode=self._mode_label()
             )
 
         context = self._build_context(sources)
         answer = self._generate(question, context)
 
-        return RAGResponse(query=question, answer=answer, sources=sources)
+        return RAGResponse(
+            query=question, 
+            rewritten_query=rewritten,
+            answer=answer, 
+            sources=sources,
+            mode=self._mode_label()
+        )
 
     # Pipeline steps
+
+    def _maybe_rewrite(self, question: str) -> tuple[str, str | None]:
+        """Apply query rewriting if enabled.
+
+        Returns:
+            (retrieval_query, rewritten_query)
+            - retrieval_query: the string fed to the retriever (rewritten or original)
+            - rewritten_query: the rewritten text, or None if rewriting was disabled
+              or produced no change
+        """
+        if not settings.enable_query_rewriting:
+            return question, None
+        
+        rewritten = self._rewriter.rewrite(question)
+        if rewritten == question:
+            return question, None
+        
+        return rewritten, rewritten
 
     def _retrieve(
         self,
@@ -132,3 +169,10 @@ class RAGPipeline:
             system=SYSTEM_PROMPT,
             user=build_user_prompt(question=question, context=context),
         )
+    
+    @staticmethod
+    def _mode_label() -> str:
+        """Return a short string identifying the pipeline configuration."""
+        if settings.enable_query_rewriting:
+            return "advanced-rewriting"
+        return "naive-pinecone"

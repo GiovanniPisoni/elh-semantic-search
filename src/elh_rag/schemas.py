@@ -1,9 +1,5 @@
 """
 Typed data schemas used across the RAG pipeline.
-
-The whole system speaks in terms of these objects instead of opaque dicts,
-which makes module contracts explicit, refactoring safe, and serialisation
-trivial.
 """
 from __future__ import annotations
 
@@ -88,11 +84,13 @@ class RAGResponse:
     answer: str
     sources: list[RetrievalResult]
     mode: str = "naive-pinecone"
+    rewritten_query: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """JSON-serialisable dict representation."""
         return {
             "query": self.query,
+            "rewritten_query": self.rewritten_query,
             "answer": self.answer,
             "mode": self.mode,
             "sources": [
