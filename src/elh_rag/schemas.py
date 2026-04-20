@@ -64,16 +64,25 @@ class Document:
 
 @dataclass(frozen=True, slots=True)
 class RetrievalResult:
-    """A single document returned by the retriever, with its similarity score."""
+    """A single document returned by the retriever.
+    
+    Carries both the originale vector-similarity score and (optionally) the
+    corss-encoder rerank score.
+    """
 
     text: str
     metadata: ReviewMetadata
-    score: float
+    vector_score: float
+    rerank_score: float | None = None
+
+    def score(self) -> float:
+        """The score used for final ranking"""
+        return self.rerank_score if self.rerank_score is not None else self.vector_score
 
     @property
     def distance(self) -> float:
         """Cosine distance, derived from score."""
-        return round(1.0 - self.score, 3)
+        return round(1.0 - self.vector_score, 3)
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,7 +105,8 @@ class RAGResponse:
             "sources": [
                 {
                     "text": s.text,
-                    "score": s.score,
+                    "vector_score": s.vector_score,
+                    "rerank_score": s.rerank_score,
                     "metadata": s.metadata.to_pinecone_dict(),
                 }
                 for s in self.sources
