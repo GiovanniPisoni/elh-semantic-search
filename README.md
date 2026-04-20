@@ -14,12 +14,21 @@ This project is developed in **5 phases**. The current state of each is marked b
 |---|---|---|
 | **0** | Domain analysis & technology study | ✅ Complete |
 | **1** | Naive RAG prototype (retrieval + generation, Pinecone, Streamlit) | ✅ Complete |
-| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | ⏳ In progress |
+| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | 🔄 Step 1/4 done |
 | **3** | Hybrid / Agentic RAG (tool calling on Supabase: geo, price, policy) | 🔜 Planned |
 | **4** | Evaluation (golden dataset, RAGAS, Naive vs Advanced comparison) | 🔜 Planned |
 | **5** | Deliverable for ELH (FastAPI, Docker, technical docs) | 🔜 Planned |
 
-This README reflects the system **as it is today** (end of Phase 1). Features marked as planned are described in the [Roadmap](#roadmap) section.
+### Phase 2 progress
+
+| Step | Description | Status |
+|---|---|---|
+| 1 | Query rewriting (LLM rephrases the question before retrieval) | ✅ Done |
+| 2 | Cross-encoder re-ranking | 🔜 Next |
+| 3 | Second corpus: house + room descriptions with intent routing | 🔜 |
+| 4 | Conversational memory for follow-up questions | 🔜 |
+
+This README reflects the system **as it is today**. Features marked as planned are described in the [Roadmap](#roadmap) section.
 
 ---
 
@@ -92,10 +101,16 @@ Messages exchanged between students and landlords were evaluated but excluded: t
 
 ---
 
-## Architecture (Phase 1 — current)
+## Architecture (current)
 
 ```
                   Student question (natural language)
+                              │
+                              ▼
+                  ┌───────────────────────┐
+                  │   Query rewriting     │   Anthropic Claude Haiku
+                  │   (optional, Phase 2) │   ENABLE_QUERY_REWRITING toggle
+                  └───────────┬───────────┘
                               │
                               ▼
                   ┌───────────────────────┐
@@ -116,14 +131,28 @@ Messages exchanged between students and landlords were evaluated but excluded: t
                               │
                               ▼
                   ┌───────────────────────┐
-                  │  Answer generation    │   Anthropic Claude
-                  │  (grounded in reviews)│   strict no-hallucination prompt
+                  │  Answer generation    │   Anthropic Claude Sonnet
+                  │  (grounded in reviews)│   sees ORIGINAL question
                   └───────────────────────┘
 ```
 
-### Architecture (Phase 2+ — planned)
+**Note on query rewriting (Phase 2, Step 1):** the rewriter transforms the
+user's conversational question into a search-optimised query (e.g. *"I
+need a quiet place where I can study"* → *"quiet room, peaceful, low
+street noise, suitable for studying"*). This rewritten query is used
+**only** for retrieval — the answer generation LLM always receives the
+original question, so the response stays stylistically faithful to the
+user's phrasing. The step can be disabled via `ENABLE_QUERY_REWRITING=false`
+to enable Naive vs Advanced A/B comparison in Phase 4.
 
-Phase 2 will introduce **query rewriting** before retrieval and **cross-encoder re-ranking** after, plus **routing** between two corpora (reviews vs descriptions). Phase 3 will add **tool calling** for structured queries (geographic filters, price ranges, policies) on Supabase, turning the system from RAG to **Agentic RAG**.
+### Architecture (Phase 2 upcoming + Phase 3)
+
+The remaining Phase 2 steps will introduce **cross-encoder re-ranking**
+after retrieval, a **second corpus** (property and room descriptions) with
+**intent-based routing**, and **conversational memory** for follow-up
+questions. Phase 3 will add **tool calling** for structured queries
+(geographic filters, price ranges, policies) on Supabase, turning the
+system from RAG to **Agentic RAG**.
 
 ---
 
@@ -135,7 +164,8 @@ elh-semantic-search/
 ├── pyproject.toml              # Build, pytest, ruff, mypy config
 ├── requirements.txt            # Runtime dependencies
 ├── requirements-dev.txt        # Dev dependencies (pytest, ruff, mypy)
-├── Makefile                    # Common commands
+├── Makefile                    # Common commands (Linux/macOS)
+├── dev.ps1                     # Windows equivalent
 ├── .env.example                # Template for environment variables
 │
 ├── src/elh_rag/                # Main package
@@ -153,6 +183,9 @@ elh-semantic-search/
 │   │   ├── embeddings.py       # SentenceTransformer wrapper
 │   │   └── indexer.py          # Build embeddings + upsert
 │   │
+│   ├── retrieval/
+│   │   └── query_rewriter.py   # LLM-based query rewriter (Phase 2, Step 1)
+│   │
 │   ├── generation/
 │   │   ├── llm_client.py       # Anthropic wrapper
 │   │   └── prompts.py          # System + user templates
@@ -166,7 +199,8 @@ elh-semantic-search/
 │   ├── conftest.py             # Fakes + fixtures (no network calls)
 │   ├── test_schemas.py
 │   ├── test_pipeline.py
-│   └── test_extractor.py
+│   ├── test_extractor.py
+│   └── test_query_rewriter.py  # Phase 2, Step 1
 │
 └── evaluation/                 # Phase 4 — golden set + RAGAS metrics
 ```
@@ -178,14 +212,16 @@ elh-semantic-search/
 | Component | Technology | Status | Reason |
 |---|---|---|---|
 | Language | Python 3.12 | ✅ | Stable ML ecosystem |
-| LLM | Anthropic Claude (API) | ✅ | Strong instruction following and faithfulness |
+| LLM (generation) | Anthropic Claude Sonnet | ✅ | Strong instruction following and faithfulness |
+| LLM (query rewriting) | Anthropic Claude Haiku | ✅ | Smaller/cheaper/faster for a simpler task (Phase 2) |
 | Embeddings | `paraphrase-multilingual-mpnet-base-v2` | ✅ | Native EN + PT support, 768-dim, free, local |
 | Vector store | Pinecone (serverless) | ✅ | Cloud-managed, persists after thesis, accessible by ELH |
 | Database | PostgreSQL (Supabase) | ✅ | ELH operational DB, accessed live (no local copy) |
 | UI | Streamlit | ✅ | Fast prototyping, ideal for academic demo |
 | Configuration | Pydantic Settings | ✅ | Validated env vars at boot |
-| LangChain | langchain | 🔄 | Will be used in Phase 2 for query rewriting and memory |
-| Re-ranking | cross-encoder | 🔜 | Phase 2 |
+| Re-ranking | cross-encoder | 🔜 | Phase 2, Step 2 |
+| Routing | intent-based | 🔜 | Phase 2, Step 3 |
+| Memory | conversational context | 🔜 | Phase 2, Step 4 |
 | Evaluation | RAGAS | 🔜 | Phase 4 — faithfulness, answer relevance |
 | API | FastAPI | 🔜 | Phase 5 — REST endpoint for ELH integration |
 | Containerisation | Docker | 🔜 | Phase 5 — handover to ELH |
@@ -259,7 +295,19 @@ Phase 2 will introduce a second corpus (house and room descriptions) requiring r
 
 ### Composable pipeline steps
 
-Each step of the RAG pipeline (`_retrieve`, `_build_context`, `_generate`) is a separate method. Phase 2 will add `_rewrite_query` and `_rerank` as new steps without rewriting the existing ones.
+Each step of the RAG pipeline (`_retrieve`, `_build_context`, `_generate`) is a separate method. Phase 2 added `_maybe_rewrite` before retrieval without modifying existing steps; future steps (`_rerank`, routing, memory) will follow the same pattern.
+
+### Query rewriting: same question for the user, optimised query for the retriever
+
+When query rewriting is active, the pipeline rewrites the user's question **only** for retrieval. The generation LLM still receives the original question, so the final answer stays stylistically faithful to how the user phrased the request. This avoids a common pitfall where a rewritten, keyword-heavy query leaks into the final response.
+
+Query rewriting uses a cheaper model (Claude Haiku) since it's a structured, short-output task — roughly 10× cheaper and 2-3× faster than using Sonnet for both stages. Results are memoised in-process (`lru_cache(128)`) to avoid redundant API calls during demos and repeated queries.
+
+The step is gated by `ENABLE_QUERY_REWRITING` so Phase 4 evaluation can run the same golden set twice — with and without rewriting — and report the retrieval quality delta.
+
+### Graceful degradation
+
+If the rewriter fails (API down, malformed response, network timeout), the pipeline falls back to the original question rather than crashing. This applies to the retrieval path too: empty retrieval results produce a clear "no relevant reviews" response instead of an error. A thesis system should be observable and robust, not brittle.
 
 ### Idempotent indexing
 
@@ -271,11 +319,11 @@ Pinecone `upsert` is idempotent by design: writing the same ID twice is a no-op 
 
 ### Phase 2 — Advanced RAG
 
-- Query rewriting (LLM rephrases the query before retrieval)
-- Cross-encoder re-ranking (re-scores top-N candidates)
-- Second corpus: house and room descriptions
-- Intent-based routing between corpora
-- Conversational memory (follow-up questions like *"and in Porto?"*)
+- ✅ Query rewriting (LLM rephrases the query before retrieval, toggled via env var)
+- 🔜 Cross-encoder re-ranking (re-scores top-N candidates)
+- 🔜 Second corpus: house and room descriptions
+- 🔜 Intent-based routing between corpora
+- 🔜 Conversational memory (follow-up questions like *"and in Porto?"*)
 
 ### Phase 3 — Hybrid / Agentic RAG
 
