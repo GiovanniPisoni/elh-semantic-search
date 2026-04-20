@@ -2,8 +2,7 @@
 Centralised configuration for the ELH RAG system.
 
 All environment variables are declared here, validated at import time, and
-exposed as a single immutable `settings` object. No other module in the
-codebase should call `os.getenv` directly.
+exposed as a single immutable `settings` object.
 """
 from __future__ import annotations
 
@@ -39,6 +38,17 @@ class Settings(BaseSettings):
     llm_model: str = Field(default="claude-sonnet-4-20250514")
     llm_temperature: float = Field(default=0.1, ge=0.0, le=1.0)
     llm_max_tokens: int = Field(default=1024, gt=0)
+
+    # Query rewriting
+    enable_query_rewriting: bool = Field(
+        default=True,
+        description="Toggle the LLM-based query rewriting step before retrival",
+    )
+    llm_rewriter_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Smaller/cheaper LLM used for query rewriting",
+    )
+    llm_rewriter_max_tokens: int = Field(default=256, gt=0)
 
     # Embeddings
     embedding_model: str = Field(
