@@ -83,6 +83,26 @@ def test_rag_response_to_dict_is_json_serialisable() -> None:
     assert payload["sources"][0]["metadata"]["city"] == "Lisbon"
 
 
+def test_rag_response_includes_rewritten_query_when_present() -> None:
+    response = RAGResponse(
+        query="original",
+        answer="answer",
+        sources=[],
+        rewritten_query="rewritten version",
+    )
+
+    payload = response.to_dict()
+
+    assert payload["rewritten_query"] == "rewritten version"
+
+
+def test_rag_response_rewritten_query_is_none_by_default() -> None:
+    response = RAGResponse(query="q", answer="a", sources=[])
+
+    assert response.rewritten_query is None
+    assert response.to_dict()["rewritten_query"] is None
+
+
 # Document
 
 

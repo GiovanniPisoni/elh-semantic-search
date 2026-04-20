@@ -13,6 +13,7 @@ import pytest
 from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.vector_store import VectorStore
 from elh_rag.generation.llm_client import LLMClient
+from elh_rag.retrieval.query_rewriter import QueryRewriter
 from elh_rag.schemas import DocumentSource, ReviewMetadata
 
 
@@ -91,6 +92,28 @@ class FakeLLMClient(LLMClient):
         return self._canned_response
 
 
+# Fake query rewriter
+
+
+class FakeQueryRewriter(QueryRewriter):
+    """Query rewriter that returns a predictable transformation without LLM calls."""
+
+    def __init__(
+        self,
+        canned_output: str | None = None,
+        passthrough: bool = False,
+    ) -> None:
+        self._canned = canned_output
+        self._passthrough = passthrough
+        self.calls: list[str] = []
+
+    def rewrite(self, question: str) -> str:
+        self.calls.append(question)
+        if self._passthrough or not question.strip():
+            return question
+        return self._canned if self._canned is not None else f"REWRITTEN: {question}"
+
+
 # Pytest fixtures
 
 
@@ -134,3 +157,9 @@ def fake_embedder() -> Embedder:
 @pytest.fixture
 def fake_llm() -> LLMClient:
     return FakeLLMClient(canned_response="The bed is comfortable, per Review 1.")
+
+
+@pytest.fixture
+def fake_rewriter() -> QueryRewriter:
+    """A rewriter that returns the input unchanged — no noise in other tests."""
+    return FakeQueryRewriter(passthrough=True)
