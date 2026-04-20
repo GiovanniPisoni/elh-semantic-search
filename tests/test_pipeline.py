@@ -10,26 +10,50 @@ from elh_rag.generation.llm_client import LLMClient
 from elh_rag.indexing.vector_store import VectorStore
 from elh_rag.pipeline import RAGPipeline
 from elh_rag.retrieval.query_rewriter import QueryRewriter
-from elh_rag.schemas import RAGResponse
+from elh_rag.retrieval.reranker import Reranker
+from elh_rag.schemas import RAGResponse, ReviewMetadata
 
-from tests.conftest import FakeQueryRewriter, FakeVectorStore
+from tests.conftest import FakeQueryRewriter, FakeReranker, FakeVectorStore
+
+
+# Helpers
+
+
+def _disable_advanced(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Turn off both optional steps — pipeline behaves as Phase 1 Naive RAG."""
+    from elh_rag import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "enable_query_rewriting", False)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", False)
+
+
+def _make_pipeline(
+    store: VectorStore,
+    embedder: Embedder,
+    llm: LLMClient,
+    rewriter: QueryRewriter | None = None,
+    reranker: Reranker | None = None,
+) -> RAGPipeline:
+    return RAGPipeline(
+        vector_store=store,
+        embedder=embedder,
+        llm_client=llm,
+        query_rewriter=rewriter or FakeQueryRewriter(passthrough=True),
+        reranker=reranker or FakeReranker(reverse=False),
+    )
 
 
 # End-to-end happy path
 
 
 def test_query_returns_rag_response_with_sources(
+    monkeypatch: pytest.MonkeyPatch,
     fake_store: VectorStore,
     fake_embedder: Embedder,
     fake_llm: LLMClient,
-    fake_rewriter: QueryRewriter,
 ) -> None:
-    pipeline = RAGPipeline(
-        vector_store=fake_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=fake_rewriter,
-    )
+    _disable_advanced(monkeypatch)
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm)
 
     response = pipeline.query("comfortable bed", top_k=5)
 
@@ -38,20 +62,17 @@ def test_query_returns_rag_response_with_sources(
     assert response.answer == "The bed is comfortable, per Review 1."
     assert len(response.sources) == 1
     assert response.sources[0].metadata.city == "Lisbon"
+    assert response.mode == "naive-pinecone"
 
 
 def test_empty_retrieval_returns_no_results_message(
+    monkeypatch: pytest.MonkeyPatch,
     fake_embedder: Embedder,
     fake_llm: LLMClient,
-    fake_rewriter: QueryRewriter,
 ) -> None:
+    _disable_advanced(monkeypatch)
     empty_store = FakeVectorStore(canned_matches=[])
-    pipeline = RAGPipeline(
-        vector_store=empty_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=fake_rewriter,
-    )
+    pipeline = _make_pipeline(empty_store, fake_embedder, fake_llm)
 
     response = pipeline.query("question with no matches")
 
@@ -85,17 +106,13 @@ def test_metadata_filter_composition(
 
 
 def test_context_includes_review_header(
+    monkeypatch: pytest.MonkeyPatch,
     fake_store: VectorStore,
     fake_embedder: Embedder,
     fake_llm: LLMClient,
-    fake_rewriter: QueryRewriter,
 ) -> None:
-    pipeline = RAGPipeline(
-        vector_store=fake_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=fake_rewriter,
-    )
+    _disable_advanced(monkeypatch)
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm)
 
     pipeline.query("anything")
 
@@ -109,17 +126,13 @@ def test_context_includes_review_header(
 
 
 def test_city_filter_propagates_to_store(
+    monkeypatch: pytest.MonkeyPatch,
     fake_store: VectorStore,
     fake_embedder: Embedder,
     fake_llm: LLMClient,
-    fake_rewriter: QueryRewriter,
 ) -> None:
-    pipeline = RAGPipeline(
-        vector_store=fake_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=fake_rewriter,
-    )
+    _disable_advanced(monkeypatch)
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm)
 
     pipeline.query("anything", city_filter="Porto", min_rating=4)
 
@@ -139,18 +152,10 @@ def test_rewriting_disabled_bypasses_rewriter(
     fake_embedder: Embedder,
     fake_llm: LLMClient,
 ) -> None:
-    """When ENABLE_QUERY_REWRITING=false, the rewriter is never called."""
-    from elh_rag import config as cfg
-
-    monkeypatch.setattr(cfg.settings, "enable_query_rewriting", False)
+    _disable_advanced(monkeypatch)
 
     rewriter = FakeQueryRewriter(canned_output="should not be used")
-    pipeline = RAGPipeline(
-        vector_store=fake_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=rewriter,
-    )
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm, rewriter=rewriter)
 
     response = pipeline.query("original question")
 
@@ -165,24 +170,19 @@ def test_rewriting_enabled_feeds_rewritten_query_to_retriever(
     fake_embedder: Embedder,
     fake_llm: LLMClient,
 ) -> None:
-    """The retriever embeds the rewritten query, not the original one."""
     from elh_rag import config as cfg
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", False)
 
     rewriter = FakeQueryRewriter(canned_output="quiet, peaceful, no street noise")
-    pipeline = RAGPipeline(
-        vector_store=fake_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=rewriter,
-    )
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm, rewriter=rewriter)
 
     response = pipeline.query("I need a quiet place to study")
 
     assert rewriter.calls == ["I need a quiet place to study"]
     assert response.rewritten_query == "quiet, peaceful, no street noise"
-    assert response.mode == "advanced-rewriting"
+    assert response.mode == "advanced-rewrite"
 
     expected_embedding = fake_embedder.encode_query("quiet, peaceful, no street noise")
     assert fake_store.query_calls[-1]["embedding"] == expected_embedding  # type: ignore[attr-defined]
@@ -194,18 +194,13 @@ def test_llm_generation_uses_original_question_not_rewritten(
     fake_embedder: Embedder,
     fake_llm: LLMClient,
 ) -> None:
-    """The generation LLM must receive the ORIGINAL question, not the rewritten one."""
     from elh_rag import config as cfg
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", False)
 
     rewriter = FakeQueryRewriter(canned_output="REWRITTEN VERSION")
-    pipeline = RAGPipeline(
-        vector_store=fake_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=rewriter,
-    )
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm, rewriter=rewriter)
 
     pipeline.query("original user question")
 
@@ -220,19 +215,142 @@ def test_rewriting_skipped_when_rewriter_returns_identical_text(
     fake_embedder: Embedder,
     fake_llm: LLMClient,
 ) -> None:
-    """If the rewriter returns the exact same text, rewritten_query stays None."""
     from elh_rag import config as cfg
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", False)
 
     rewriter = FakeQueryRewriter(passthrough=True)
-    pipeline = RAGPipeline(
-        vector_store=fake_store,
-        embedder=fake_embedder,
-        llm_client=fake_llm,
-        query_rewriter=rewriter,
-    )
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm, rewriter=rewriter)
 
     response = pipeline.query("already optimal query")
 
     assert response.rewritten_query is None
+
+
+# ── Re-ranking (Phase 2, Step 2) ──────────────────────────────────────────
+
+
+def _make_matches(n: int) -> list[dict[str, Any]]:
+    """Build n distinct Pinecone-shaped matches for reranking tests."""
+    matches = []
+    for i in range(n):
+        meta = ReviewMetadata(
+            id=f"rev-{i:03d}",
+            city="Lisbon",
+            flatname=f"House {i}",
+            review_text_original=f"Review content number {i}",
+        )
+        matches.append(
+            {
+                "id": meta.id,
+                "score": 0.9 - i * 0.05,
+                "metadata": meta.to_pinecone_dict(),
+            }
+        )
+    return matches
+
+
+def test_reranking_disabled_preserves_vector_order(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    _disable_advanced(monkeypatch)
+    store = FakeVectorStore(canned_matches=_make_matches(5))
+    reranker = FakeReranker(reverse=True)
+    pipeline = _make_pipeline(store, fake_embedder, fake_llm, reranker=reranker)
+
+    response = pipeline.query("q", top_k=3)
+
+    assert reranker.calls == []
+    assert [s.metadata.id for s in response.sources] == ["rev-000", "rev-001", "rev-002"]
+    assert all(s.rerank_score is None for s in response.sources)
+
+
+def test_reranking_enabled_reorders_results(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    from elh_rag import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "enable_query_rewriting", False)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+    monkeypatch.setattr(cfg.settings, "reranker_pool_size", 5)
+
+    store = FakeVectorStore(canned_matches=_make_matches(5))
+    reranker = FakeReranker(reverse=True)
+    pipeline = _make_pipeline(store, fake_embedder, fake_llm, reranker=reranker)
+
+    response = pipeline.query("q", top_k=3)
+
+    assert len(reranker.calls) == 1
+    assert [s.metadata.id for s in response.sources] == ["rev-004", "rev-003", "rev-002"]
+    assert all(s.rerank_score is not None for s in response.sources)
+    assert all(s.vector_score is not None for s in response.sources)
+    assert response.mode == "advanced-rerank"
+
+
+def test_reranking_fetches_pool_size_candidates_from_store(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    """With reranking on, the store is queried for `pool_size` candidates, not top_k."""
+    from elh_rag import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "enable_query_rewriting", False)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+    monkeypatch.setattr(cfg.settings, "reranker_pool_size", 20)
+
+    store = FakeVectorStore(canned_matches=_make_matches(20))
+    pipeline = _make_pipeline(
+        store, fake_embedder, fake_llm, reranker=FakeReranker(reverse=False)
+    )
+
+    pipeline.query("q", top_k=5)
+
+    assert store.query_calls[-1]["top_k"] == 20  # type: ignore[attr-defined]
+
+
+def test_reranking_uses_retrieval_query_not_original_when_rewriting_also_on(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    """The reranker receives the rewritten query, matching what the retriever used."""
+    from elh_rag import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+    monkeypatch.setattr(cfg.settings, "reranker_pool_size", 5)
+
+    store = FakeVectorStore(canned_matches=_make_matches(5))
+    rewriter = FakeQueryRewriter(canned_output="rewritten text")
+    reranker = FakeReranker(reverse=False)
+    pipeline = _make_pipeline(
+        store, fake_embedder, fake_llm, rewriter=rewriter, reranker=reranker
+    )
+
+    pipeline.query("original question")
+
+    assert reranker.calls[-1][0] == "rewritten text"
+
+
+def test_mode_label_includes_all_active_flags(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_store: VectorStore,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    from elh_rag import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
+    monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+
+    pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm)
+
+    response = pipeline.query("q")
+
+    assert response.mode == "advanced-rewrite+rerank"
