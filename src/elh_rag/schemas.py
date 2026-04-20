@@ -75,6 +75,7 @@ class RetrievalResult:
     vector_score: float
     rerank_score: float | None = None
 
+    @property
     def score(self) -> float:
         """The score used for final ranking"""
         return self.rerank_score if self.rerank_score is not None else self.vector_score
