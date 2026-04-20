@@ -11,6 +11,7 @@ help:
 	@echo "  make index         Index reviews into Pinecone"
 	@echo "  make index-reset   Wipe the index and rebuild from scratch"
 	@echo "  make app           Launch the Streamlit app"
+	@echo "  make evaluate      Run evaluation suite to compare LLM performance"
 	@echo "  make clean         Remove caches and build artifacts"
 
 install:
@@ -38,6 +39,9 @@ index-reset:
 
 app:
 	streamlit run src/elh_rag/ui/app.py --server.fileWatcherType none
+
+evaluate:
+	python -m scripts.run_qualitative_benchmark
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage
