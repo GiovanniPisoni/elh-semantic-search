@@ -50,6 +50,23 @@ class Settings(BaseSettings):
     )
     llm_rewriter_max_tokens: int = Field(default=256, gt=0)
 
+    # Re-ranking
+    enable_reranking: bool = Field(
+        default=True,
+        description="Toggle the cross-encoder reranking step after retrieval",
+    )
+    reranker_model: str = Field(
+        default="BAAI/bge-reranker-v2-m3",
+        description="Cross-encoder model for reranking (multilingual, 100+ languages)"
+    )
+    reranker_pool_size: int = Field(
+        default=20,
+        gt=0,
+        le=100,
+        description="Number of condidates to retrive before reranking",
+    )
+    reranker_batch_size: int = Field(default=16, gt=0)
+
     # Embeddings
     embedding_model: str = Field(
         default="paraphrase-multilingual-mpnet-base-v2",
