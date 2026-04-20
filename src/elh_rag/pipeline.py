@@ -12,6 +12,7 @@ from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.pinecone_store import PineconeVectorStore
 from elh_rag.indexing.vector_store import VectorStore
 from elh_rag.retrieval.query_rewriter import QueryRewriter
+from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import RAGResponse, RetrievalResult, ReviewMetadata
 
 logger = logging.getLogger(__name__)
@@ -24,11 +25,14 @@ class RAGPipeline:
     Steps:
         (optional) rewrite query  ← Phase 2, Step 1
         embed query
-        retrieve top-k
+        retrieve top-k (N-candidates)
+        (optional) rerank -> top-k
         build context
         generate answer
     
-    Query rewriting can be toggled via the ENABLE_QUERY_REWRITING env var
+    Each optional step is gated by an env-var toggle so the same pipeline
+    instance can serve all three A/B configurations for evaluation:
+    Naive / +Rewriting / +Rewriting+Reranking.
     """
 
     def __init__(
@@ -37,11 +41,13 @@ class RAGPipeline:
         embedder: Embedder | None = None,
         llm_client: LLMClient | None = None,
         query_rewriter: QueryRewriter | None = None,
+        reranker: Reranker | None = None,
     ) -> None:
         self._store = vector_store or PineconeVectorStore()
         self._embedder = embedder or Embedder()
         self._llm = llm_client or LLMClient()
         self._rewriter = query_rewriter or QueryRewriter()
+        self._reranker = reranker or Reranker()
 
     # Public API
 
@@ -54,19 +60,23 @@ class RAGPipeline:
     ) -> RAGResponse:
         """Run the full RAG pipeline on a single question."""
         top_k = top_k or settings.retrieval_top_k
+        pool_size = self._pool_size(top_k)
 
         retrival_query, rewritten = self._maybe_rewrite(question)
 
-        sources = self._retrieve(
+        candidates = self._retrieve(
             retrival_query,
-            top_k=top_k,
+            top_k=pool_size,
             city_filter=city_filter,
             min_rating=min_rating,
         )
 
+        sources = self._maybe_rerank(retrival_query, candidates, top_k=top_k)
+
         if not sources:
             return RAGResponse(
                 query=question,
+                rewritten_query=rewritten,
                 answer="No relevant reviews found for your question.",
                 sources=[],
                 mode=self._mode_label()
@@ -105,13 +115,13 @@ class RAGPipeline:
 
     def _retrieve(
         self,
-        question: str,
+        query_text: str,
         top_k: int,
         city_filter: str | None,
         min_rating: int | None,
     ) -> list[RetrievalResult]:
         """Embed the question and retrieve the most similar documents."""
-        embedding = self._embedder.encode_query(question)
+        embedding = self._embedder.encode_query(query_text)
         metadata_filter = self._build_metadata_filter(city_filter, min_rating)
         matches = self._store.query(
             embedding=embedding,
@@ -123,10 +133,30 @@ class RAGPipeline:
             RetrievalResult(
                 text=m["metadata"].get("review_text_original", ""),
                 metadata=ReviewMetadata.from_pinecone_dict(m["metadata"]),
-                score=round(m["score"], 3),
+                vector_score=round(m["score"], 3),
             )
             for m in matches
         ]
+
+    def _maybe_rerank(
+            self,
+            query: str,
+            candidates: list[RetrievalResult],
+            top_k: int,
+    ) -> list[RetrievalResult]:
+        """Apply corss-encoder reranking if enabled, else truncate to top_k."""
+        if not settings.enable_reranking:
+            return candidates[:top_k]
+        
+        return self._reranker.rerank(query, candidates, top_k=top_k)
+    
+    @staticmethod
+    def _pool_size(top_k: int) -> int:
+        """Candidate pool size for retrieval."""
+        if settings.enable_reranking:
+            return max(settings.reranker_pool_size, top_k)
+        
+        return top_k
 
     @staticmethod
     def _build_metadata_filter(
@@ -173,6 +203,11 @@ class RAGPipeline:
     @staticmethod
     def _mode_label() -> str:
         """Return a short string identifying the pipeline configuration."""
+        flags = []
         if settings.enable_query_rewriting:
-            return "advanced-rewriting"
-        return "naive-pinecone"
+            flags.append("rewrite")
+        if settings.enable_reranking:
+            flags.append("rerank")
+        if not flags:
+            return "naive-pinecone"
+        return "advanced-" + "+".join(flags)
