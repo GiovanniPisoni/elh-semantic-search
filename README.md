@@ -14,7 +14,7 @@ This project is developed in **5 phases**. The current state of each is marked b
 |---|---|---|
 | **0** | Domain analysis & technology study | ✅ Complete |
 | **1** | Naive RAG prototype (retrieval + generation, Pinecone, Streamlit) | ✅ Complete |
-| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | 🔄 Step 1/4 done |
+| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | 🔄 Step 2/4 done |
 | **3** | Hybrid / Agentic RAG (tool calling on Supabase: geo, price, policy) | 🔜 Planned |
 | **4** | Evaluation (golden dataset, RAGAS, Naive vs Advanced comparison) | 🔜 Planned |
 | **5** | Deliverable for ELH (FastAPI, Docker, technical docs) | 🔜 Planned |
@@ -24,8 +24,8 @@ This project is developed in **5 phases**. The current state of each is marked b
 | Step | Description | Status |
 |---|---|---|
 | 1 | Query rewriting (LLM rephrases the question before retrieval) | ✅ Done |
-| 2 | Cross-encoder re-ranking | 🔜 Next |
-| 3 | Second corpus: house + room descriptions with intent routing | 🔜 |
+| 2 | Cross-encoder re-ranking (BGE-reranker-v2-m3, multilingual) | ✅ Done |
+| 3 | Second corpus: house + room descriptions with intent routing | 🔜 Next |
 | 4 | Conversational memory for follow-up questions | 🔜 |
 
 This README reflects the system **as it is today**. Features marked as planned are described in the [Roadmap](#roadmap) section.
@@ -109,7 +109,7 @@ Messages exchanged between students and landlords were evaluated but excluded: t
                               ▼
                   ┌───────────────────────┐
                   │   Query rewriting     │   Anthropic Claude Haiku
-                  │   (optional, Phase 2) │   ENABLE_QUERY_REWRITING toggle
+                  │   (optional, Phase 2) │   ENABLE_QUERY_REWRITING
                   └───────────┬───────────┘
                               │
                               ▼
@@ -121,7 +121,14 @@ Messages exchanged between students and landlords were evaluated but excluded: t
                               ▼
                   ┌───────────────────────┐
                   │  Vector retrieval     │   Pinecone serverless
-                  │  (top-k cosine)       │   metadata filter: city, rating
+                  │  (pool of N=20)       │   metadata filter: city, rating
+                  └───────────┬───────────┘
+                              │
+                              ▼
+                  ┌───────────────────────┐
+                  │  Cross-encoder rerank │   BAAI/bge-reranker-v2-m3
+                  │  (optional, Phase 2)  │   100+ languages · ENABLE_RERANKING
+                  │  N=20 → top_k=5       │
                   └───────────┬───────────┘
                               │
                               ▼
@@ -140,19 +147,39 @@ Messages exchanged between students and landlords were evaluated but excluded: t
 user's conversational question into a search-optimised query (e.g. *"I
 need a quiet place where I can study"* → *"quiet room, peaceful, low
 street noise, suitable for studying"*). This rewritten query is used
-**only** for retrieval — the answer generation LLM always receives the
-original question, so the response stays stylistically faithful to the
-user's phrasing. The step can be disabled via `ENABLE_QUERY_REWRITING=false`
-to enable Naive vs Advanced A/B comparison in Phase 4.
+**only** for retrieval and reranking — the answer generation LLM always
+receives the original question, so the response stays stylistically
+faithful to the user's phrasing. The step can be disabled via
+`ENABLE_QUERY_REWRITING=false`.
+
+**Note on cross-encoder reranking (Phase 2, Step 2):** vector retrieval
+is fast but approximate. It computes query and document embeddings
+independently and compares them with cosine similarity — efficient but
+missing fine-grained lexical and contextual signals. A cross-encoder
+analyses the `(query, document)` pair jointly in a single transformer
+forward pass, producing much more accurate relevance scores at the cost
+of higher latency.
+
+The standard pattern is two-stage retrieval: the bi-encoder retrieves a
+pool of N candidates fast (N=20 by default), then the cross-encoder
+re-scores all N jointly with the query and returns only the top K (K=5).
+Both scores are preserved in the response (`vector_score` and
+`rerank_score`) — this lets Phase 4 evaluation quantify exactly how much
+reranking reshuffled the top-k, and whether the reshuffling improved
+ground-truth recall.
+
+`BAAI/bge-reranker-v2-m3` was chosen for its native support of 100+
+languages — important for international Erasmus students querying in
+their native language, not just the primary EN/PT corpus. The step can
+be disabled via `ENABLE_RERANKING=false`.
 
 ### Architecture (Phase 2 upcoming + Phase 3)
 
-The remaining Phase 2 steps will introduce **cross-encoder re-ranking**
-after retrieval, a **second corpus** (property and room descriptions) with
-**intent-based routing**, and **conversational memory** for follow-up
-questions. Phase 3 will add **tool calling** for structured queries
-(geographic filters, price ranges, policies) on Supabase, turning the
-system from RAG to **Agentic RAG**.
+The remaining Phase 2 steps will introduce a **second corpus** (property
+and room descriptions) with **intent-based routing**, and **conversational
+memory** for follow-up questions. Phase 3 will add **tool calling** for
+structured queries (geographic filters, price ranges, policies) on
+Supabase, turning the system from RAG to **Agentic RAG**.
 
 ---
 
@@ -184,7 +211,8 @@ elh-semantic-search/
 │   │   └── indexer.py          # Build embeddings + upsert
 │   │
 │   ├── retrieval/
-│   │   └── query_rewriter.py   # LLM-based query rewriter (Phase 2, Step 1)
+│   │   ├── query_rewriter.py   # LLM-based query rewriter (Phase 2, Step 1)
+│   │   └── reranker.py         # Cross-encoder reranker (Phase 2, Step 2)
 │   │
 │   ├── generation/
 │   │   ├── llm_client.py       # Anthropic wrapper
@@ -200,7 +228,8 @@ elh-semantic-search/
 │   ├── test_schemas.py
 │   ├── test_pipeline.py
 │   ├── test_extractor.py
-│   └── test_query_rewriter.py  # Phase 2, Step 1
+│   ├── test_query_rewriter.py  # Phase 2, Step 1
+│   └── test_reranker.py        # Phase 2, Step 2
 │
 └── evaluation/                 # Phase 4 — golden set + RAGAS metrics
 ```
@@ -213,13 +242,13 @@ elh-semantic-search/
 |---|---|---|---|
 | Language | Python 3.12 | ✅ | Stable ML ecosystem |
 | LLM (generation) | Anthropic Claude Sonnet | ✅ | Strong instruction following and faithfulness |
-| LLM (query rewriting) | Anthropic Claude Haiku | ✅ | Smaller/cheaper/faster for a simpler task (Phase 2) |
+| LLM (query rewriting) | Anthropic Claude Haiku | ✅ | Smaller/cheaper/faster for a simpler task |
 | Embeddings | `paraphrase-multilingual-mpnet-base-v2` | ✅ | Native EN + PT support, 768-dim, free, local |
+| Reranker | `BAAI/bge-reranker-v2-m3` | ✅ | Multilingual cross-encoder (100+ languages) |
 | Vector store | Pinecone (serverless) | ✅ | Cloud-managed, persists after thesis, accessible by ELH |
 | Database | PostgreSQL (Supabase) | ✅ | ELH operational DB, accessed live (no local copy) |
 | UI | Streamlit | ✅ | Fast prototyping, ideal for academic demo |
 | Configuration | Pydantic Settings | ✅ | Validated env vars at boot |
-| Re-ranking | cross-encoder | 🔜 | Phase 2, Step 2 |
 | Routing | intent-based | 🔜 | Phase 2, Step 3 |
 | Memory | conversational context | 🔜 | Phase 2, Step 4 |
 | Evaluation | RAGAS | 🔜 | Phase 4 — faithfulness, answer relevance |
@@ -299,15 +328,27 @@ Each step of the RAG pipeline (`_retrieve`, `_build_context`, `_generate`) is a 
 
 ### Query rewriting: same question for the user, optimised query for the retriever
 
-When query rewriting is active, the pipeline rewrites the user's question **only** for retrieval. The generation LLM still receives the original question, so the final answer stays stylistically faithful to how the user phrased the request. This avoids a common pitfall where a rewritten, keyword-heavy query leaks into the final response.
+When query rewriting is active, the pipeline rewrites the user's question **only** for retrieval and reranking. The generation LLM still receives the original question, so the final answer stays stylistically faithful to how the user phrased the request. This avoids a common pitfall where a rewritten, keyword-heavy query leaks into the final response.
 
 Query rewriting uses a cheaper model (Claude Haiku) since it's a structured, short-output task — roughly 10× cheaper and 2-3× faster than using Sonnet for both stages. Results are memoised in-process (`lru_cache(128)`) to avoid redundant API calls during demos and repeated queries.
 
 The step is gated by `ENABLE_QUERY_REWRITING` so Phase 4 evaluation can run the same golden set twice — with and without rewriting — and report the retrieval quality delta.
 
+### Two-stage retrieval: fast bi-encoder + precise cross-encoder
+
+Vector retrieval with a bi-encoder (SentenceTransformer) is fast because it can precompute document embeddings once at indexing time and only needs to embed the query at search time. The downside is approximation: the model has no direct access to the pair when scoring.
+
+A cross-encoder takes the `(query, document)` pair as a single input and produces a relevance score — roughly 2-3 orders of magnitude more accurate but also slower, since every candidate requires a full forward pass. Running a cross-encoder over the entire corpus is prohibitive.
+
+The solution, standard in information retrieval, is **two-stage retrieval**: the bi-encoder narrows the search space to a pool of N=20 candidates per query (millisecond-level), then the cross-encoder re-scores those 20 and returns the top K=5 — adding ~150-400ms on CPU for substantially better precision.
+
+Both scores are preserved in `RetrievalResult.vector_score` and `RetrievalResult.rerank_score` so Phase 4 evaluation can quantify *how much* reranking changed the ranking, not just whether precision improved.
+
+`BAAI/bge-reranker-v2-m3` was chosen over lighter alternatives because ELH's Erasmus students query in many languages beyond EN and PT. A model trained only on English (e.g. `ms-marco-MiniLM`) would systematically penalise non-English queries — a bias problem in a multilingual system. The 2.2GB model is downloaded once and cached locally.
+
 ### Graceful degradation
 
-If the rewriter fails (API down, malformed response, network timeout), the pipeline falls back to the original question rather than crashing. This applies to the retrieval path too: empty retrieval results produce a clear "no relevant reviews" response instead of an error. A thesis system should be observable and robust, not brittle.
+If the rewriter fails (API down, malformed response, network timeout), the pipeline falls back to the original question rather than crashing. If the reranker fails (GPU OOM, corrupted model file), the pipeline falls back to the vector-only ranking. Retrieval returning zero results produces a clear "no relevant reviews" response instead of an error. A thesis system should be observable and robust, not brittle.
 
 ### Idempotent indexing
 
@@ -320,7 +361,7 @@ Pinecone `upsert` is idempotent by design: writing the same ID twice is a no-op 
 ### Phase 2 — Advanced RAG
 
 - ✅ Query rewriting (LLM rephrases the query before retrieval, toggled via env var)
-- 🔜 Cross-encoder re-ranking (re-scores top-N candidates)
+- ✅ Cross-encoder re-ranking (BGE-reranker-v2-m3, 100+ languages, toggled via env var)
 - 🔜 Second corpus: house and room descriptions
 - 🔜 Intent-based routing between corpora
 - 🔜 Conversational memory (follow-up questions like *"and in Porto?"*)
