@@ -1,0 +1,97 @@
+# Test query set for qualitative benchmark.
+# Covers different question types to stress-test the pipeline:
+# conversational verbosity, multilingual support, abstract concepts,
+# factual constraints, and negative queries.
+#
+# This file will be expanded into the full golden dataset in Phase 4.
+
+queries:
+  - id: q01
+    category: conversational_verbose
+    text: "I am looking for a quiet place where I can focus on my studies without being disturbed by neighbours"
+    language: en
+    notes: "Long conversational query, tests query rewriting effectiveness"
+
+  - id: q02
+    category: short_direct
+    text: "comfortable bed"
+    language: en
+    notes: "Minimal query, should change little with rewriting"
+
+  - id: q03
+    category: abstract_concept
+    text: "a place that feels like home"
+    language: en
+    notes: "Abstract request, tests semantic retrieval beyond keywords"
+
+  - id: q04
+    category: landlord_behavior
+    text: "landlords who respond quickly when something breaks"
+    language: en
+    notes: "Tests retrieval of experiential content not in structured fields"
+
+  - id: q05
+    category: negative_query
+    text: "apartments with noise complaints or maintenance issues"
+    language: en
+    notes: "Negative sentiment retrieval — important for ELH quality monitoring"
+
+  - id: q06
+    category: multilingual_pt
+    text: "quarto tranquilo para estudar"
+    language: pt
+    notes: "Portuguese native query, tests EN+PT embeddings"
+
+  - id: q07
+    category: multilingual_it
+    text: "stanza luminosa con buona connessione internet"
+    language: it
+    notes: "Italian query, tests the multilingual reranker beyond EN+PT"
+
+  - id: q08
+    category: multilingual_es
+    text: "habitación acogedora cerca de la universidad"
+    language: es
+    notes: "Spanish query, another Erasmus demographic"
+
+  - id: q09
+    category: location_constraint
+    text: "properties in Porto that students recommend for first-time visitors"
+    language: en
+    notes: "Factual constraint (Porto) plus qualitative judgement"
+
+  - id: q10
+    category: amenity_specific
+    text: "rooms with fast WiFi praised by students"
+    language: en
+    notes: "Specific amenity combined with positive sentiment"
+
+  - id: q11
+    category: cleanliness
+    text: "properties where cleanliness was specifically praised"
+    language: en
+    notes: "Quality dimension that cross-encoder should weight heavily"
+
+  - id: q12
+    category: value_for_money
+    text: "good value for money according to past students"
+    language: en
+    notes: "Subjective economic judgement from reviews"
+
+  - id: q13
+    category: social_atmosphere
+    text: "friendly flatmates and social atmosphere"
+    language: en
+    notes: "Social experience, not captured by any structured field"
+
+  - id: q14
+    category: problem_solving
+    text: "places where the host was helpful in emergencies"
+    language: en
+    notes: "Stress situations — tests retrieval of rare but important content"
+
+  - id: q15
+    category: study_focused
+    text: "best accommodation for thesis writing with desk and peace"
+    language: en
+    notes: "Composite query: amenity + concept + user context"
