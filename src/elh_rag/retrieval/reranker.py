@@ -75,7 +75,7 @@ class Reranker:
         scored = [
             RetrievalResult(
                 text=c.text,
-                metadata=c.metada,
+                metadata=c.metadata,
                 vector_score=c.vector_score,
                 rerank_score=float(score),
             )
