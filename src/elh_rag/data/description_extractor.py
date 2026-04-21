@@ -93,11 +93,14 @@ class DescriptionExtractor:
         """Fetch all descriptions from Supabase as typed Documents."""
         logger.info("Connecting to Supabase to fetch descriptions")
  
+        logger.info("Connecting to Supabase to fetch descriptions")
+ 
         with psycopg2.connect(self._db_uri) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(_HOUSE_QUERY, (self._house_status, self._min_text_length))
                 house_rows = [dict(r) for r in cur.fetchall()]
  
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(_ROOM_QUERY, (self._room_status, self._min_text_length))
                 room_rows = [dict(r) for r in cur.fetchall()]
  
@@ -261,7 +264,7 @@ def _build_room_text(
  
  
 def _format_location(city: str, zone: str, neighbourhood: str) -> str:
-    """Build a location string like 'City, Zone, Neighbourhood'."""
+    """Build a location string like 'Lisbon, Alfama, Jardim Botto Machado'."""
     return ", ".join(filter(None, [city, zone, neighbourhood]))
  
  
