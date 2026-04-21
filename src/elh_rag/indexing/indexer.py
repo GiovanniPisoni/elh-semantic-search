@@ -1,6 +1,9 @@
 """
 Indexer: build the embeddings of the extracted documents and upsert them
 into the vector store.
+
+Source-agnostic: the indexer accepts any `Extractor` implementation and
+any `VectorStore` implementation.
 """
 from __future__ import annotations
 
@@ -10,7 +13,8 @@ from typing import Any
 from tqdm import tqdm
 
 from elh_rag.config import settings
-from elh_rag.data.review_extractor import fetch_documents, summarise_corpus
+from elh_rag.data.extractor import Extractor
+from elh_rag.data.review_extractor import ReviewExtractor
 from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.pinecone_store import PineconeVectorStore
 from elh_rag.indexing.vector_store import VectorStore
@@ -47,32 +51,53 @@ def _build_vectors(
         for doc, emb in zip(documents, embeddings)
     ]
  
+def _summarise_by_city(documents: list[Document]) -> dict[str, int]:
+    """Per-city document count for logging."""
+    counts: dict[str, int] = {}
+    for doc in documents:
+        city = getattr(doc.metadata, "city", None) or "Unknown"
+        counts[city] = counts.get(city, 0) + 1
+    return dict(sorted(counts.items(), key=lambda x: -x[1]))
+
+def _summarise_by_source(documents: list[Document]) -> dict[str, int]:
+    """Per-source document count for logging (useful when mixing HOUSE+ROOM)."""
+    counts: dict[str, int] = {}
+    for doc in documents:
+        source = doc.metadata.source.value
+        counts[source] = counts.get(source, 0) + 1
+    return dict(sorted(counts.items(), key=lambda x: -x[1]))
+
+# Core indexing routine
  
 def run_indexing(
-    reset: bool = False,
+    extractor: Extractor | None = None,
     store: VectorStore | None = None,
     embedder: Embedder | None = None,
+    reset: bool = False,
 ) -> int:
-    """Index all reviews from Supabase into the vector store.
+    """Index all documents produced by `extractor` into `store`.
  
     Returns the number of vectors upserted.
     """
+    extractor = extractor or ReviewExtractor()
     store = store or PineconeVectorStore()
     embedder = embedder or Embedder()
  
-    logger.info("Fetching documents from Supabase")
-    documents = fetch_documents()
+    logger.info("Extracting documents from source=%s", extractor.source.value)
+    documents = list(extractor.extract())
     if not documents:
-        logger.error("No documents found — aborting indexing")
+        logger.error("No documents returned by extractor — aborting indexing")
         return 0
  
-    for city, n in summarise_corpus(documents).items():
-        logger.info("  %-15s %d reviews", city, n)
+    for source, n in _summarise_by_source(documents).items():
+        logger.info("  source=%-10s %d documents", source, n)
+    for city, n in _summarise_by_city(documents).items():
+        logger.info("  city=%-15s %d documents", city, n)
  
     existing = store.count()
-    logger.info("Vectors already in index: %d", existing)
+    logger.info("Vectors already in target index: %d", existing)
     if reset and existing > 0:
-        logger.warning("--reset requested: deleting all %d existing vectors", existing)
+        logger.warning("reset=True: deleting all %d existing vectors", existing)
         store.delete_all()
  
     logger.info("Indexing %d documents", len(documents))

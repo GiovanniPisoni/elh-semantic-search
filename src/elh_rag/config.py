@@ -31,7 +31,14 @@ class Settings(BaseSettings):
 
     # Vector store (Pinecone)
     pinecone_api_key: str = Field(..., description="Pinecone API key")
-    pinecone_index_name: str = Field(default="elh-reviews")
+    pinecone_index_name: str = Field(
+        default="elh-reviews",
+        description="Pinecone index for student reviews",   
+    )
+    pinecone_descriptions_index_name: str = Field(
+        default="elh-descriptions",
+        description="Pinecone index for house + room descriptions",
+    )
 
     # LLM (Anthropic)
     anthropic_api_key: str = Field(..., description="Anthropic API key")
