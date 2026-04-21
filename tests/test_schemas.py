@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from elh_rag.schemas import (
     Document,
+    DocumentMetadata,
     DocumentSource,
+    HouseMetadata,
     RAGResponse,
     RetrievalResult,
     ReviewMetadata,
+    RoomMetadata,
+    metadata_from_pinecone_dict,
 )
 
 
@@ -51,6 +55,121 @@ def test_metadata_from_pinecone_dict_ignores_unknown_keys() -> None:
 
     assert meta.id == "rev-1"
     assert meta.city == "Lisbon"
+
+
+# HouseMetadata
+
+
+def test_house_metadata_default_source_is_house() -> None:
+    meta = HouseMetadata(id="house:HSE_001")
+    assert meta.source == DocumentSource.HOUSE
+
+
+def test_house_metadata_round_trip_preserves_fields() -> None:
+    original = HouseMetadata(
+        id="house:HSE_712D9E74",
+        idhouse="HSE_712D9E74",
+        flatname="Graca Student Flat",
+        city="Lisbon",
+        zone="Graca",
+        neighbourhood="Jardim Botto Machado",
+    )
+
+    restored = HouseMetadata.from_pinecone_dict(original.to_pinecone_dict())
+
+    assert restored == original
+    assert restored.source == DocumentSource.HOUSE
+
+
+def test_house_metadata_to_pinecone_dict_is_json_safe() -> None:
+    import json
+
+    meta = HouseMetadata(id="house:X", idhouse="X", flatname="Name", city="Porto")
+    json.dumps(meta.to_pinecone_dict())
+
+
+# RoomMetadata
+
+
+def test_room_metadata_default_source_is_room() -> None:
+    meta = RoomMetadata(id="room:RM_001")
+    assert meta.source == DocumentSource.ROOM
+
+
+def test_room_metadata_round_trip_preserves_fields() -> None:
+    original = RoomMetadata(
+        id="room:RM_HSE_DE976537_3",
+        idroom="RM_HSE_DE976537_3",
+        roomname="Garden View Room",
+        idhouse="HSE_DE976537",
+        flatname="Residencia Alfama",
+        city="Lisbon",
+        zone="Alfama",
+    )
+
+    restored = RoomMetadata.from_pinecone_dict(original.to_pinecone_dict())
+
+    assert restored == original
+    assert restored.source == DocumentSource.ROOM
+
+
+# metadata_from_pinecone_dict dispatcher
+
+
+def test_dispatcher_routes_review_source_to_review_metadata() -> None:
+    payload = {"id": "r1", "source": "review", "city": "Lisbon"}
+    meta = metadata_from_pinecone_dict(payload)
+
+    assert isinstance(meta, ReviewMetadata)
+    assert meta.city == "Lisbon"
+
+
+def test_dispatcher_routes_house_source_to_house_metadata() -> None:
+    payload = {"id": "h1", "source": "house", "idhouse": "HSE_001", "flatname": "X"}
+    meta = metadata_from_pinecone_dict(payload)
+
+    assert isinstance(meta, HouseMetadata)
+    assert meta.flatname == "X"
+
+
+def test_dispatcher_routes_room_source_to_room_metadata() -> None:
+    payload = {"id": "rm1", "source": "room", "idroom": "RM_001", "roomname": "A"}
+    meta = metadata_from_pinecone_dict(payload)
+
+    assert isinstance(meta, RoomMetadata)
+    assert meta.roomname == "A"
+
+
+def test_dispatcher_defaults_to_review_when_source_missing() -> None:
+    """Backward compatibility: pre-Step 4 records have no 'source' field."""
+    payload = {"id": "legacy", "city": "Porto"}
+    meta = metadata_from_pinecone_dict(payload)
+
+    assert isinstance(meta, ReviewMetadata)
+
+
+# DocumentMetadata union accepts all three types
+
+
+def test_document_accepts_all_three_metadata_types() -> None:
+    """Document.metadata: DocumentMetadata accepts ReviewMetadata, HouseMetadata, RoomMetadata."""
+    review_doc = Document(text="rev", metadata=ReviewMetadata(id="r"))
+    house_doc = Document(text="house desc", metadata=HouseMetadata(id="h"))
+    room_doc = Document(text="room desc", metadata=RoomMetadata(id="rm"))
+
+    assert review_doc.metadata.source == DocumentSource.REVIEW
+    assert house_doc.metadata.source == DocumentSource.HOUSE
+    assert room_doc.metadata.source == DocumentSource.ROOM
+
+
+def test_retrieval_result_accepts_all_three_metadata_types() -> None:
+    for meta in [
+        ReviewMetadata(id="r"),
+        HouseMetadata(id="h"),
+        RoomMetadata(id="rm"),
+    ]:
+        result = RetrievalResult(text="t", metadata=meta, vector_score=0.5)
+        assert result.score == 0.5
 
 
 # RetrievalResult
