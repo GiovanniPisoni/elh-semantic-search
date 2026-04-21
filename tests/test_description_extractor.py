@@ -1,4 +1,4 @@
-"""Tests for DescriptionExtractor.
+"""Tests for DescriptionExtractor (Phase 2, Step 4).
 
 Two layers of testing:
     1. Pure-logic unit tests on the text builders and row→Document helpers
@@ -370,19 +370,27 @@ def test_extract_handles_empty_result_sets(
 def test_extract_passes_status_and_min_length_to_queries(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verify the parametrised query receives the right arguments."""
+    """Verify the two parametrised queries receive the right arguments.
+
+    House and room have different status values in the ELH schema:
+    house uses 'Validated', room uses 'Available'. The extractor must
+    route each status to the correct query.
+    """
     cursor = _mock_psycopg2_connection(monkeypatch, [], [])
 
     extractor = DescriptionExtractor(
         db_uri="fake",
-        status_filter="active",
+        house_status_filter="Validated",
+        room_status_filter="Available",
         min_text_length=50,
     )
     list(extractor.extract())
 
-    # Two execute() calls, both should receive ('active', 50)
+    # Two execute() calls: first house with 'Validated', then room with 'Available'
     assert cursor.execute.call_count == 2
-    for call in cursor.execute.call_args_list:
-        args = call.args
-        params = args[1]
-        assert params == ("active", 50)
+
+    first_call_params = cursor.execute.call_args_list[0].args[1]
+    second_call_params = cursor.execute.call_args_list[1].args[1]
+
+    assert first_call_params == ("Validated", 50)
+    assert second_call_params == ("Available", 50)

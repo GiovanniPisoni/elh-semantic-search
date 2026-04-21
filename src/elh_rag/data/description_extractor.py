@@ -10,13 +10,13 @@ The two query results are merged in a single iterable, so the indexer can
 stream all descriptions with one call.
 """
 from __future__ import annotations
-
+ 
 import logging
 from typing import Any, Iterable
-
+ 
 import psycopg2
 import psycopg2.extras
-
+ 
 from elh_rag.config import settings
 from elh_rag.data.extractor import Extractor
 from elh_rag.schemas import (
@@ -40,10 +40,10 @@ _HOUSE_QUERY = """
         h.description
     FROM house h
     WHERE h.status = %s
-        AND LENGTH(TRIM(h.description)) >= %s
+      AND LENGTH(TRIM(h.description)) >= %s
     ORDER BY h.idhouse
 """
-
+ 
 _ROOM_QUERY = """
     SELECT
         r.idroom,
@@ -72,56 +72,58 @@ class DescriptionExtractor:
     def __init__(
         self,
         db_uri: str | None = None,
-        status_filter: str = "approved",
+        house_status_filter: str = "Validated",
+        room_status_filter: str = "Available",
         min_text_length: int | None = None,
     ) -> None:
         self._db_uri = db_uri or settings.db_uri
-        self._status = status_filter
+        self._house_status = house_status_filter
+        self._room_status = room_status_filter
         self._min_text_length = (
             min_text_length
             if min_text_length is not None
             else settings.min_text_length
         )
-
+ 
     @property
     def source(self) -> DocumentSource:
         return DocumentSource.HOUSE
-    
+ 
     def extract(self) -> Iterable[Document]:
-        """Fetch all descriptions from Supabase as typed Documents""",
-        logger.info("Connecting to Subapase to fetch descriptions")
-
+        """Fetch all descriptions from Supabase as typed Documents."""
+        logger.info("Connecting to Supabase to fetch descriptions")
+ 
         with psycopg2.connect(self._db_uri) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute(_HOUSE_QUERY, (self._status, self._min_text_length))
+                cur.execute(_HOUSE_QUERY, (self._house_status, self._min_text_length))
                 house_rows = [dict(r) for r in cur.fetchall()]
-
-                cur.execute(_ROOM_QUERY, (self._status, self._min_text_length))
+ 
+                cur.execute(_ROOM_QUERY, (self._room_status, self._min_text_length))
                 room_rows = [dict(r) for r in cur.fetchall()]
-        
+ 
         logger.info(
             "Fetched %d house descriptions and %d room descriptions",
             len(house_rows),
             len(room_rows),
         )
-
+ 
         documents: list[Document] = []
         skipped = 0
-
-        for r in house_rows:
-            doc = _house_row_to_document(r)
+ 
+        for row in house_rows:
+            doc = _house_row_to_document(row)
             if len(doc.text) < self._min_text_length:
                 skipped += 1
                 continue
             documents.append(doc)
-
-        for r in room_rows:
-            doc = _room_row_to_document(r)
+ 
+        for row in room_rows:
+            doc = _room_row_to_document(row)
             if len(doc.text) < self._min_text_length:
                 skipped += 1
                 continue
             documents.append(doc)
-
+ 
         logger.info(
             "Built %d description documents (%d skipped for being too short)",
             len(documents),
@@ -158,7 +160,8 @@ def _house_row_to_document(row: dict[str, Any]) -> Document:
     )
  
     return Document(text=text, metadata=metadata)
-
+ 
+ 
 def _room_row_to_document(row: dict[str, Any]) -> Document:
     """Build a Document for a single room row."""
     idroom = _clean_str(row.get("idroom"))
