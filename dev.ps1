@@ -42,7 +42,7 @@ function Show-Help {
     Write-Host "Wipe the index and rebuild from scratch"
     Write-Host "  .\dev.ps1 app           " -NoNewline -ForegroundColor Yellow
     Write-Host "Launch the Streamlit app"
-    Write-Host "  .\dev.ps1 evaluate         " -NoNewline -ForegroundColor Yellow
+    Write-Host "  .\dev.ps1 evaluate      " -NoNewline -ForegroundColor Yellow
     Write-Host "Run evaluation suite to compare LLM performance"
     Write-Host "  .\dev.ps1 clean         " -NoNewline -ForegroundColor Yellow
     Write-Host "Remove caches and build artifacts"
