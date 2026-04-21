@@ -31,21 +31,22 @@ logger = logging.getLogger(__name__)
 # SQL
 
 _HOUSE_QUERY = """
-    SELECT
+    SELECT DISTINCT ON (h.idhouse)
         h.idhouse,
         h.flatname,
         h.city,
         h.zone,
         h.neighboorhood,
-        h.description
+        h.description,
+        h.dateupdate
     FROM house h
     WHERE h.status = %s
       AND LENGTH(TRIM(h.description)) >= %s
-    ORDER BY h.idhouse
+    ORDER BY h.idhouse, h.dateupdate DESC
 """
  
 _ROOM_QUERY = """
-    SELECT
+    SELECT DISTINCT ON (r.loc_idhouse, r.idroom)
         r.idroom,
         r.roomname,
         r.loc_idhouse       AS idhouse,
@@ -53,14 +54,15 @@ _ROOM_QUERY = """
         h.city,
         h.zone,
         h.neighboorhood,
-        r.description
+        r.description,
+        r.dateupdate
     FROM room r
     JOIN house h
         ON  r.loc_idhouse    = h.idhouse
         AND r.loc_dateupdate = h.dateupdate
     WHERE r.status = %s
       AND LENGTH(TRIM(r.description)) >= %s
-    ORDER BY r.idroom
+    ORDER BY r.loc_idhouse, r.idroom, r.dateupdate DESC
 """
 
 # Extractor class
@@ -91,8 +93,6 @@ class DescriptionExtractor:
  
     def extract(self) -> Iterable[Document]:
         """Fetch all descriptions from Supabase as typed Documents."""
-        logger.info("Connecting to Supabase to fetch descriptions")
- 
         logger.info("Connecting to Supabase to fetch descriptions")
  
         with psycopg2.connect(self._db_uri) as conn:
