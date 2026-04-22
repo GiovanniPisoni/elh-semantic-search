@@ -29,9 +29,7 @@ class Intent(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class RoutingDecision:
-    """The output of the IntentRouter
-    
-    """
+    """The output of the IntentRouter."""
 
     intent: Intent
     confidence: float
@@ -202,10 +200,12 @@ class RAGResponse:
     sources: list[RetrievalResult]
     mode: str = "naive-pinecone"
     rewritten_query: str | None = None
+    sources_by_source: dict[str, list[RetrievalResult]] | None = None
+    routing: RoutingDecision | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """JSON-serialisable dict representation."""
-        return {
+        payload: dict[str, Any] = {
             "query": self.query,
             "rewritten_query": self.rewritten_query,
             "answer": self.answer,
@@ -220,3 +220,24 @@ class RAGResponse:
                 for s in self.sources
             ],
         }
+        if self.sources_by_source is not None:
+            payload["sources_by_source"] = {
+                source_name: [
+                    {
+                        "text": s.text,
+                        "vector_score": s.vector_score,
+                        "rerank_score": s.rerank_score,
+                        "metadata": s.metadata.to_pinecone_dict(),
+                    }
+                    for s in sources
+                ]
+                for source_name, sources in self.sources_by_source.items()
+            }
+        if self.routing is not None:
+            payload["routing"] = {
+                "intent": self.routing.intent.value,
+                "confidence": self.routing.confidence,
+                "reasoning": self.routing.reasoning,
+                "source": self.routing.source,
+            }
+        return payload

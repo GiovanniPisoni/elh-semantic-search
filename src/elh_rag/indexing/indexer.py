@@ -22,7 +22,8 @@ from elh_rag.schemas import Document
 
 logger = logging.getLogger(__name__)
  
- 
+# Helpers
+
 def _sanitize_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     """Coerce metadata values to Pinecone-compatible types (str/int/float/bool/list[str])."""
     clean: dict[str, Any] = {}
@@ -42,14 +43,18 @@ def _build_vectors(
     documents: list[Document], embeddings: list[list[float]]
 ) -> list[dict[str, Any]]:
     """Pair documents with their embeddings into Pinecone vector dicts."""
-    return [
-        {
-            "id": doc.metadata.id,
-            "values": emb,
-            "metadata": _sanitize_metadata(doc.metadata.to_pinecone_dict()),
-        }
-        for doc, emb in zip(documents, embeddings)
-    ]
+    vectors: list[dict[str, Any]] = []
+    for doc, emb in zip(documents, embeddings):
+        metadata = _sanitize_metadata(doc.metadata.to_pinecone_dict())
+        metadata["text"] = doc.text
+        vectors.append(
+            {
+                "id": doc.metadata.id,
+                "values": emb,
+                "metadata": metadata,
+            }
+        )
+    return vectors
  
 def _summarise_by_city(documents: list[Document]) -> dict[str, int]:
     """Per-city document count for logging."""
