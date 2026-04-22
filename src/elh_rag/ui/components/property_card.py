@@ -1,10 +1,5 @@
 """
 Property card component: renders a single retrieved source as an ELH listing.
-
-Images are not available in the ELH dataset yet, so the card shows a
-stylised house icon on a gradient placeholder. Price / rooms / bathrooms
-are deterministic placeholders derived from the source id, so that each
-property is visually consistent across reloads.
 """
 from __future__ import annotations
 
@@ -55,13 +50,17 @@ def render(result: RetrievalResult) -> str:
     """Return the HTML for a single property card."""
     meta = result.metadata
 
-    title_raw = " — ".join(filter(None, [meta.flatname, meta.roomname])) or "ELH Property"
+    flatname = getattr(meta, "flatname", "")
+    roomname = getattr(meta, "roomname", "")
+    title_raw = " — ".join(filter(None, [flatname, roomname])) or "ELH Property"
     title = _html.escape(title_raw)
 
-    location_raw = ", ".join(filter(None, [meta.zone, meta.city])) or "Lisbon"
+    zone = getattr(meta, "zone", "")
+    location_raw = ", ".join(filter(None, [zone, meta.city])) or "Lisbon"
     location = _html.escape(location_raw)
 
-    desc_raw = (meta.review_text_original or result.text or "").strip()
+    review_text = getattr(meta, "review_text_original", "")
+    desc_raw = (review_text or result.text or "").strip()
     desc = _html.escape(desc_raw[:140]) + ("…" if len(desc_raw) > 140 else "")
 
     seed = meta.id or title_raw

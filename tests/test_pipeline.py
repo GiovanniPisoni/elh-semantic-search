@@ -8,6 +8,7 @@ import pytest
 from elh_rag.indexing.embeddings import Embedder
 from elh_rag.generation.llm_client import LLMClient
 from elh_rag.indexing.vector_store import VectorStore
+from elh_rag.orchestration.orchestrator import _build_reviews_filter
 from elh_rag.pipeline import RAGPipeline
 from elh_rag.retrieval.query_rewriter import QueryRewriter
 from elh_rag.retrieval.reranker import Reranker
@@ -20,11 +21,12 @@ from tests.conftest import FakeQueryRewriter, FakeReranker, FakeVectorStore
 
 
 def _disable_advanced(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Turn off both optional steps — pipeline behaves as Phase 1 Naive RAG."""
+    """Turn off all optional Phase 2 steps — pipeline behaves as Phase 1 Naive RAG."""
     from elh_rag import config as cfg
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", False)
     monkeypatch.setattr(cfg.settings, "enable_reranking", False)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
 
 
 def _make_pipeline(
@@ -34,12 +36,14 @@ def _make_pipeline(
     rewriter: QueryRewriter | None = None,
     reranker: Reranker | None = None,
 ) -> RAGPipeline:
+    """Build a RAGPipeline with empty descriptions_store so reviews is the only active corpus."""
     return RAGPipeline(
         vector_store=store,
         embedder=embedder,
         llm_client=llm,
         query_rewriter=rewriter or FakeQueryRewriter(passthrough=True),
         reranker=reranker or FakeReranker(reverse=False),
+        descriptions_store=FakeVectorStore(canned_matches=[]),
     )
 
 
@@ -77,7 +81,7 @@ def test_empty_retrieval_returns_no_results_message(
     response = pipeline.query("question with no matches")
 
     assert response.sources == []
-    assert "No relevant reviews" in response.answer
+    assert "No relevant" in response.answer
 
 
 # Metadata filter composition
@@ -99,7 +103,7 @@ def test_empty_retrieval_returns_no_results_message(
 def test_metadata_filter_composition(
     city: str | None, rating: int | None, expected: dict[str, Any] | None
 ) -> None:
-    assert RAGPipeline._build_metadata_filter(city, rating) == expected
+    assert _build_reviews_filter(city, rating) == expected
 
 
 # Context formatting
@@ -117,7 +121,8 @@ def test_context_includes_review_header(
     pipeline.query("anything")
 
     user_prompt = fake_llm.calls[0]["user"]  # type: ignore[attr-defined]
-    assert "[Review 1]" in user_prompt
+    # Orchestrator format uses source tag (REVIEW) in header
+    assert "[REVIEW 1]" in user_prompt
     assert "Casa do Sol" in user_prompt
     assert "Lisbon" in user_prompt
 
@@ -174,6 +179,7 @@ def test_rewriting_enabled_feeds_rewritten_query_to_retriever(
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
     monkeypatch.setattr(cfg.settings, "enable_reranking", False)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
 
     rewriter = FakeQueryRewriter(canned_output="quiet, peaceful, no street noise")
     pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm, rewriter=rewriter)
@@ -198,6 +204,7 @@ def test_llm_generation_uses_original_question_not_rewritten(
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
     monkeypatch.setattr(cfg.settings, "enable_reranking", False)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
 
     rewriter = FakeQueryRewriter(canned_output="REWRITTEN VERSION")
     pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm, rewriter=rewriter)
@@ -219,6 +226,7 @@ def test_rewriting_skipped_when_rewriter_returns_identical_text(
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
     monkeypatch.setattr(cfg.settings, "enable_reranking", False)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
 
     rewriter = FakeQueryRewriter(passthrough=True)
     pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm, rewriter=rewriter)
@@ -228,7 +236,7 @@ def test_rewriting_skipped_when_rewriter_returns_identical_text(
     assert response.rewritten_query is None
 
 
-# ── Re-ranking (Phase 2, Step 2) ──────────────────────────────────────────
+# Re-ranking
 
 
 def _make_matches(n: int) -> list[dict[str, Any]]:
@@ -277,6 +285,7 @@ def test_reranking_enabled_reorders_results(
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", False)
     monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
     monkeypatch.setattr(cfg.settings, "reranker_pool_size", 5)
 
     store = FakeVectorStore(canned_matches=_make_matches(5))
@@ -302,6 +311,7 @@ def test_reranking_fetches_pool_size_candidates_from_store(
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", False)
     monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
     monkeypatch.setattr(cfg.settings, "reranker_pool_size", 20)
 
     store = FakeVectorStore(canned_matches=_make_matches(20))
@@ -324,6 +334,7 @@ def test_reranking_uses_retrieval_query_not_original_when_rewriting_also_on(
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
     monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
     monkeypatch.setattr(cfg.settings, "reranker_pool_size", 5)
 
     store = FakeVectorStore(canned_matches=_make_matches(5))
@@ -348,6 +359,7 @@ def test_mode_label_includes_all_active_flags(
 
     monkeypatch.setattr(cfg.settings, "enable_query_rewriting", True)
     monkeypatch.setattr(cfg.settings, "enable_reranking", True)
+    monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
 
     pipeline = _make_pipeline(fake_store, fake_embedder, fake_llm)
 
