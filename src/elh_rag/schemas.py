@@ -15,7 +15,32 @@ class DocumentSource(str, Enum):
     HOUSE = "house"
     ROOM = "room"
 
+class Intent(str, Enum):
+    """Which corpus the IntentRouter decide to target.
+    
+    - REVIEWS: user asks about experience, atmosphere, landlord, issues
+    - DESCRIPTIONS: user asks about facts, amenities, prices, location
+    - BOTH: intent is ambiguous or multi-faceted, query both corpora
+    """
+
+    REVIEWS = "reviews"
+    DESCRIPTIONS = "descriptions"
+    BOTH = "both"
+
+@dataclass(frozen=True, slots=True)
+class RoutingDecision:
+    """The output of the IntentRouter
+    
+    """
+
+    intent: Intent
+    confidence: float
+    reasoning: str = ""
+    source: str = "llm"
+
+
 # Metadata: one frozen dataclass per source
+
 
 @dataclass(frozen=True, slots=True)
 class ReviewMetadata:
