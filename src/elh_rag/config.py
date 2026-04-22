@@ -74,6 +74,26 @@ class Settings(BaseSettings):
     )
     reranker_batch_size: int = Field(default=16, gt=0)
 
+    # Intent routing
+    enable_intent_routing: bool = Field(
+        default=True,
+        description="Toggle the LLM-based intent router; disable for A/B in Phase 4",
+    )
+    intent_router_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Smaller/cheaper LLM used for intent classification",
+    )
+    intent_router_confidence_threshold: float = Field(
+        default=0.8,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Minimum confidence to commit to a single-corpus route; "
+            "below this, query both corpora and let the reranker merge"
+        ),
+    )
+    intent_router_max_tokens: int = Field(default=200, gt=0)
+
     # Embeddings
     embedding_model: str = Field(
         default="paraphrase-multilingual-mpnet-base-v2",
