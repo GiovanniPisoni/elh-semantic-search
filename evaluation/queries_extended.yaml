@@ -1,0 +1,160 @@
+# Extended qualitative benchmark query set.
+#
+# Each query includes an `expected_intent` field acting as qualitative
+# ground truth for the IntentRouter: reviews | descriptions | both.
+#
+# Five categories, four each, for a total of 20 queries:
+#   1. review-oriented     → expected_intent: reviews
+#   2. description-oriented → expected_intent: descriptions
+#   3. ambiguous            → expected_intent: both
+#   4. multilingual         → varies, one per non-EN language
+#   5. edge_case            → stresses the system's fallback paths
+
+queries:
+  # Review-oriented (experiential, subjective)
+
+  - id: r01
+    category: review_safety
+    text: "did students feel safe at night?"
+    language: en
+    expected_intent: reviews
+    notes: "Safety perception is subjective, only reviews discuss it"
+
+  - id: r02
+    category: review_landlord_pt
+    text: "os senhorios respondem rapidamente?"
+    language: pt
+    expected_intent: reviews
+    notes: "Landlord responsiveness, Portuguese"
+
+  - id: r03
+    category: review_atmosphere
+    text: "what was the atmosphere like with roommates?"
+    language: en
+    expected_intent: reviews
+    notes: "Social atmosphere with flatmates is review-only content"
+
+  - id: r04
+    category: review_problems_it
+    text: "ho avuto problemi con il proprietario, è capitato anche ad altri?"
+    language: it
+    expected_intent: reviews
+    notes: "Student asks about shared problem experiences, Italian"
+
+  - id: r05
+    category: review_recommendation
+    text: "would you recommend this place for a quiet person?"
+    language: en
+    expected_intent: reviews
+    notes: "Recommendation framing — typical review language"
+
+  # Description-oriented (factual, structural)
+
+  - id: d01
+    category: desc_balcony_porto
+    text: "apartments with balcony in Porto"
+    language: en
+    expected_intent: descriptions
+    notes: "Specific amenity + city, purely factual"
+
+  - id: d02
+    category: desc_price_it
+    text: "quanto costa una stanza singola in Lisbona?"
+    language: it
+    expected_intent: descriptions
+    notes: "Pricing query, Italian"
+
+  - id: d03
+    category: desc_price_bathroom
+    text: "rooms under 500 euros with private bathroom"
+    language: en
+    expected_intent: descriptions
+    notes: "Numeric threshold + amenity, archetypal description query"
+
+  - id: d04
+    category: desc_ac_es
+    text: "habitaciones con aire acondicionado"
+    language: es
+    expected_intent: descriptions
+    notes: "Amenity query in Spanish"
+
+  - id: d05
+    category: desc_size_location
+    text: "how big are the studios in Alvalade?"
+    language: en
+    expected_intent: descriptions
+    notes: "Size + neighbourhood, pure factual retrieval"
+
+  # Ambiguous (mixed experience + facts)
+
+  - id: a01
+    category: both_erasmus_alfama
+    text: "best accommodation for Erasmus students in Alfama"
+    language: en
+    expected_intent: both
+    notes: "'Best' subjective (reviews) + location (descriptions)"
+
+  - id: a02
+    category: both_quiet_study
+    text: "quiet room to study"
+    language: en
+    expected_intent: both
+    notes: "Quietness experienced (reviews) + room type (descriptions)"
+
+  - id: a03
+    category: both_value_university
+    text: "good value apartments near university"
+    language: en
+    expected_intent: both
+    notes: "Value judgement (reviews) + distance (descriptions)"
+
+  - id: a04
+    category: both_location_cheap_es
+    text: "casas con buena ubicación y baratas"
+    language: es
+    expected_intent: both
+    notes: "Location judgement + affordability, Spanish"
+
+  - id: a05
+    category: both_nice_place
+    text: "a nice place to live in Porto"
+    language: en
+    expected_intent: both
+    notes: "'Nice' highly subjective, city is factual"
+
+  # Edge cases
+
+  - id: e01
+    category: edge_empty
+    text: ""
+    language: en
+    expected_intent: both
+    notes: "Empty query — must default to both with confidence 0"
+
+  - id: e02
+    category: edge_nonsense
+    text: "asdfgh zxcvbn qwerty"
+    language: en
+    expected_intent: both
+    notes: "Nonsense tokens — system should gracefully fall back"
+
+  - id: e03
+    category: edge_conversational
+    text: "hi how are you today"
+    language: en
+    expected_intent: both
+    notes: "Greeting, not a search query — stress test for the router"
+
+  - id: e04
+    category: edge_vague
+    text: "tell me everything"
+    language: en
+    expected_intent: both
+    notes: "Extremely vague — should route to both"
+
+  - id: e05
+    category: edge_multi_intent
+    text: "price AND amenities AND atmosphere AND reviews"
+    language: en
+    expected_intent: both
+    notes: "Explicitly forces all dimensions — should confirm both"

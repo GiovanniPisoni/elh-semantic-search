@@ -43,6 +43,13 @@ coverage.xml
 chroma_db/
 .chroma/
 
+# Benchmark outputs (generated, not source)
+evaluation/reports/
+evaluation/qualitative_results_*.jsonl
+evaluation/qualitative_report_*.md
+evaluation/orchestrator_results_*.jsonl
+evaluation/orchestrator_report_*.md
+
 # IDE
 .vscode/
 .idea/
