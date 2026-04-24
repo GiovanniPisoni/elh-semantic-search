@@ -69,13 +69,19 @@ def render_input() -> tuple[bool, str, st.delta_generator.DeltaGenerator]:
     loading_slot = st.empty()
 
     with st.form(key="chat_form", clear_on_submit=True):
-        q_col, btn_col = st.columns([10, 1])
+        q_col, clear_col, btn_col = st.columns([10, 1, 1])
         with q_col:
             question = st.text_input(
                 "question",
                 value=state.consume_prefill(),
                 placeholder="Ask another question...",
                 label_visibility="collapsed",
+            )
+        with clear_col:
+            clear_clicked = st.form_submit_button(
+                "↻",
+                use_container_width=True,
+                help="Clear the conversation and start fresh",
             )
         with btn_col:
             submitted = st.form_submit_button(
@@ -84,5 +90,9 @@ def render_input() -> tuple[bool, str, st.delta_generator.DeltaGenerator]:
 
     if state.consume_auto_submit():
         submitted = True
+
+    if clear_clicked:
+        state.clear_conversation()
+        st.rerun()
 
     return submitted, question, loading_slot

@@ -43,6 +43,7 @@ def run_query(
         top_k=filters.top_k,
         city_filter=filters.city,
         min_rating=filters.min_rating,
+        conversation_memory=state.get_conversation_memory(),
     )
 
 
