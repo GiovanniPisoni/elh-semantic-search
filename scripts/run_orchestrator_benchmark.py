@@ -1,5 +1,9 @@
 """
-Qualitative benchmark for the full orchestrated pipeline.
+Qualitative benchmark for the full orchestrated pipeline (Phase 2, Step 4).
+
+Runs 20 queries through the complete system — rewrite + retrieve + rerank
++ intent routing + dual-corpus retrieval + generation — and produces a
+Markdown report.
 """
 from __future__ import annotations
 
@@ -25,6 +29,7 @@ _PRICING: dict[str, dict[str, float]] = {
     "claude-sonnet": {"input": 3.00, "output": 15.00},
 }
 
+# Rough token estimates per query (router, rewriter, generator).
 _EST_TOKENS_PER_QUERY = {
     "router_input": 2000,
     "router_output": 60,
@@ -263,14 +268,25 @@ def generate_report(
     runs: list[dict[str, Any]],
     metrics: dict[str, Any],
     path: Path,
+    config_label: str = "",
 ) -> None:
     """Render the human-facing Markdown report."""
+    from elh_rag import config as cfg_module
+
     lines: list[str] = []
 
     lines.append("# ELH RAG — Orchestrator Qualitative Benchmark")
     lines.append("")
     lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     lines.append(f"**Queries:** {metrics['total_queries']}  ·  **OK:** {metrics['ok']}  ·  **Errored:** {metrics['errored']}")
+    if config_label:
+        lines.append(f"**Configuration label:** `{config_label}`")
+    lines.append(
+        f"**Pipeline config:** "
+        f"rewriting=`{cfg_module.settings.enable_query_rewriting}`  ·  "
+        f"reranking=`{cfg_module.settings.enable_reranking}`  ·  "
+        f"routing=`{cfg_module.settings.enable_intent_routing}`"
+    )
     lines.append("")
     lines.append(
         "This report exercises the complete Phase 2 Step 4 pipeline: "
@@ -493,12 +509,50 @@ def main() -> None:
         default=None,
         help="Limit to first N queries (useful for smoke tests)",
     )
+    parser.add_argument(
+        "--disable",
+        action="append",
+        choices=["rewriting", "reranking", "routing"],
+        default=[],
+        help=(
+            "Disable a pipeline stage for this run. May be passed multiple "
+            "times. Used to ablate the full pipeline for performance analysis. "
+            "Example: --disable reranking --disable rewriting"
+        ),
+    )
+    parser.add_argument(
+        "--label",
+        type=str,
+        default="",
+        help=(
+            "Optional label appended to output filenames, useful when "
+            "running several configurations back-to-back (e.g. 'no-rerank')"
+        ),
+    )
     args = parser.parse_args()
 
     setup_logging()
 
+    # Apply --disable flags to settings BEFORE creating the pipeline so
+    # the injected components see the correct configuration.
+    from elh_rag import config as cfg_module
+
+    if "rewriting" in args.disable:
+        cfg_module.settings.enable_query_rewriting = False
+    if "reranking" in args.disable:
+        cfg_module.settings.enable_reranking = False
+    if "routing" in args.disable:
+        cfg_module.settings.enable_intent_routing = False
+
     print("ELH RAG — Orchestrator Qualitative Benchmark")
     print("=" * 60)
+    print(
+        f"Config: rewriting={cfg_module.settings.enable_query_rewriting}, "
+        f"reranking={cfg_module.settings.enable_reranking}, "
+        f"routing={cfg_module.settings.enable_intent_routing}"
+    )
+    if args.label:
+        print(f"Run label: {args.label}")
 
     queries = load_queries(args.queries)
     if args.limit:
@@ -542,11 +596,12 @@ def main() -> None:
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    jsonl_path = args.output_dir / f"orchestrator_results_{ts}.jsonl"
-    md_path = args.output_dir / f"orchestrator_report_{ts}.md"
+    label_suffix = f"_{args.label}" if args.label else ""
+    jsonl_path = args.output_dir / f"orchestrator_results_{ts}{label_suffix}.jsonl"
+    md_path = args.output_dir / f"orchestrator_report_{ts}{label_suffix}.md"
 
     save_jsonl(runs, jsonl_path)
-    generate_report(runs, metrics, md_path)
+    generate_report(runs, metrics, md_path, config_label=args.label)
 
     print()
     print("=" * 60)
