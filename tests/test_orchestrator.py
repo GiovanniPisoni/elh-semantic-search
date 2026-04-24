@@ -524,3 +524,139 @@ def test_select_prompts_picks_multicorpus_when_only_descriptions() -> None:
     sys_prompt, _ = _select_prompts(question="q", context="c", sources=sources)
 
     assert "DESCRIPTIONS" in sys_prompt
+
+
+# Conversational memory integration
+
+
+def test_orchestrator_passes_memory_through_rewriter(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    """When memory has turns, the followup rewriter should be called."""
+    from elh_rag.retrieval.conversation_memory import ConversationMemory
+    from elh_rag.retrieval.followup_rewriter import FollowUpRewriter
+
+    _disable_extras(monkeypatch)
+
+    class _RecordingFollowupLLM(LLMClient):
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def complete(self, system: str, user: str) -> str:
+            self.calls.append(user)
+            return "cheap house in Porto"
+
+    followup_llm = _RecordingFollowupLLM()
+    rewriter = FollowUpRewriter(llm_client=followup_llm)
+
+    router = _FakeRouter(
+        RoutingDecision(intent=Intent.DESCRIPTIONS, confidence=0.9, source="llm")
+    )
+    orch, reviews_store, descriptions_store = _make_orchestrator(
+        reviews_matches=[],
+        descriptions_matches=_make_description_matches(2),
+        router=router,
+        llm=fake_llm,
+        embedder=fake_embedder,
+    )
+    # Replace the orchestrator's default followup rewriter with our spy
+    orch._followup = rewriter
+
+    memory = ConversationMemory(max_turns=5)
+    memory.append("cheap house in Lisbon", "Residencia Campo de Ourique €350.")
+
+    response = orch.query(
+        "and in Porto?", top_k=2, conversation_memory=memory
+    )
+
+    # The followup rewriter must have been called once
+    assert len(followup_llm.calls) == 1
+    # The retriever must have queried with the rewritten text — which we
+    # can verify indirectly via the rewritten_query field on the response
+    assert response.rewritten_query == "cheap house in Porto"
+
+
+def test_orchestrator_skips_rewriter_when_memory_is_none(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    """No memory → no followup rewrite, original question goes through."""
+    _disable_extras(monkeypatch)
+
+    class _RecordingFollowupLLM(LLMClient):
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def complete(self, system: str, user: str) -> str:
+            self.calls.append(user)
+            return "should-not-be-used"
+
+    from elh_rag.retrieval.followup_rewriter import FollowUpRewriter
+
+    followup_llm = _RecordingFollowupLLM()
+    rewriter = FollowUpRewriter(llm_client=followup_llm)
+
+    router = _FakeRouter(
+        RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm")
+    )
+    orch, _, _ = _make_orchestrator(
+        reviews_matches=_make_review_matches(2),
+        descriptions_matches=[],
+        router=router,
+        llm=fake_llm,
+        embedder=fake_embedder,
+    )
+    orch._followup = rewriter
+
+    response = orch.query("standalone question", top_k=2, conversation_memory=None)
+
+    assert followup_llm.calls == []
+    assert response.query == "standalone question"
+
+
+def test_orchestrator_respects_disable_conversational_memory_flag(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_embedder: Embedder,
+    fake_llm: LLMClient,
+) -> None:
+    """ENABLE_CONVERSATIONAL_MEMORY=False → rewriter never invoked."""
+    from elh_rag import config as cfg
+    from elh_rag.retrieval.conversation_memory import ConversationMemory
+    from elh_rag.retrieval.followup_rewriter import FollowUpRewriter
+
+    _disable_extras(monkeypatch)
+    monkeypatch.setattr(cfg.settings, "enable_conversational_memory", False)
+
+    class _RecordingFollowupLLM(LLMClient):
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def complete(self, system: str, user: str) -> str:
+            self.calls.append(user)
+            return "should-not-be-used"
+
+    followup_llm = _RecordingFollowupLLM()
+    rewriter = FollowUpRewriter(llm_client=followup_llm)
+
+    router = _FakeRouter(
+        RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm")
+    )
+    orch, _, _ = _make_orchestrator(
+        reviews_matches=_make_review_matches(2),
+        descriptions_matches=[],
+        router=router,
+        llm=fake_llm,
+        embedder=fake_embedder,
+    )
+    orch._followup = rewriter
+
+    memory = ConversationMemory(max_turns=5)
+    memory.append("previous question", "previous answer")
+
+    orch.query("and in Porto?", top_k=2, conversation_memory=memory)
+
+    # Even with non-empty memory, the rewriter is bypassed by the config flag
+    assert followup_llm.calls == []
