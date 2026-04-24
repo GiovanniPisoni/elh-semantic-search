@@ -14,7 +14,7 @@ This project is developed in **5 phases**. The current state of each is marked b
 |---|---|---|
 | **0** | Domain analysis & technology study | ✅ Complete |
 | **1** | Naive RAG prototype (retrieval + generation, Pinecone, Streamlit) | ✅ Complete |
-| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | 🔄 Step 2/4 done |
+| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | 🔄 Step 4/5 done |
 | **3** | Hybrid / Agentic RAG (tool calling on Supabase: geo, price, policy) | 🔜 Planned |
 | **4** | Evaluation (golden dataset, RAGAS, Naive vs Advanced comparison) | 🔜 Planned |
 | **5** | Deliverable for ELH (FastAPI, Docker, technical docs) | 🔜 Planned |
@@ -25,8 +25,9 @@ This project is developed in **5 phases**. The current state of each is marked b
 |---|---|---|
 | 1 | Query rewriting (LLM rephrases the question before retrieval) | ✅ Done |
 | 2 | Cross-encoder re-ranking (BGE-reranker-v2-m3, multilingual) | ✅ Done |
-| 3 | Second corpus: house + room descriptions with intent routing | 🔜 Next |
-| 4 | Conversational memory for follow-up questions | 🔜 |
+| 3 | Document chunking | 🔍 Conditional (deferred until Phase 4 measures the need) |
+| 4 | Second corpus (house + room descriptions) + intent routing + orchestrator | ✅ Done |
+| 5 | Conversational memory for follow-up questions | 🔜 Next |
 
 This README reflects the system **as it is today**. Features marked as planned are described in the [Roadmap](#roadmap) section.
 
@@ -281,12 +282,28 @@ cp .env.example .env
 # Edit .env with your real credentials (DB_URI, PINECONE_API_KEY, ANTHROPIC_API_KEY)
 ```
 
-### 3. Build the Pinecone index
+### 3. Build the Pinecone indices
+
+The system uses two separate Pinecone indices — `elh-reviews` and `elh-descriptions`.
+Both must be created on the Pinecone dashboard with **dimension 768** and **cosine** similarity.
 
 ```bash
-make index             # incremental upsert (idempotent)
-make index-reset       # wipe and rebuild from scratch
+# Index reviews only (Phase 1 default, backward-compatible)
+python -m scripts.run_indexer
+
+# Index descriptions only (Phase 2 Step 4)
+python -m scripts.run_indexer --source descriptions
+
+# Index both corpora in sequence
+python -m scripts.run_indexer --source all
+
+# Wipe and rebuild a specific corpus from scratch
+python -m scripts.run_indexer --source descriptions --reset
 ```
+
+Expected production state after `--source all`:
+- `elh-reviews`: ~358 vectors
+- `elh-descriptions`: ~350 vectors (80 unique houses + 270 unique rooms)
 
 ### 4. Run the app
 
@@ -346,13 +363,41 @@ Both scores are preserved in `RetrievalResult.vector_score` and `RetrievalResult
 
 `BAAI/bge-reranker-v2-m3` was chosen over lighter alternatives because ELH's Erasmus students query in many languages beyond EN and PT. A model trained only on English (e.g. `ms-marco-MiniLM`) would systematically penalise non-English queries — a bias problem in a multilingual system. The 2.2GB model is downloaded once and cached locally.
 
+### Dual-corpus architecture: separate indices, unified orchestrator
+
+Phase 2 Step 4 added a second corpus — house and room descriptions written by ELH property managers — sitting in its own Pinecone index (`elh-descriptions`, 350 documents) alongside the existing reviews index (`elh-reviews`, 358 documents). The two corpora are semantically complementary: reviews answer *"what was it like?"*, descriptions answer *"what is it?"*.
+
+Keeping them in **separate indices** rather than merged was a deliberate choice: the embedding distributions are visibly different (subjective narrative vs factual catalogue text), and per-corpus reranking pools stay cleaner. It also makes per-source A/B evaluation in Phase 4 trivial.
+
+A new subpackage `elh_rag.orchestration` introduces:
+- `CorpusPipeline` (base class): rewrite + retrieve + rerank for one corpus, no generation
+- `ReviewsPipeline`, `DescriptionsPipeline`: concrete subclasses
+- `Orchestrator`: composes the intent router + per-corpus pipelines + a single generation step
+
+The legacy `RAGPipeline` becomes a thin facade over `Orchestrator`, preserving the Phase 1 API so existing entry points (Streamlit UI, benchmarks, tests) keep working without modification.
+
+### Intent routing: LLM classifier + keyword fallback + safe default
+
+A user query like *"did students feel safe at night?"* should not waste a retrieval round on the descriptions corpus, and *"apartments with balcony in Porto"* should not be answered from review opinions. An `IntentRouter` (`elh_rag.retrieval.intent_router`) classifies each query into one of three intents — `reviews`, `descriptions`, or `both` — using Claude Haiku with strict JSON output.
+
+Three strategies cascade for robustness:
+1. **LLM classification** (primary): Haiku returns `{intent, confidence, reasoning}`. If `confidence` is below the configurable threshold (`INTENT_ROUTER_CONFIDENCE_THRESHOLD`, default 0.8), single-corpus answers are escalated to `both` to avoid committing to the wrong corpus.
+2. **Keyword fallback** (when the LLM fails or returns malformed JSON): simple multilingual keyword lists (EN, PT, IT, ES) covering review-style and description-style vocabulary.
+3. **Default `both`** (safety net): empty queries or total failures route to dual retrieval with confidence 0.
+
+Routing accuracy measured against hand-labelled expected intent on a benchmark of 20 multilingual queries: **19/20 (95%)**. Cost: ~$0.0018 per query.
+
+When the orchestrator routes to `both`, sources from the two corpora are merged by score and the generation LLM is called **once** on the combined context. A source-aware system prompt (`MULTICORPUS_SYSTEM_PROMPT`) instructs the model to weave subjective and factual material rather than treat both as "reviews".
+
 ### Graceful degradation
 
-If the rewriter fails (API down, malformed response, network timeout), the pipeline falls back to the original question rather than crashing. If the reranker fails (GPU OOM, corrupted model file), the pipeline falls back to the vector-only ranking. Retrieval returning zero results produces a clear "no relevant reviews" response instead of an error. A thesis system should be observable and robust, not brittle.
+If the rewriter fails (API down, malformed response, network timeout), the pipeline falls back to the original question rather than crashing. If the reranker fails (GPU OOM, corrupted model file), the pipeline falls back to the vector-only ranking. If the intent router fails, the keyword fallback takes over; if that fails too, the system safely defaults to dual-corpus retrieval. Retrieval returning zero results produces a clear "no relevant sources" response instead of an error. A thesis system should be observable and robust, not brittle.
 
-### Idempotent indexing
+### Idempotent indexing — with a versioning gotcha
 
-Pinecone `upsert` is idempotent by design: writing the same ID twice is a no-op rather than a duplicate. This eliminates the need for per-document existence checks (which previously cost N API calls), making indexing dramatically faster and cheaper.
+Pinecone `upsert` is idempotent by design: writing the same ID twice is a no-op rather than a duplicate. This eliminates the need for per-document existence checks, making indexing dramatically faster and cheaper.
+
+A subtlety surfaced when indexing the descriptions corpus: ELH's `house` and `room` tables keep historical versions of each entity in-place, identified by the composite key `(id, dateupdate)`. Indexing all rows produced N versions per logical entity, all sharing the same Pinecone ID — so the upsert overwrote them down to one (often the wrong one). The fix lives in `DescriptionExtractor`'s SQL queries, which use `SELECT DISTINCT ON (id) ... ORDER BY dateupdate DESC` to keep only the most recent version per logical entity. Final state: 80 unique houses + 270 unique rooms = 350 active descriptions in production.
 
 ---
 
@@ -362,8 +407,10 @@ Pinecone `upsert` is idempotent by design: writing the same ID twice is a no-op 
 
 - ✅ Query rewriting (LLM rephrases the query before retrieval, toggled via env var)
 - ✅ Cross-encoder re-ranking (BGE-reranker-v2-m3, 100+ languages, toggled via env var)
-- 🔜 Second corpus: house and room descriptions
-- 🔜 Intent-based routing between corpora
+- 🔍 Document chunking (deferred until Phase 4 measurements show the need)
+- ✅ Second corpus: house and room descriptions, indexed in `elh-descriptions`
+- ✅ Intent-based routing between corpora (Haiku classifier, 95% routing agreement on 20-query benchmark)
+- ✅ Orchestrator with per-corpus pipelines + unified generation
 - 🔜 Conversational memory (follow-up questions like *"and in Porto?"*)
 
 ### Phase 3 — Hybrid / Agentic RAG
