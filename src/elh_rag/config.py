@@ -94,6 +94,23 @@ class Settings(BaseSettings):
     )
     intent_router_max_tokens: int = Field(default=200, gt=0)
 
+    # Conversational memory
+    enable_conversational_memory: bool = Field(
+        default=True,
+        description="Toggle follow-up rewriting using conversation history",
+    )
+    conversational_memory_max_turns: int = Field(
+        default=5,
+        gt=0,
+        le=20,
+        description="How many past (question, answer) pairs to keep in memory",
+    )
+    followup_rewriter_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="LLM used to expand follow-up questions into standalone queries",
+    )
+    followup_rewriter_max_tokens: int = Field(default=200, gt=0)
+
     # Embeddings
     embedding_model: str = Field(
         default="paraphrase-multilingual-mpnet-base-v2",

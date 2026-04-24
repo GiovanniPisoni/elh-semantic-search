@@ -36,6 +36,14 @@ class RoutingDecision:
     reasoning: str = ""
     source: str = "llm"
 
+ 
+@dataclass(frozen=True, slots=True)
+class ConversationTurn:
+    """A single (question, answer) pair in a conversation."""
+ 
+    question: str
+    answer: str
+
 
 # Metadata: one frozen dataclass per source
 
@@ -61,7 +69,7 @@ class ReviewMetadata:
     date_review: str = ""
     review_title: str = ""
     review_text_original: str = ""
-
+ 
     def to_pinecone_dict(self) -> dict[str, Any]:
         """Convert to a Pinecone-safe dict (str/int/float/bool/list[str] only)."""
         d = asdict(self)
@@ -202,7 +210,7 @@ class RAGResponse:
     rewritten_query: str | None = None
     sources_by_source: dict[str, list[RetrievalResult]] | None = None
     routing: RoutingDecision | None = None
-
+ 
     def to_dict(self) -> dict[str, Any]:
         """JSON-serialisable dict representation."""
         payload: dict[str, Any] = {
