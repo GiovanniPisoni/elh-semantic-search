@@ -10,11 +10,8 @@
   height: 100vh !important;
 }
 
-[data-testid="stColumn"],
 [data-testid="stColumn"] > div,
-[data-testid="stColumn"] > div > div,
-[data-testid="stVerticalBlock"],
-div[class*="st-emotion-cache"] {
+[data-testid="stVerticalBlock"] {
   padding: 0 !important;
   gap: 0 !important;
 }
@@ -124,9 +121,8 @@ div[class*="st-emotion-cache"] {
   bottom: 16px !important;
   left: 16px !important;
   width: calc(50% - 32px) !important;
-  height: 56px !important;
-  padding: 8px 8px 8px 16px !important;
-  justify-content: center !important;
+  max-height: 56px !important;
+  padding: 6px 8px 6px 16px !important;
   margin: 0 !important;
   background: var(--white) !important;
   z-index: 9999 !important;
@@ -135,16 +131,15 @@ div[class*="st-emotion-cache"] {
   align-items: center !important;
 }
 
-[data-testid="stForm"] > div,
-[data-testid="stForm"] [data-testid="stVerticalBlock"],
-[data-testid="stForm"] [data-testid="stVerticalBlockBorderWrapper"] {
+[data-testid="stForm"] > div {
   width: 100% !important;
   padding: 0 !important;
   margin: 0 !important;
+}
+
+[data-testid="stForm"] [data-testid="stVerticalBlock"] {
   gap: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  height: 40px !important;
+  padding: 0 !important;
 }
 
 [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
@@ -153,32 +148,23 @@ div[class*="st-emotion-cache"] {
   align-items: center !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: 100% !important;
-  flex: 1 !important;
 }
 
 [data-testid="stForm"] [data-testid="stHorizontalBlock"] > div {
   height: 40px !important;
   padding: 0 !important;
   margin: 0 !important;
-  display: flex !important;
-  align-items: center !important;
 }
 
 [data-testid="stForm"] [data-testid="stTextInput"],
 [data-testid="stForm"] [data-testid="stTextInput"] > div {
   height: 40px !important;
-  display: flex !important;
-  align-items: center !important;
 }
 
 [data-testid="stForm"] [data-testid="stTextInput"] input {
   height: 40px !important;
-  line-height: 40px !important;
   padding: 0 !important;
   font-size: 0.95rem !important;
-  display: flex !important;
-  align-items: center !important;
 }
 
 [data-testid="stFormSubmitButton"] button {
@@ -260,7 +246,7 @@ div[class*="st-emotion-cache"] {
   padding: 5px 14px;
   font-size: 0.82rem;
   font-weight: 700;
-  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
 }
 
 .prop-body {

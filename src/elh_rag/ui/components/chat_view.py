@@ -23,6 +23,6 @@ def render(
         submitted, question, loading_slot = chat_panel.render_input()
 
     with col_right:
-        results_panel.render(response.sources)
+        results_panel.render(response)
 
     return submitted, question, loading_slot

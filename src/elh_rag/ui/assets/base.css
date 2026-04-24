@@ -1,10 +1,10 @@
-/* ── Design tokens ────────────────────────────────────────────────────── */
+/* Design tokens */
 :root {
   --primary: #1D4ED8;
   --primary-hover: #2563EB;
   --primary-light: #DBEAFE;
   --primary-soft: #EFF6FF;
-  --accent: #F97316;
+  --accent: #16A34A;
   --success: #16A34A;
   --text-primary: #0F172A;
   --text-secondary: #475569;
@@ -32,6 +32,14 @@
 
 [data-testid="stAppViewBlockContainer"] {
   padding: 0 !important;
+  max-width: 100% !important;
+}
+
+[data-testid="stAppViewContainer"] > section[data-testid="stMain"],
+[data-testid="stMain"] > div.block-container,
+.main .block-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   max-width: 100% !important;
 }
 
