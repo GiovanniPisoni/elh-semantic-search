@@ -1,4 +1,4 @@
-"""Tests for the Orchestrator (Phase 2, Step 4).
+"""Tests for the Orchestrator.
 
 The orchestrator wires IntentRouter + per-corpus pipelines + generation
 LLM together. Tests verify:
@@ -24,13 +24,17 @@ from elh_rag.orchestration.orchestrator import (
     _build_reviews_filter,
     _empty_answer,
     _mode_label,
+    _select_prompts,
 )
 from elh_rag.orchestration.reviews_pipeline import ReviewsPipeline
 from elh_rag.retrieval.intent_router import IntentRouter
+from elh_rag.retrieval.query_rewriter import QueryRewriter
+from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import (
     DocumentSource,
     HouseMetadata,
     Intent,
+    RAGResponse,
     RetrievalResult,
     ReviewMetadata,
     RoomMetadata,
@@ -463,3 +467,60 @@ def test_build_context_tags_review_vs_description_headers() -> None:
     assert "Overall rating: 5/5" in ctx
     assert "review text" in ctx
     assert "house desc" in ctx
+
+
+# _select_prompts
+
+
+def test_select_prompts_picks_review_only_prompt_when_all_sources_are_reviews() -> None:
+    sources = [
+        RetrievalResult(
+            text="t1", metadata=ReviewMetadata(id="r1"), vector_score=0.8
+        ),
+        RetrievalResult(
+            text="t2", metadata=ReviewMetadata(id="r2"), vector_score=0.7
+        ),
+    ]
+    sys_prompt, _ = _select_prompts(question="q", context="c", sources=sources)
+
+    # The Phase 1 review-only prompt mentions "student reviews" specifically
+    assert "student reviews" in sys_prompt.lower()
+    assert "descriptions" not in sys_prompt.lower()
+
+
+def test_select_prompts_picks_multicorpus_prompt_when_any_description_present() -> None:
+    sources = [
+        RetrievalResult(
+            text="t1", metadata=ReviewMetadata(id="r1"), vector_score=0.8
+        ),
+        RetrievalResult(
+            text="t2",
+            metadata=HouseMetadata(id="h1", flatname="X"),
+            vector_score=0.7,
+        ),
+    ]
+    sys_prompt, user_prompt = _select_prompts(
+        question="q", context="c", sources=sources
+    )
+
+    # Multi-corpus prompt mentions both kinds
+    assert "DESCRIPTIONS" in sys_prompt
+    assert "REVIEWS" in sys_prompt
+
+
+def test_select_prompts_picks_multicorpus_when_only_descriptions() -> None:
+    sources = [
+        RetrievalResult(
+            text="t1",
+            metadata=HouseMetadata(id="h1", flatname="X"),
+            vector_score=0.8,
+        ),
+        RetrievalResult(
+            text="t2",
+            metadata=RoomMetadata(id="rm1", roomname="Y"),
+            vector_score=0.7,
+        ),
+    ]
+    sys_prompt, _ = _select_prompts(question="q", context="c", sources=sources)
+
+    assert "DESCRIPTIONS" in sys_prompt

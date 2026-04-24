@@ -8,13 +8,18 @@ Binds together:
     - LLMClient         → final answer generation
 """
 from __future__ import annotations
-
+ 
 import logging
 from typing import Any
-
+ 
 from elh_rag.config import settings
 from elh_rag.generation.llm_client import LLMClient
-from elh_rag.generation.prompts import SYSTEM_PROMPT, build_user_prompt
+from elh_rag.generation.prompts import (
+    MULTICORPUS_SYSTEM_PROMPT,
+    SYSTEM_PROMPT,
+    build_multicorpus_user_prompt,
+    build_user_prompt,
+)
 from elh_rag.orchestration.corpus_pipeline import CorpusResult
 from elh_rag.orchestration.descriptions_pipeline import DescriptionsPipeline
 from elh_rag.orchestration.reviews_pipeline import ReviewsPipeline
@@ -26,7 +31,7 @@ from elh_rag.schemas import (
     RetrievalResult,
     RoutingDecision,
 )
-
+ 
 logger = logging.getLogger(__name__)
 
 
@@ -56,9 +61,9 @@ class Orchestrator:
     ) -> RAGResponse:
         """Run the full orchestrated pipeline on a single question."""
         top_k = top_k or settings.retrieval_top_k
-
+ 
         routing = self._decide_route(question)
-
+ 
         per_corpus = self._run_pipelines(
             question=question,
             routing=routing,
@@ -66,10 +71,10 @@ class Orchestrator:
             city_filter=city_filter,
             min_rating=min_rating,
         )
-
+ 
         sources_by_source, merged_sources = self._merge(per_corpus, top_k=top_k)
         rewritten_query = _first_rewrite(per_corpus)
-
+ 
         if not merged_sources:
             return RAGResponse(
                 query=question,
@@ -80,13 +85,15 @@ class Orchestrator:
                 routing=routing,
                 mode=_mode_label(routing),
             )
-
+ 
         context = _build_context(merged_sources)
-        answer = self._llm.complete(
-            system=SYSTEM_PROMPT,
-            user=build_user_prompt(question=question, context=context),
+        system_prompt, user_prompt = _select_prompts(
+            question=question,
+            context=context,
+            sources=merged_sources,
         )
-
+        answer = self._llm.complete(system=system_prompt, user=user_prompt)
+ 
         return RAGResponse(
             query=question,
             rewritten_query=rewritten_query,
@@ -122,7 +129,7 @@ class Orchestrator:
     ) -> list[CorpusResult]:
         """Execute the pipelines selected by the routing decision."""
         results: list[CorpusResult] = []
-
+ 
         if routing.intent in (Intent.REVIEWS, Intent.BOTH):
             filter_reviews = _build_reviews_filter(city_filter, min_rating)
             results.append(
@@ -130,7 +137,7 @@ class Orchestrator:
                     question, top_k=top_k, metadata_filter=filter_reviews
                 )
             )
-
+ 
         if routing.intent in (Intent.DESCRIPTIONS, Intent.BOTH):
             filter_descriptions = _build_descriptions_filter(city_filter)
             results.append(
@@ -138,7 +145,7 @@ class Orchestrator:
                     question, top_k=top_k, metadata_filter=filter_descriptions
                 )
             )
-
+ 
         return results
 
     # Merging
@@ -152,13 +159,13 @@ class Orchestrator:
         sources_by_source: dict[str, list[RetrievalResult]] = {
             r.corpus_name: r.sources for r in per_corpus
         }
-
+ 
         all_sources = [s for r in per_corpus for s in r.sources]
         all_sources.sort(key=lambda s: s.score, reverse=True)
-
+ 
         merged_cap = 2 * top_k if len(per_corpus) > 1 else top_k
         merged = all_sources[:merged_cap]
-
+ 
         return sources_by_source, merged
 
 
@@ -175,8 +182,8 @@ def _build_reviews_filter(
     if min_rating:
         f["overall_rating"] = {"$gte": min_rating}
     return f or None
-
-
+ 
+ 
 def _build_descriptions_filter(city_filter: str | None) -> dict[str, Any] | None:
     """Compose a Pinecone metadata filter for the descriptions index."""
     if not city_filter:
@@ -190,20 +197,20 @@ def _build_context(sources: list[RetrievalResult]) -> str:
     for i, src in enumerate(sources, 1):
         m = src.metadata
         source_tag = m.source.value.upper()
-
+ 
         location = ", ".join(filter(None, [getattr(m, "zone", ""), m.city]))
         prop_parts = [
             getattr(m, "flatname", ""),
             getattr(m, "roomname", ""),
         ]
         prop = " — ".join(filter(None, prop_parts))
-
+ 
         header = [f"[{source_tag} {i}]"]
         if location:
             header.append(f"Location: {location}")
         if prop:
             header.append(f"Property: {prop}")
-
+ 
         if m.source == DocumentSource.REVIEW:
             overall_rating = getattr(m, "overall_rating", 0)
             if overall_rating:
@@ -211,10 +218,31 @@ def _build_context(sources: list[RetrievalResult]) -> str:
             review_title = getattr(m, "review_title", "")
             if review_title:
                 header.append(f'Title: "{review_title}"')
-
+ 
         parts.append(" | ".join(header) + "\n" + src.text)
-
+ 
     return "\n\n".join(parts)
+
+def _select_prompts(
+    question: str,
+    context: str,
+    sources: list[RetrievalResult],
+) -> tuple[str, str]:
+    """Pick the system+user prompts that match the kinds of sources retrieved."""
+    has_description = any(
+        s.metadata.source in (DocumentSource.HOUSE, DocumentSource.ROOM)
+        for s in sources
+    )
+ 
+    if has_description:
+        return (
+            MULTICORPUS_SYSTEM_PROMPT,
+            build_multicorpus_user_prompt(question=question, context=context),
+        )
+    return (
+        SYSTEM_PROMPT,
+        build_user_prompt(question=question, context=context),
+    )
 
 
 def _first_rewrite(per_corpus: list[CorpusResult]) -> str | None:
@@ -243,7 +271,7 @@ def _mode_label(routing: RoutingDecision) -> str:
         flags.append("rerank")
     if settings.enable_intent_routing:
         flags.append(f"route:{routing.intent.value}")
-
+ 
     if not flags:
         return "naive-pinecone"
     return "advanced-" + "+".join(flags)
