@@ -14,7 +14,7 @@ This project is developed in **5 phases**. The current state of each is marked b
 |---|---|---|
 | **0** | Domain analysis & technology study | ✅ Complete |
 | **1** | Naive RAG prototype (retrieval + generation, Pinecone, Streamlit) | ✅ Complete |
-| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | 🔄 Step 4/5 done |
+| **2** | Advanced RAG (query rewriting, re-ranking, second corpus, conversational memory) | ✅ Complete |
 | **3** | Hybrid / Agentic RAG (tool calling on Supabase: geo, price, policy) | 🔜 Planned |
 | **4** | Evaluation (golden dataset, RAGAS, Naive vs Advanced comparison) | 🔜 Planned |
 | **5** | Deliverable for ELH (FastAPI, Docker, technical docs) | 🔜 Planned |
@@ -27,7 +27,7 @@ This project is developed in **5 phases**. The current state of each is marked b
 | 2 | Cross-encoder re-ranking (BGE-reranker-v2-m3, multilingual) | ✅ Done |
 | 3 | Document chunking | 🔍 Conditional (deferred until Phase 4 measures the need) |
 | 4 | Second corpus (house + room descriptions) + intent routing + orchestrator | ✅ Done |
-| 5 | Conversational memory for follow-up questions | 🔜 Next |
+| 5 | Conversational memory for follow-up questions | ✅ Done |
 
 This README reflects the system **as it is today**. Features marked as planned are described in the [Roadmap](#roadmap) section.
 
@@ -389,6 +389,16 @@ Routing accuracy measured against hand-labelled expected intent on a benchmark o
 
 When the orchestrator routes to `both`, sources from the two corpora are merged by score and the generation LLM is called **once** on the combined context. A source-aware system prompt (`MULTICORPUS_SYSTEM_PROMPT`) instructs the model to weave subjective and factual material rather than treat both as "reviews".
 
+### Conversational memory: rewriter before the router
+
+The follow-up rewriter (Step 5) lets the system handle dependent questions like *"and in Porto?"* after a turn about Lisbon. Architecturally, the rewriter runs **before** the intent router, so the rewritten standalone query reaches retrieval, reranking, and routing intact. A separate `ConversationMemory` (bounded FIFO of `ConversationTurn` objects, default 5 turns) stores past pairs and is per-session in the Streamlit state.
+
+Two design choices worth noting:
+1. **Memory helps retrieval, not generation.** The generation LLM still receives the user's *original* phrasing — the rewriter only feeds the embedder and the router. This preserves conversational tone without paying the latency cost of stuffing 10 messages into the generation prompt.
+2. **Graceful fallback all the way down.** Empty memory → no rewrite. LLM call fails → original question. LLM returns garbage → original question. The rewriter cannot make the pipeline worse, only better.
+
+The rewriter uses Claude Haiku with a prompt containing five canonical follow-up examples (city swap, property swap, constraint addition, language switch, attribute filter). Memoised via `lru_cache` keyed on `(memory_signature, question)` so identical follow-ups in demos and tests don't pay twice.
+
 ### Graceful degradation
 
 If the rewriter fails (API down, malformed response, network timeout), the pipeline falls back to the original question rather than crashing. If the reranker fails (GPU OOM, corrupted model file), the pipeline falls back to the vector-only ranking. If the intent router fails, the keyword fallback takes over; if that fails too, the system safely defaults to dual-corpus retrieval. Retrieval returning zero results produces a clear "no relevant sources" response instead of an error. A thesis system should be observable and robust, not brittle.
@@ -411,7 +421,7 @@ A subtlety surfaced when indexing the descriptions corpus: ELH's `house` and `ro
 - ✅ Second corpus: house and room descriptions, indexed in `elh-descriptions`
 - ✅ Intent-based routing between corpora (Haiku classifier, 95% routing agreement on 20-query benchmark)
 - ✅ Orchestrator with per-corpus pipelines + unified generation
-- 🔜 Conversational memory (follow-up questions like *"and in Porto?"*)
+- ✅ Conversational memory (follow-up questions like *"and in Porto?"* — pre-router rewriter)
 
 ### Phase 3 — Hybrid / Agentic RAG
 
