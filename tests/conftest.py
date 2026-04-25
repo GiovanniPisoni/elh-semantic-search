@@ -13,6 +13,8 @@ import pytest
 from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.vector_store import VectorStore
 from elh_rag.generation.llm_client import LLMClient
+from elh_rag.retrieval.query_rewriter import QueryRewriter
+from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import DocumentSource, ReviewMetadata
 
 
@@ -91,6 +93,64 @@ class FakeLLMClient(LLMClient):
         return self._canned_response
 
 
+# Fake query rewriter
+
+
+class FakeQueryRewriter(QueryRewriter):
+    """Query rewriter that returns a predictable transformation without LLM calls."""
+
+    def __init__(
+        self,
+        canned_output: str | None = None,
+        passthrough: bool = False,
+    ) -> None:
+        self._canned = canned_output
+        self._passthrough = passthrough
+        self.calls: list[str] = []
+
+    def rewrite(self, question: str) -> str:
+        self.calls.append(question)
+        if self._passthrough or not question.strip():
+            return question
+        return self._canned if self._canned is not None else f"REWRITTEN: {question}"
+
+
+# Fake reranker
+
+
+class FakeReranker(Reranker):
+    """Reranker that reverses the input order without loading any model.
+
+    Reversing the order is a simple but effective signal that reranking
+    actually ran: any test that expects the "reranked" order can assert
+    on the reversed sequence.
+    """
+
+    def __init__(self, reverse: bool = True) -> None:
+        self._reverse = reverse
+        self.calls: list[tuple[str, int]] = []
+
+    def rerank(
+        self,
+        query: str,
+        candidates: list,
+        top_k: int,
+    ) -> list:
+        from elh_rag.schemas import RetrievalResult
+
+        self.calls.append((query, len(candidates)))
+        ordered = list(reversed(candidates)) if self._reverse else list(candidates)
+        return [
+            RetrievalResult(
+                text=c.text,
+                metadata=c.metadata,
+                vector_score=c.vector_score,
+                rerank_score=float(len(ordered) - i),
+            )
+            for i, c in enumerate(ordered[:top_k])
+        ]
+
+
 # Pytest fixtures
 
 
@@ -134,3 +194,21 @@ def fake_embedder() -> Embedder:
 @pytest.fixture
 def fake_llm() -> LLMClient:
     return FakeLLMClient(canned_response="The bed is comfortable, per Review 1.")
+
+
+@pytest.fixture
+def fake_rewriter() -> QueryRewriter:
+    """A rewriter that returns the input unchanged — no noise in other tests."""
+    return FakeQueryRewriter(passthrough=True)
+
+
+@pytest.fixture
+def fake_reranker() -> Reranker:
+    """A reranker that reverses the input order to make reordering visible."""
+    return FakeReranker(reverse=True)
+
+
+@pytest.fixture
+def noop_reranker() -> Reranker:
+    """A reranker that preserves input order (useful when testing other steps)."""
+    return FakeReranker(reverse=False)

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import streamlit as st
 
+from elh_rag.retrieval.conversation_memory import ConversationMemory
 from elh_rag.schemas import RAGResponse
 
 
@@ -32,6 +33,9 @@ def init() -> None:
     for key, value in _DEFAULTS.items():
         if key not in st.session_state:
             st.session_state[key] = value
+    
+    if "conversation_memory" not in st.session_state:
+        st.session_state["conversation_memory"] = ConversationMemory()
 
 
 def has_response() -> bool:
@@ -54,6 +58,15 @@ def get_recent_queries() -> list[dict]:
     return list(st.session_state.get("recent_queries", []))
 
 
+def get_conversation_memory() -> ConversationMemory:
+    """Return the per-session ConversationMemory used for follow-up rewriting."""
+    memory = st.session_state.get("conversation_memory")
+    if memory is None:
+        memory = ConversationMemory()
+        st.session_state["conversation_memory"] = memory
+    return memory
+
+
 def record_query(question: str, response: RAGResponse) -> None:
     """Persist a new Q&A turn into the session state."""
     st.session_state["last_response"] = response
@@ -67,6 +80,18 @@ def record_query(question: str, response: RAGResponse) -> None:
     if question not in [r["q"] for r in recent]:
         recent.insert(0, {"q": question, "n": len(response.sources)})
     st.session_state["recent_queries"] = recent[:10]
+
+    memory = get_conversation_memory()
+    memory.append(question=question, answer=response.answer)
+
+
+def clear_conversation() -> None:
+    """Reset chat history, last response, and conversation memory."""
+    st.session_state["chat_history"] = []
+    st.session_state["last_response"] = None
+    memory = st.session_state.get("conversation_memory")
+    if memory is not None:
+        memory.clear()
 
 
 def consume_prefill() -> str:

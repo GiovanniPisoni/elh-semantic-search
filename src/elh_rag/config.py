@@ -2,8 +2,7 @@
 Centralised configuration for the ELH RAG system.
 
 All environment variables are declared here, validated at import time, and
-exposed as a single immutable `settings` object. No other module in the
-codebase should call `os.getenv` directly.
+exposed as a single immutable `settings` object.
 """
 from __future__ import annotations
 
@@ -32,13 +31,85 @@ class Settings(BaseSettings):
 
     # Vector store (Pinecone)
     pinecone_api_key: str = Field(..., description="Pinecone API key")
-    pinecone_index_name: str = Field(default="elh-reviews")
+    pinecone_index_name: str = Field(
+        default="elh-reviews",
+        description="Pinecone index for student reviews",   
+    )
+    pinecone_descriptions_index_name: str = Field(
+        default="elh-descriptions",
+        description="Pinecone index for house + room descriptions",
+    )
 
     # LLM (Anthropic)
     anthropic_api_key: str = Field(..., description="Anthropic API key")
     llm_model: str = Field(default="claude-sonnet-4-20250514")
     llm_temperature: float = Field(default=0.1, ge=0.0, le=1.0)
     llm_max_tokens: int = Field(default=1024, gt=0)
+
+    # Query rewriting
+    enable_query_rewriting: bool = Field(
+        default=True,
+        description="Toggle the LLM-based query rewriting step before retrival",
+    )
+    llm_rewriter_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Smaller/cheaper LLM used for query rewriting",
+    )
+    llm_rewriter_max_tokens: int = Field(default=256, gt=0)
+
+    # Re-ranking
+    enable_reranking: bool = Field(
+        default=True,
+        description="Toggle the cross-encoder reranking step after retrieval",
+    )
+    reranker_model: str = Field(
+        default="BAAI/bge-reranker-v2-m3",
+        description="Cross-encoder model for reranking (multilingual, 100+ languages)"
+    )
+    reranker_pool_size: int = Field(
+        default=20,
+        gt=0,
+        le=100,
+        description="Number of condidates to retrive before reranking",
+    )
+    reranker_batch_size: int = Field(default=16, gt=0)
+
+    # Intent routing
+    enable_intent_routing: bool = Field(
+        default=True,
+        description="Toggle the LLM-based intent router; disable for A/B in Phase 4",
+    )
+    intent_router_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Smaller/cheaper LLM used for intent classification",
+    )
+    intent_router_confidence_threshold: float = Field(
+        default=0.8,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Minimum confidence to commit to a single-corpus route; "
+            "below this, query both corpora and let the reranker merge"
+        ),
+    )
+    intent_router_max_tokens: int = Field(default=200, gt=0)
+
+    # Conversational memory
+    enable_conversational_memory: bool = Field(
+        default=True,
+        description="Toggle follow-up rewriting using conversation history",
+    )
+    conversational_memory_max_turns: int = Field(
+        default=5,
+        gt=0,
+        le=20,
+        description="How many past (question, answer) pairs to keep in memory",
+    )
+    followup_rewriter_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="LLM used to expand follow-up questions into standalone queries",
+    )
+    followup_rewriter_max_tokens: int = Field(default=200, gt=0)
 
     # Embeddings
     embedding_model: str = Field(

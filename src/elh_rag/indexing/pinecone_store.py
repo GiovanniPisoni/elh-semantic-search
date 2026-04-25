@@ -4,11 +4,20 @@ Pinecone implementation of the VectorStore protocol.
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from elh_rag.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+_UPSERT_CHUNK_SIZE = 50
+
+_UPSERT_SLEEP_SEC = 0.1
+
+_MAX_RETRIES = 3
+_BACKOFF_BASE_SEC = 1.0
 
 
 class PineconeVectorStore:
@@ -30,9 +39,66 @@ class PineconeVectorStore:
         return self._index
 
     def upsert(self, vectors: list[dict[str, Any]]) -> None:
+        """Upsert vectors into the index, chunked and retried."""
         if not vectors:
             return
-        self.index.upsert(vectors=vectors)
+
+        total_upserted = 0
+        total_chunks = (len(vectors) + _UPSERT_CHUNK_SIZE - 1) // _UPSERT_CHUNK_SIZE
+
+        for chunk_idx, start in enumerate(range(0, len(vectors), _UPSERT_CHUNK_SIZE)):
+            chunk = vectors[start : start + _UPSERT_CHUNK_SIZE]
+            self._upsert_chunk_with_retry(chunk, chunk_idx + 1, total_chunks)
+            total_upserted += len(chunk)
+
+            # Skip sleep after the last chunk — the caller is done.
+            if chunk_idx + 1 < total_chunks:
+                time.sleep(_UPSERT_SLEEP_SEC)
+
+        logger.debug(
+            "Upserted %d vectors in %d chunks", total_upserted, total_chunks
+        )
+
+    def _upsert_chunk_with_retry(
+        self,
+        chunk: list[dict[str, Any]],
+        chunk_num: int,
+        total_chunks: int,
+    ) -> None:
+        """Send a single chunk, retrying on failure."""
+        last_error: Exception | None = None
+
+        for attempt in range(1, _MAX_RETRIES + 1):
+            try:
+                self.index.upsert(vectors=chunk)
+                return
+            except Exception as exc:
+                last_error = exc
+                if attempt < _MAX_RETRIES:
+                    backoff = _BACKOFF_BASE_SEC * (2 ** (attempt - 1))
+                    logger.warning(
+                        "Upsert chunk %d/%d failed (attempt %d/%d): %s — "
+                        "retrying in %.1fs",
+                        chunk_num,
+                        total_chunks,
+                        attempt,
+                        _MAX_RETRIES,
+                        exc,
+                        backoff,
+                    )
+                    time.sleep(backoff)
+
+        logger.error(
+            "Upsert chunk %d/%d failed after %d attempts: %s",
+            chunk_num,
+            total_chunks,
+            _MAX_RETRIES,
+            last_error,
+        )
+        raise RuntimeError(
+            f"Failed to upsert chunk {chunk_num}/{total_chunks} after "
+            f"{_MAX_RETRIES} attempts"
+        ) from last_error
 
     def query(
         self,
