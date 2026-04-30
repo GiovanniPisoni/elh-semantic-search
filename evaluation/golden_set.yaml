@@ -1,0 +1,254 @@
+# ELH RAG — Phase 4 light golden set
+#
+# 20 queries with ground-truth annotations for diagnostic evaluation.
+# This is NOT the full evaluation set — it's a smaller, carefully curated
+# set used to identify systemic problems in the current pipeline.
+#
+# Annotation methodology note:
+#   `expected_property_ids` is intentionally left empty. RAGAS uses the
+#   `must_mention` keywords as a fallback reference for context_recall.
+#   A full property-ID grounded golden set is reserved for Phase 4 full,
+#   to be conducted post-deadline with a larger annotation effort.
+
+queries:
+
+  # Pre-annotated examples (5)
+
+  - id: q01
+    category: review_safety
+    question: "Did students feel safe at night in their accommodations?"
+    language: en
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "safety"
+    notes: |
+      Safety perception is purely subjective and lives in reviews only.
+
+  - id: q02
+    category: desc_balcony_porto
+    question: "Apartments with balcony in Porto"
+    language: en
+    expected_intent: descriptions
+    expected_property_ids: []
+    must_mention:
+      - "balcony"
+      - "Porto"
+    notes: |
+      Pure factual filter, descriptions corpus is the right place.
+
+  - id: q03
+    category: both_quiet_study
+    question: "Quiet room to study in Lisbon"
+    language: en
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "quiet"
+      - "study"
+    notes: |
+      "Quiet" can come from reviews OR from descriptions.
+      Tests that the orchestrator routes to both.
+
+  - id: q04
+    category: review_landlord_pt
+    question: "Os senhorios respondem rapidamente?"
+    language: pt
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "senhorios"
+    notes: |
+      Landlord responsiveness, in Portuguese. Tests multilingual retrieval.
+
+  - id: q05
+    category: edge_nonsense
+    question: "asdfgh zxcvbn"
+    language: en
+    expected_intent: both
+    expected_property_ids: []
+    must_mention: []
+    notes: |
+      Nonsense query. The system should NOT hallucinate. Tests faithfulness.
+
+  # Review-oriented (4) — student experiences from past tenants
+
+  - id: q06
+    category: review_infrastructure
+    question: "Are the doors or windows in good condition, or do they creak or make noise?"
+    language: en
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "windows"
+    notes: |
+      Detailed perception of infrastructure quality, only in reviews.
+
+  - id: q07
+    category: review_humidity
+    question: "Rooms without mould or damp smell?"
+    language: en
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "mould"
+    notes: |
+      Lisbon's humidity makes this a real concern. Reviews-only topic.
+
+  - id: q08
+    category: review_maintenance
+    question: "If something goes wrong, is the maintenance carried out promptly, or is there a long delay in finding a solution?"
+    language: en
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "maintenance"
+    notes: |
+      Long, conversational question. Tests query rewriting + retrieval.
+
+  - id: q09
+    category: review_atmosphere
+    question: "What's the social atmosphere like with other tenants in shared apartments?"
+    language: en
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "atmosphere"
+    notes: |
+      Replaced original q09 ("Has the contract been registered?") because
+      that requires DB-level data not in the corpus — would need Phase 3
+      agentic. Atmosphere is genuinely review-only material.
+
+  # Description-oriented (4) — factual filters on amenities/features
+
+  - id: q10
+    category: desc_balcony_terrace
+    question: "Rooms with a balcony or terrace?"
+    language: en
+    expected_intent: descriptions
+    expected_property_ids: []
+    must_mention:
+      - "balcony"
+      - "terrace"
+    notes: |
+      Pure amenity filter.
+
+  - id: q11
+    category: desc_ensuite
+    question: "Could you tell me which rooms have an en-suite bathroom?"
+    language: en
+    expected_intent: descriptions
+    expected_property_ids: []
+    must_mention:
+      - "bathroom"
+    notes: |
+      Private bathroom is high-value amenity, listed in room descriptions.
+
+  - id: q12
+    category: desc_communal_area
+    question: "Is there a living room or a communal area in the flats?"
+    language: en
+    expected_intent: descriptions
+    expected_property_ids: []
+    must_mention:
+      - "living room"
+    notes: |
+      Living spaces are described in house-level descriptions.
+
+  - id: q13
+    category: desc_amenities_combo
+    question: "Studio apartments with kitchen and washing machine"
+    language: en
+    expected_intent: descriptions
+    expected_property_ids: []
+    must_mention:
+      - "kitchen"
+    notes: |
+      Replaced original q13 (vague "this area") with a multi-amenity filter.
+
+  # Both / ambiguous (4) — mix of factual + experiential
+
+  - id: q14
+    category: both_recommendation
+    question: "Recommend a flat in Lisbon that's good for international students"
+    language: en
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Lisbon"
+    notes: |
+      Replaced original q14 ("Green Line") because metro line data is
+      not in the corpus. New question naturally combines descriptions
+      (factual) and reviews (subjective "good for students").
+
+  - id: q15
+    category: both_porto_balcony
+    question: "Are the rooms in central Porto suitable for students, and do they usually have a balcony?"
+    language: en
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Porto"
+      - "balcony"
+    notes: |
+      Replaced original q15 (mentioned non-existent "Outubro district").
+      "Suitable for students" (reviews) + "have a balcony" (descriptions).
+
+  - id: q16
+    category: both_quiet_lift
+    question: "Flat in a quiet neighbourhood with a lift"
+    language: en
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "lift"
+    notes: |
+      Quiet (review) + lift (description amenity).
+
+  - id: q17
+    category: both_double_central
+    question: "Could you find me a double room near the city centre, with a desk for studying, a washing machine and fast Wi-Fi?"
+    language: en
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Wi-Fi"
+    notes: |
+      Long, multi-attribute query. Stress test for query rewriting.
+
+  # Edge cases (3) — multilingual + unanswerable
+
+  - id: q18
+    category: edge_multilingual_pt
+    question: "Posso ter outra pessoa no quarto comigo?"
+    language: pt
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "quarto"
+    notes: |
+      Portuguese query about guest policy. Tests multilingual retrieval.
+
+  - id: q19
+    category: edge_multilingual_it
+    question: "Il propretario è gentile e disponibile?"
+    language: it
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "proprietario"
+    notes: |
+      Italian with intentional typo ("propretario") — tests embedder
+      tolerance to spelling errors typical of non-native speakers.
+
+  - id: q20
+    category: edge_unanswerable
+    question: "Is good at work Sofia?"
+    language: en
+    expected_intent: both
+    expected_property_ids: []
+    must_mention: []
+    notes: |
+      Unanswerable + grammatically broken. The system should respond
+      with "I don't have information" rather than hallucinate.
+      Severe faithfulness test.
