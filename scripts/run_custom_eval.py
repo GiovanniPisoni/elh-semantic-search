@@ -9,7 +9,8 @@ response with three custom metrics built on Claude as judge:
     - answer_relevancy: does the answer address the question on-topic?
 
 Outputs:
-    - JSONL with one record per query (full per-metric details + reasoning)
+    - JSONL with one record per query (full per-metric details + reasoning),
+      written incrementally so a crash mid-run never loses work
     - Markdown report with aggregates, problems prioritised, per-query
       breakdown, and an interpretation guide
 """
@@ -147,10 +148,26 @@ def identify_problems(
 
 
 def save_jsonl(records: list[dict[str, Any]], path: Path) -> None:
-    """Persist raw per-query records (machine-readable)."""
+    """Persist raw per-query records (machine-readable, full rewrite).
+
+    Useful when reconstructing a JSONL from records held in memory, e.g.
+    by a one-shot regenerator script. The live evaluation loop in `main`
+    uses `append_jsonl_record` instead, to be crash-safe.
+    """
     with path.open("w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False, default=str) + "\n")
+
+
+def append_jsonl_record(record: dict[str, Any], path: Path) -> None:
+    """Append a single record to a JSONL file in 'a' mode.
+
+    Used during a run to persist results incrementally. If the run is
+    interrupted (API credit exhausted, rate limit, Ctrl+C, crash), all
+    records completed so far are safely on disk.
+    """
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
 
 
 def write_markdown_report(
@@ -363,8 +380,14 @@ def main() -> None:
     pipeline = RAGPipeline()
     judge = EvaluationJudge()
 
-    # Step 1 & 2 interleaved: run pipeline + evaluate each response immediately.
-    # This way if something crashes we keep partial results in memory.
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    label_suffix = f"_{args.label}" if args.label else ""
+    jsonl_path = args.output_dir / f"phase2.5_custom_results_{ts}{label_suffix}.jsonl"
+    md_path = args.output_dir / f"phase2.5_custom_report_{ts}{label_suffix}.md"
+
+    jsonl_path.write_text("", encoding="utf-8")
+
     records: list[dict[str, Any]] = []
     for i, q in enumerate(queries, 1):
         print(f"  [{i}/{len(queries)}] {q['id']}: {q['question'][:60]}...")
@@ -377,6 +400,7 @@ def main() -> None:
             rec["contexts"] = []
             rec["answer"] = ""
             records.append(rec)
+            append_jsonl_record(rec, jsonl_path)
             print(f"      pipeline failed: {error}")
             continue
 
@@ -410,17 +434,11 @@ def main() -> None:
         )
 
         records.append(rec)
+        append_jsonl_record(rec, jsonl_path)
 
-    # Step 3: identify problems, save outputs.
+    # Step 3: identify problems, write the Markdown report.
+    # The JSONL has been written incrementally already.
     problems = identify_problems(records, thresholds)
-
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    label_suffix = f"_{args.label}" if args.label else ""
-    jsonl_path = args.output_dir / f"phase2.5_custom_results_{ts}{label_suffix}.jsonl"
-    md_path = args.output_dir / f"phase2.5_custom_report_{ts}{label_suffix}.md"
-
-    save_jsonl(records, jsonl_path)
     write_markdown_report(records, problems, md_path, thresholds)
 
     # Console summary

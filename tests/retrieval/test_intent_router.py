@@ -307,3 +307,100 @@ def test_routing_decision_is_frozen() -> None:
     except dataclasses.FrozenInstanceError:
         return
     raise AssertionError("RoutingDecision should be frozen")
+
+
+# Phase 2.5 light
+
+
+from elh_rag.generation.prompts import INTENT_ROUTER_SYSTEM_PROMPT
+from elh_rag.retrieval.intent_router import (
+    _DESCRIPTIONS_KEYWORDS,
+    _REVIEWS_KEYWORDS,
+)
+
+
+# Structural sentinels
+
+
+def test_router_prompt_contains_qualitative_modifiers_rule() -> None:
+    """The QUALITATIVE MODIFIERS rule must stay in the system prompt."""
+    assert "QUALITATIVE MODIFIERS rule" in INTENT_ROUTER_SYSTEM_PROMPT
+    # Spot-check at least one sample modifier from each category so that
+    # editing only some of them gets caught.
+    for sample in ("fast", "quiet", "clean", "responsive", "warm"):
+        assert sample in INTENT_ROUTER_SYSTEM_PROMPT, (
+            f"modifier '{sample}' missing from QUALITATIVE MODIFIERS rule"
+        )
+
+
+def test_router_prompt_contains_non_leak_few_shot_examples() -> None:
+    """The two few-shot Q/A examples must stay in the prompt."""
+    assert "Reliable heating in a private room" in INTENT_ROUTER_SYSTEM_PROMPT
+    assert "Clean kitchen with dishwasher" in INTENT_ROUTER_SYSTEM_PROMPT
+
+
+# Behavioral documentation: keyword fallback diverges from LLM by design
+
+
+def test_keyword_fallback_diverges_from_llm_for_q16_pattern() -> None:
+    """q16-style query: 'flat in a quiet neighbourhood with a lift'.
+
+    With the patched LLM router, this query routes to BOTH (the
+    QUALITATIVE MODIFIERS rule recognises 'quiet' as subjective).
+
+    With the keyword fallback (used when Anthropic API is down or
+    returns malformed output), this query routes to REVIEWS instead,
+    because the substring 'neighbour' inside 'neighbourhood' matches
+    the reviews keyword list, and 'lift' is not in either list.
+
+    This divergence is documented in docs/phase4_light_outcomes.md.
+    If the fallback behavior changes — either through new keywords or
+    through a richer fallback heuristic — this test will fail and the
+    documentation must be updated.
+    """
+    decision = _keyword_fallback("flat in a quiet neighbourhood with a lift")
+    assert decision.intent == Intent.REVIEWS
+    assert decision.source == "keyword"
+
+
+def test_keyword_fallback_diverges_from_llm_for_q17_pattern() -> None:
+    """q17-style query: 'double room with fast wifi and washing machine'.
+
+    With the patched LLM router, this query routes to BOTH (the
+    QUALITATIVE MODIFIERS rule recognises 'fast' as subjective).
+
+    With the keyword fallback, the query routes to DESCRIPTIONS,
+    because 'wifi' and 'washing machine' are both description keywords
+    and no review keyword matches.
+
+    Same caveat as the q16 test: divergence is by design and documented.
+    """
+    decision = _keyword_fallback(
+        "double room with fast wifi and washing machine"
+    )
+    assert decision.intent == Intent.DESCRIPTIONS
+    assert decision.source == "keyword"
+
+
+def test_qualitative_modifiers_are_not_in_keyword_lists() -> None:
+    """The modifiers from the LLM rule must NOT leak into the keyword lists.
+
+    The keyword fallback and the LLM router are two independent code
+    paths. The LLM router uses the QUALITATIVE MODIFIERS rule from the
+    prompt. The fallback uses a static keyword match. Mixing modifiers
+    into the keyword lists would conflate the two abstractions and
+    introduce confusing routing behavior.
+
+    If in the future you want the fallback to also be modifier-aware,
+    that is a deliberate design change — extend `_keyword_fallback`
+    with its own modifier check, do NOT inject modifiers into the
+    plain keyword tuples.
+    """
+    modifiers = ("fast", "quiet", "clean", "responsive", "reliable")
+    for modifier in modifiers:
+        assert modifier not in _REVIEWS_KEYWORDS, (
+            f"'{modifier}' is a qualitative modifier, not a review keyword"
+        )
+        assert modifier not in _DESCRIPTIONS_KEYWORDS, (
+            f"'{modifier}' is a qualitative modifier, not a description keyword"
+        )

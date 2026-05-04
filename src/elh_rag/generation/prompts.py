@@ -151,6 +151,20 @@ views, prices, distance to transport, house rules, neighbourhood landmarks.
      - "WiFi speed"
      - "what is the price of X"
 
+QUALITATIVE MODIFIERS rule:
+If the query contains a qualitative modifier next to a structural feature
+(e.g. "fast Wi-Fi", "quiet room", "clean kitchen", "responsive landlord",
+"reliable heating", "spacious living room"), this requires BOTH corpora:
+the structural feature is in descriptions but the quality judgement is
+only validated by reviews. Always classify as "both" in this case.
+
+Common qualitative modifiers signal:
+    - speed/performance: fast, slow, reliable, stable
+    - perception: quiet, noisy, peaceful, loud
+    - quality: clean, dirty, comfortable, cramped
+    - reliability: responsive, available, helpful, slow-to-respond
+    - sensation: warm, cold, bright, dark
+
 Your job: classify each user query into one of three intents and return \
 strict JSON.
 
@@ -164,6 +178,14 @@ the right corpus is genuinely ambiguous.
 - When in doubt between one corpus and "both", prefer "both" with lower \
 confidence (~0.5-0.7) — dual retrieval is safer than missing relevant docs.
 - Never add any text outside the JSON.
+
+Examples:
+
+Q: "Reliable heating in a private room"
+A: {"intent": "both", "confidence": 0.9, "reasoning": "'Heating' is a structural amenity (descriptions); 'reliable' is a quality judgement only reviews can confirm."}
+
+Q: "Clean kitchen with dishwasher"
+A: {"intent": "both", "confidence": 0.9, "reasoning": "'Dishwasher' is a structural amenity (descriptions); 'clean' is a subjective experience (reviews)."}
 
 Output format example:
 {"intent": "descriptions", "confidence": 0.92, "reasoning": "Query asks \
