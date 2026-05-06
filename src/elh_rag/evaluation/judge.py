@@ -99,7 +99,7 @@ class EvaluationJudge:
         )
         if not response.content:
             return ""
-        return response.content[0].text
+        return response.content[0].text  # type: ignore[union-attr]
 
 
 def _try_parse_json(raw: str) -> dict[str, Any] | None:

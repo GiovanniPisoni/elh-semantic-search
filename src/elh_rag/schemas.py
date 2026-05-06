@@ -82,7 +82,7 @@ class ReviewMetadata:
     @classmethod
     def from_pinecone_dict(cls, data: dict[str, Any]) -> ReviewMetadata:
         """Reconstruct from a Pinecone match.metadata dict."""
-        known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
+        known = {f.name for f in cls.__dataclass_fields__.values()}
         clean = {k: v for k, v in data.items() if k in known}
         if "source" in clean and isinstance(clean["source"], str):
             clean["source"] = DocumentSource(clean["source"])
@@ -110,7 +110,7 @@ class HouseMetadata:
     @classmethod
     def from_pinecone_dict(cls, data: dict[str, Any]) -> HouseMetadata:
         """Reconstruct from a Pinecone match.metadata dict."""
-        known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
+        known = {f.name for f in cls.__dataclass_fields__.values()}
         clean = {k: v for k, v in data.items() if k in known}
         if "source" in clean and isinstance(clean["source"], str):
             clean["source"] = DocumentSource(clean["source"])
@@ -140,7 +140,7 @@ class RoomMetadata:
     @classmethod
     def from_pinecone_dict(cls, data: dict[str, Any]) -> RoomMetadata:
         """Reconstruct from a Pinecone match.metadata dict."""
-        known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
+        known = {f.name for f in cls.__dataclass_fields__.values()}
         clean = {k: v for k, v in data.items() if k in known}
         if "source" in clean and isinstance(clean["source"], str):
             clean["source"] = DocumentSource(clean["source"])
