@@ -3,9 +3,9 @@ name: Continuous Integration
 # CI runs every time you push to the 'main' branch or open a Pull Request
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
 
 jobs:
   build-and-test:
