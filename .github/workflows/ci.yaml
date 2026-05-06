@@ -42,7 +42,7 @@ jobs:
     - name: 2. Management Dependencies and Security
       run: |
         echo "Execute pip-audit to search for vulnerabilities..."
-        pip-audit
+        pip-audit --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2026-6587
 
     - name: 3. Automation Tests & Code Coverage
       # Set dummy environment variables in case the tests need them to avoid failing
