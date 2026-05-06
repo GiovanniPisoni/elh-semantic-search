@@ -1,0 +1,44 @@
+name: Publish Release
+
+# The workflow runs ONLY when you push a tag that starts with "v"
+on:
+  push:
+    tags:
+      - 'v*' # Example: v1.0.0, v2.1, v0.5-beta
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write 
+
+    steps:
+    - name: Code checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python 3.12.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12.9"
+
+    - name: Build the Deliverable (Python Package)
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+        # This reads your pyproject.toml or setup.py and creates the files in a "dist/" folder
+        python -m build
+
+    - name: Build the Zip Archive (Standalone App)
+      run: |
+        # Create a clean zip archive containing only the files needed to run the app in production
+        zip -r elh-semantic-search-app.zip src/ scripts/ requirements.txt README.md .env.example Makefile dev.ps1
+
+    - name: Create the Release on GitHub
+      uses: softprops/action-gh-release@v2
+      with:
+        # Automatically generate release notes (changelog) by reading your commits!
+        generate_release_notes: true 
+        files: |
+          dist/*
+          elh-semantic-search-app.zip
