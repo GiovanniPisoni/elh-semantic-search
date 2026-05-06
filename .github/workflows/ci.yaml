@@ -1,0 +1,55 @@
+name: Continuous Integration
+
+# CI runs every time you push to the 'main' branch or open a Pull Request
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python 3.12.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12.9" # Versione aggiornata
+        cache: 'pip'
+
+    - name: Installation dependencies and CI tools
+      run: |
+        python -m pip install --upgrade pip
+        # Install the project dependencies (come in dev.ps1)
+        pip install -r requirements.txt
+        pip install -e .
+        # Install the CI tools (Black e Isort rimossi, Ruff gestisce tutto)
+        pip install ruff mypy pytest pytest-cov pip-audit
+
+    - name: 1. Validation Code (Formatting & Linting)
+      run: |
+        echo "Execute Ruff (Formatting Check)..."
+        ruff format --check src tests scripts
+        echo "Execute Ruff (Linting)..."
+        ruff check src tests scripts
+        echo "Execute Mypy (Type Checking)..."
+        mypy src/elh_rag --ignore-missing-imports
+
+    - name: 2. Management Dependencies and Security
+      run: |
+        echo "Execute pip-audit to search for vulnerabilities..."
+        pip-audit
+
+    - name: 3. Automation Tests & Code Coverage
+      # Set dummy environment variables in case the tests need them to avoid failing
+      env:
+        PINECONE_API_KEY: "dummy_key"
+        OPENAI_API_KEY: "dummy_key"
+      run: |
+        echo "Execute Pytest with coverage report..."
+        # Test coverage limitata al modulo elh_rag (come in dev.ps1)
+        pytest --cov=elh_rag --cov-report=term-missing
