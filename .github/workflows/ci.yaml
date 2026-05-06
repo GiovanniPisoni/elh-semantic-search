@@ -27,7 +27,7 @@ jobs:
         # Install the project dependencies (come in dev.ps1)
         pip install -r requirements.txt
         pip install -e .
-        # Install the CI tools (Black e Isort rimossi, Ruff gestisce tutto)
+        # Install the CI tools (Ruff, Mypy, Pytest, pip-audit)
         pip install ruff mypy pytest pytest-cov pip-audit
 
     - name: 1. Validation Code (Formatting & Linting)
