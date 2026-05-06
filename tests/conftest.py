@@ -4,19 +4,19 @@ Shared pytest fixtures for the test suite.
 Provides fake implementations of the external dependencies (vector store,
 embedder, LLM client) so unit tests run offline and deterministic.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 import pytest
 
+from elh_rag.generation.llm_client import LLMClient
 from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.vector_store import VectorStore
-from elh_rag.generation.llm_client import LLMClient
 from elh_rag.retrieval.query_rewriter import QueryRewriter
 from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import DocumentSource, ReviewMetadata
-
 
 # Fake vector store
 
@@ -41,9 +41,7 @@ class FakeVectorStore:
         top_k: int,
         metadata_filter: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        self.query_calls.append(
-            {"embedding": embedding, "top_k": top_k, "filter": metadata_filter}
-        )
+        self.query_calls.append({"embedding": embedding, "top_k": top_k, "filter": metadata_filter})
         return self._canned_matches[:top_k]
 
     def delete_all(self) -> None:
@@ -72,9 +70,7 @@ class FakeEmbedder(Embedder):
     def encode_query(self, text: str) -> list[float]:
         return [float(len(text) % 10) / 10.0] * self._dim
 
-    def encode_batch(
-        self, texts: list[str], batch_size: int | None = None
-    ) -> list[list[float]]:
+    def encode_batch(self, texts: list[str], batch_size: int | None = None) -> list[list[float]]:
         return [[float(len(t) % 10) / 10.0] * self._dim for t in texts]
 
 

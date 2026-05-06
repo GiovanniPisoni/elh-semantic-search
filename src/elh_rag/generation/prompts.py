@@ -1,8 +1,8 @@
 """
 Prompt templates for the RAG pipeline.
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 SYSTEM_PROMPT = """You are a helpful assistant for Erasmus Life Housing (ELH), \
 a student accommodation platform in Lisbon and Porto, Portugal.
@@ -36,11 +36,11 @@ Please provide a clear, helpful answer citing the relevant reviews."""
 def build_user_prompt(question: str, context: str) -> str:
     """Render the user prompt with the given question and context."""
     return _USER_TEMPLATE.format(question=question, context=context)
- 
- 
+
+
 # Multi-corpus generation
- 
- 
+
+
 MULTICORPUS_SYSTEM_PROMPT = """You are a helpful assistant for Erasmus Life \
 Housing (ELH), a student accommodation platform in Lisbon and Porto, Portugal.
 
@@ -85,11 +85,11 @@ Please provide a clear, helpful answer citing the relevant sources."""
 def build_multicorpus_user_prompt(question: str, context: str) -> str:
     """Render the user prompt for multi-corpus generation."""
     return _MULTICORPUS_USER_TEMPLATE.format(question=question, context=context)
- 
- 
+
+
 # Query rewriting
- 
- 
+
+
 REWRITER_SYSTEM_PROMPT = """You are a query rewriter for a semantic search \
 system over student accommodation reviews.
 
@@ -108,7 +108,7 @@ neighbourhoods, numeric thresholds) — never drop them.
 commonly use in reviews (e.g. "quiet" → "quiet, peaceful, low noise").
 - Remove conversational filler ("Hi, could you please find me...", "I was \
 wondering if...") and keep only the retrieval-relevant content.
-- Keep the rewritten query concise: at most 2–3 short sentences or a list \
+- Keep the rewritten query concise: at most 2-3 short sentences or a list \
 of keywords. Never exceed 40 words.
 - If the input is already a well-formed search query, return it unchanged.
 """
@@ -256,9 +256,7 @@ Turn 2: "solo a Porto"
 """
 
 
-def build_followup_rewriter_prompt(
-    history_lines: list[str], question: str
-) -> str:
+def build_followup_rewriter_prompt(history_lines: list[str], question: str) -> str:
     """Render the user-side prompt for the follow-up rewrite."""
     history_block = "\n".join(history_lines)
     return (

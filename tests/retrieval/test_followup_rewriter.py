@@ -1,7 +1,6 @@
 """Tests for the FollowUpRewriter."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from elh_rag.generation.llm_client import LLMClient
 from elh_rag.retrieval.conversation_memory import ConversationMemory
@@ -12,7 +11,6 @@ from elh_rag.retrieval.followup_rewriter import (
     _rewrite_cached,
 )
 from elh_rag.schemas import ConversationTurn
-
 
 # Fake LLM
 
@@ -117,9 +115,7 @@ def test_sequence_3_constraint_addition() -> None:
 
 def test_sequence_4_city_filter_it() -> None:
     """Italian follow-up adding city constraint."""
-    fake = _FakeLLM(
-        canned_output="studenti che si sono lamentati del proprietario a Lisbona"
-    )
+    fake = _FakeLLM(canned_output="studenti che si sono lamentati del proprietario a Lisbona")
     rewriter = FollowUpRewriter(llm_client=fake)
     memory = _memory_with(
         [
@@ -214,7 +210,7 @@ def test_format_history_truncates_long_answers() -> None:
     turns = [ConversationTurn(question="q", answer=long_answer)]
     lines = _format_history(turns)
 
-    answer_line = next(l for l in lines if l.startswith("Turn 1 assistant"))
+    answer_line = next(line for line in lines if line.startswith("Turn 1 assistant"))
     assert len(answer_line) < 400  # well under the 1000-char raw answer
     assert answer_line.endswith("…")
 
@@ -226,8 +222,8 @@ def test_format_history_skips_blank_fields() -> None:
     ]
     lines = _format_history(turns)
     # Only the non-empty fields render
-    assert any("q1" in l for l in lines)
-    assert any("a2" in l for l in lines)
+    assert any("q1" in line for line in lines)
+    assert any("a2" in line for line in lines)
     assert len(lines) == 2  # not 4
 
 

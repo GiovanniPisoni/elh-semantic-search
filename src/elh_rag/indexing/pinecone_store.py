@@ -1,6 +1,7 @@
 """
 Pinecone implementation of the VectorStore protocol.
 """
+
 from __future__ import annotations
 
 import logging
@@ -55,9 +56,7 @@ class PineconeVectorStore:
             if chunk_idx + 1 < total_chunks:
                 time.sleep(_UPSERT_SLEEP_SEC)
 
-        logger.debug(
-            "Upserted %d vectors in %d chunks", total_upserted, total_chunks
-        )
+        logger.debug("Upserted %d vectors in %d chunks", total_upserted, total_chunks)
 
     def _upsert_chunk_with_retry(
         self,
@@ -77,8 +76,7 @@ class PineconeVectorStore:
                 if attempt < _MAX_RETRIES:
                     backoff = _BACKOFF_BASE_SEC * (2 ** (attempt - 1))
                     logger.warning(
-                        "Upsert chunk %d/%d failed (attempt %d/%d): %s — "
-                        "retrying in %.1fs",
+                        "Upsert chunk %d/%d failed (attempt %d/%d): %s — retrying in %.1fs",
                         chunk_num,
                         total_chunks,
                         attempt,
@@ -96,8 +94,7 @@ class PineconeVectorStore:
             last_error,
         )
         raise RuntimeError(
-            f"Failed to upsert chunk {chunk_num}/{total_chunks} after "
-            f"{_MAX_RETRIES} attempts"
+            f"Failed to upsert chunk {chunk_num}/{total_chunks} after {_MAX_RETRIES} attempts"
         ) from last_error
 
     def query(

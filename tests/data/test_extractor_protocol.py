@@ -5,14 +5,14 @@ These tests verify that:
     1. Concrete extractors actually conform to the protocol at runtime
     2. The protocol is minimal enough that fake implementations work
 """
+
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from elh_rag.data.extractor import Extractor
 from elh_rag.data.review_extractor import ReviewExtractor
 from elh_rag.schemas import Document, DocumentSource, ReviewMetadata
-
 
 # Conformance of the real extractor
 

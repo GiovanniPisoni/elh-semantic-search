@@ -4,6 +4,7 @@ Centralised configuration for the ELH RAG system.
 All environment variables are declared here, validated at import time, and
 exposed as a single immutable `settings` object.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -11,7 +12,6 @@ from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     pinecone_api_key: str = Field(..., description="Pinecone API key")
     pinecone_index_name: str = Field(
         default="elh-reviews",
-        description="Pinecone index for student reviews",   
+        description="Pinecone index for student reviews",
     )
     pinecone_descriptions_index_name: str = Field(
         default="elh-descriptions",
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     )
     reranker_model: str = Field(
         default="BAAI/bge-reranker-v2-m3",
-        description="Cross-encoder model for reranking (multilingual, 100+ languages)"
+        description="Cross-encoder model for reranking (multilingual, 100+ languages)",
     )
     reranker_pool_size: int = Field(
         default=20,

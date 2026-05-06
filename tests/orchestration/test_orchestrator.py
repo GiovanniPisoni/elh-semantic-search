@@ -8,11 +8,13 @@ LLM together. Tests verify:
     - Intent routing disabled → reviews-only behaviour (Phase 1 parity)
     - Empty retrieval paths
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 import pytest
+from tests.conftest import FakeQueryRewriter, FakeReranker, FakeVectorStore
 
 from elh_rag.generation.llm_client import LLMClient
 from elh_rag.indexing.embeddings import Embedder
@@ -28,21 +30,15 @@ from elh_rag.orchestration.orchestrator import (
 )
 from elh_rag.orchestration.reviews_pipeline import ReviewsPipeline
 from elh_rag.retrieval.intent_router import IntentRouter
-from elh_rag.retrieval.query_rewriter import QueryRewriter
-from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import (
     DocumentSource,
     HouseMetadata,
     Intent,
-    RAGResponse,
     RetrievalResult,
     ReviewMetadata,
     RoomMetadata,
     RoutingDecision,
 )
-
-from tests.conftest import FakeQueryRewriter, FakeReranker, FakeVectorStore
-
 
 # Fake IntentRouter
 
@@ -71,9 +67,7 @@ def _make_review_matches(n: int) -> list[dict[str, Any]]:
             flatname=f"House {i}",
             review_text_original=f"Review text {i}",
         )
-        out.append(
-            {"id": meta.id, "score": 0.9 - i * 0.05, "metadata": meta.to_pinecone_dict()}
-        )
+        out.append({"id": meta.id, "score": 0.9 - i * 0.05, "metadata": meta.to_pinecone_dict()})
     return out
 
 
@@ -98,9 +92,7 @@ def _make_description_matches(n: int) -> list[dict[str, Any]]:
             )
         raw_md = meta.to_pinecone_dict()
         raw_md["text"] = f"Description text {i}"
-        out.append(
-            {"id": meta.id, "score": 0.85 - i * 0.05, "metadata": raw_md}
-        )
+        out.append({"id": meta.id, "score": 0.85 - i * 0.05, "metadata": raw_md})
     return out
 
 
@@ -155,9 +147,7 @@ def test_intent_reviews_activates_only_reviews_pipeline(
 ) -> None:
     _disable_extras(monkeypatch)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm"))
     orch, reviews_store, descriptions_store = _make_orchestrator(
         reviews_matches=_make_review_matches(3),
         descriptions_matches=_make_description_matches(3),
@@ -174,9 +164,7 @@ def test_intent_reviews_activates_only_reviews_pipeline(
 
     # All sources are reviews
     assert len(response.sources) == 3
-    assert all(
-        s.metadata.source == DocumentSource.REVIEW for s in response.sources
-    )
+    assert all(s.metadata.source == DocumentSource.REVIEW for s in response.sources)
     assert response.sources_by_source is not None
     assert "reviews" in response.sources_by_source
     assert "descriptions" not in response.sources_by_source
@@ -192,9 +180,7 @@ def test_intent_descriptions_activates_only_descriptions_pipeline(
 ) -> None:
     _disable_extras(monkeypatch)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.DESCRIPTIONS, confidence=0.95, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.DESCRIPTIONS, confidence=0.95, source="llm"))
     orch, reviews_store, descriptions_store = _make_orchestrator(
         reviews_matches=_make_review_matches(3),
         descriptions_matches=_make_description_matches(4),
@@ -209,8 +195,7 @@ def test_intent_descriptions_activates_only_descriptions_pipeline(
     assert len(descriptions_store.query_calls) == 1
     assert len(response.sources) == 4
     assert all(
-        s.metadata.source in (DocumentSource.HOUSE, DocumentSource.ROOM)
-        for s in response.sources
+        s.metadata.source in (DocumentSource.HOUSE, DocumentSource.ROOM) for s in response.sources
     )
 
 
@@ -224,9 +209,7 @@ def test_intent_both_activates_both_pipelines(
 ) -> None:
     _disable_extras(monkeypatch)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.BOTH, confidence=0.6, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.BOTH, confidence=0.6, source="llm"))
     orch, reviews_store, descriptions_store = _make_orchestrator(
         reviews_matches=_make_review_matches(3),
         descriptions_matches=_make_description_matches(3),
@@ -258,9 +241,7 @@ def test_intent_both_merges_sources_by_descending_score(
 ) -> None:
     _disable_extras(monkeypatch)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.BOTH, confidence=0.7, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.BOTH, confidence=0.7, source="llm"))
     orch, _, _ = _make_orchestrator(
         reviews_matches=_make_review_matches(3),
         descriptions_matches=_make_description_matches(3),
@@ -289,9 +270,7 @@ def test_intent_routing_disabled_always_queries_reviews(
     monkeypatch.setattr(cfg.settings, "enable_intent_routing", False)
 
     # Router would return DESCRIPTIONS, but routing is off so it's ignored
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.DESCRIPTIONS, confidence=0.99, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.DESCRIPTIONS, confidence=0.99, source="llm"))
     orch, reviews_store, descriptions_store = _make_orchestrator(
         reviews_matches=_make_review_matches(2),
         descriptions_matches=_make_description_matches(2),
@@ -351,9 +330,7 @@ def test_to_dict_serialises_routing_and_sources_by_source(
     _disable_extras(monkeypatch)
 
     router = _FakeRouter(
-        RoutingDecision(
-            intent=Intent.BOTH, confidence=0.65, reasoning="mixed", source="llm"
-        )
+        RoutingDecision(intent=Intent.BOTH, confidence=0.65, reasoning="mixed", source="llm")
     )
     orch, _, _ = _make_orchestrator(
         reviews_matches=_make_review_matches(2),
@@ -384,9 +361,7 @@ def test_empty_retrieval_returns_no_sources_message(
 ) -> None:
     _disable_extras(monkeypatch)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm"))
     orch, _, _ = _make_orchestrator(
         reviews_matches=[],
         descriptions_matches=[],
@@ -449,9 +424,7 @@ def test_mode_label_includes_routing_intent(
 def test_build_context_tags_review_vs_description_headers() -> None:
     review = RetrievalResult(
         text="review text",
-        metadata=ReviewMetadata(
-            id="r1", city="Lisbon", flatname="Casa", overall_rating=5
-        ),
+        metadata=ReviewMetadata(id="r1", city="Lisbon", flatname="Casa", overall_rating=5),
         vector_score=0.8,
     )
     house = RetrievalResult(
@@ -474,12 +447,8 @@ def test_build_context_tags_review_vs_description_headers() -> None:
 
 def test_select_prompts_picks_review_only_prompt_when_all_sources_are_reviews() -> None:
     sources = [
-        RetrievalResult(
-            text="t1", metadata=ReviewMetadata(id="r1"), vector_score=0.8
-        ),
-        RetrievalResult(
-            text="t2", metadata=ReviewMetadata(id="r2"), vector_score=0.7
-        ),
+        RetrievalResult(text="t1", metadata=ReviewMetadata(id="r1"), vector_score=0.8),
+        RetrievalResult(text="t2", metadata=ReviewMetadata(id="r2"), vector_score=0.7),
     ]
     sys_prompt, _ = _select_prompts(question="q", context="c", sources=sources)
 
@@ -490,18 +459,14 @@ def test_select_prompts_picks_review_only_prompt_when_all_sources_are_reviews() 
 
 def test_select_prompts_picks_multicorpus_prompt_when_any_description_present() -> None:
     sources = [
-        RetrievalResult(
-            text="t1", metadata=ReviewMetadata(id="r1"), vector_score=0.8
-        ),
+        RetrievalResult(text="t1", metadata=ReviewMetadata(id="r1"), vector_score=0.8),
         RetrievalResult(
             text="t2",
             metadata=HouseMetadata(id="h1", flatname="X"),
             vector_score=0.7,
         ),
     ]
-    sys_prompt, user_prompt = _select_prompts(
-        question="q", context="c", sources=sources
-    )
+    sys_prompt, _user_prompt = _select_prompts(question="q", context="c", sources=sources)
 
     # Multi-corpus prompt mentions both kinds
     assert "DESCRIPTIONS" in sys_prompt
@@ -551,10 +516,8 @@ def test_orchestrator_passes_memory_through_rewriter(
     followup_llm = _RecordingFollowupLLM()
     rewriter = FollowUpRewriter(llm_client=followup_llm)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.DESCRIPTIONS, confidence=0.9, source="llm")
-    )
-    orch, reviews_store, descriptions_store = _make_orchestrator(
+    router = _FakeRouter(RoutingDecision(intent=Intent.DESCRIPTIONS, confidence=0.9, source="llm"))
+    orch, _reviews_store, _descriptions_store = _make_orchestrator(
         reviews_matches=[],
         descriptions_matches=_make_description_matches(2),
         router=router,
@@ -567,9 +530,7 @@ def test_orchestrator_passes_memory_through_rewriter(
     memory = ConversationMemory(max_turns=5)
     memory.append("cheap house in Lisbon", "Residencia Campo de Ourique €350.")
 
-    response = orch.query(
-        "and in Porto?", top_k=2, conversation_memory=memory
-    )
+    response = orch.query("and in Porto?", top_k=2, conversation_memory=memory)
 
     # The followup rewriter must have been called once
     assert len(followup_llm.calls) == 1
@@ -599,9 +560,7 @@ def test_orchestrator_skips_rewriter_when_memory_is_none(
     followup_llm = _RecordingFollowupLLM()
     rewriter = FollowUpRewriter(llm_client=followup_llm)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm"))
     orch, _, _ = _make_orchestrator(
         reviews_matches=_make_review_matches(2),
         descriptions_matches=[],
@@ -641,9 +600,7 @@ def test_orchestrator_respects_disable_conversational_memory_flag(
     followup_llm = _RecordingFollowupLLM()
     rewriter = FollowUpRewriter(llm_client=followup_llm)
 
-    router = _FakeRouter(
-        RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm")
-    )
+    router = _FakeRouter(RoutingDecision(intent=Intent.REVIEWS, confidence=0.9, source="llm"))
     orch, _, _ = _make_orchestrator(
         reviews_matches=_make_review_matches(2),
         descriptions_matches=[],

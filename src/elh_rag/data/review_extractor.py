@@ -5,17 +5,18 @@ Joins review/room/house on the composite keys used by the ELH schema,
 filters to approved status and minimum text length, and emits one
 `Document` per review enriched with location and property context.
 """
+
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from datetime import date
-from typing import Any, Iterable
+from typing import Any
 
 import psycopg2
 import psycopg2.extras
 
 from elh_rag.config import settings
-from elh_rag.data.extractor import Extractor
 from elh_rag.schemas import Document, DocumentSource, ReviewMetadata
 
 logger = logging.getLogger(__name__)
@@ -70,9 +71,7 @@ class ReviewExtractor:
     ) -> None:
         self._db_uri = db_uri or settings.db_uri
         self._min_text_length = (
-            min_text_length
-            if min_text_length is not None
-            else settings.min_text_length
+            min_text_length if min_text_length is not None else settings.min_text_length
         )
 
     @property
@@ -83,10 +82,12 @@ class ReviewExtractor:
         """Fetch all approved reviews from Supabase as typed Documents."""
         logger.info("Connecting to Supabase to fetch reviews")
 
-        with psycopg2.connect(self._db_uri) as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute(_EXTRACTION_QUERY, (REVIEW_STATUS, self._min_text_length))
-                rows = cur.fetchall()
+        with (
+            psycopg2.connect(self._db_uri) as conn,
+            conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur,
+        ):
+            cur.execute(_EXTRACTION_QUERY, (REVIEW_STATUS, self._min_text_length))
+            rows = cur.fetchall()
 
         logger.info("Fetched %d rows from database", len(rows))
 
@@ -142,11 +143,7 @@ def _row_to_document(row: dict[str, Any]) -> Document:
     enriched_text = _build_enriched_text(row)
 
     date_review = row.get("datereview")
-    date_str = (
-        date_review.isoformat()
-        if isinstance(date_review, date)
-        else str(date_review or "")
-    )
+    date_str = date_review.isoformat() if isinstance(date_review, date) else str(date_review or "")
 
     metadata = ReviewMetadata(
         id=str(row["idreview"]),

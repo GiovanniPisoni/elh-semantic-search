@@ -1,16 +1,13 @@
 """Tests for the custom evaluation framework."""
+
 from __future__ import annotations
 
-import pytest
-
-from elh_rag.evaluation.judge import _try_parse_json, EvaluationJudge, JudgeError
+from elh_rag.evaluation.judge import EvaluationJudge, JudgeError, _try_parse_json
 from elh_rag.evaluation.metrics import (
     answer_relevancy,
     context_recall,
     faithfulness,
-    MetricResult,
 )
-
 
 # JSON parser robustness
 
@@ -78,25 +75,29 @@ class _FakeJudge(EvaluationJudge):
 
 
 def test_faithfulness_all_supported() -> None:
-    judge = _FakeJudge({
-        "claims": [
-            {"text": "claim A", "supported": True, "reason": "ok"},
-            {"text": "claim B", "supported": True, "reason": "ok"},
-        ]
-    })
+    judge = _FakeJudge(
+        {
+            "claims": [
+                {"text": "claim A", "supported": True, "reason": "ok"},
+                {"text": "claim B", "supported": True, "reason": "ok"},
+            ]
+        }
+    )
     result = faithfulness(judge=judge, answer="some answer", contexts=["ctx 1"])
     assert result.score == 1.0
     assert result.details["total_claims"] == 2
 
 
 def test_faithfulness_partial_support() -> None:
-    judge = _FakeJudge({
-        "claims": [
-            {"text": "claim A", "supported": True},
-            {"text": "claim B", "supported": False},
-            {"text": "claim C", "supported": True},
-        ]
-    })
+    judge = _FakeJudge(
+        {
+            "claims": [
+                {"text": "claim A", "supported": True},
+                {"text": "claim B", "supported": False},
+                {"text": "claim C", "supported": True},
+            ]
+        }
+    )
     result = faithfulness(judge=judge, answer="some answer", contexts=["ctx"])
     assert result.score == round(2 / 3, 3)
 
@@ -125,28 +126,28 @@ def test_faithfulness_returns_none_on_empty_inputs() -> None:
 
 
 def test_context_recall_all_covered() -> None:
-    judge = _FakeJudge({
-        "concepts": [
-            {"concept": "safety", "covered": True, "evidence": "felt safe"},
-            {"concept": "Lisbon", "covered": True, "evidence": "in Lisboa"},
-        ]
-    })
-    result = context_recall(
-        judge=judge, must_mention=["safety", "Lisbon"], contexts=["ctx"]
+    judge = _FakeJudge(
+        {
+            "concepts": [
+                {"concept": "safety", "covered": True, "evidence": "felt safe"},
+                {"concept": "Lisbon", "covered": True, "evidence": "in Lisboa"},
+            ]
+        }
     )
+    result = context_recall(judge=judge, must_mention=["safety", "Lisbon"], contexts=["ctx"])
     assert result.score == 1.0
 
 
 def test_context_recall_partial_coverage() -> None:
-    judge = _FakeJudge({
-        "concepts": [
-            {"concept": "safety", "covered": True},
-            {"concept": "balcony", "covered": False},
-        ]
-    })
-    result = context_recall(
-        judge=judge, must_mention=["safety", "balcony"], contexts=["ctx"]
+    judge = _FakeJudge(
+        {
+            "concepts": [
+                {"concept": "safety", "covered": True},
+                {"concept": "balcony", "covered": False},
+            ]
+        }
     )
+    result = context_recall(judge=judge, must_mention=["safety", "balcony"], contexts=["ctx"])
     assert result.score == 0.5
 
 
@@ -174,25 +175,27 @@ def test_context_recall_returns_none_on_judge_error() -> None:
 
 
 def test_answer_relevancy_returns_score() -> None:
-    judge = _FakeJudge({
-        "score": 0.8,
-        "reasoning": "On-topic, concise",
-        "is_unanswerable_query": False,
-    })
+    judge = _FakeJudge(
+        {
+            "score": 0.8,
+            "reasoning": "On-topic, concise",
+            "is_unanswerable_query": False,
+        }
+    )
     result = answer_relevancy(judge=judge, question="q?", answer="ans")
     assert result.score == 0.8
     assert result.details["reasoning"] == "On-topic, concise"
 
 
 def test_answer_relevancy_handles_unanswerable() -> None:
-    judge = _FakeJudge({
-        "score": 1.0,
-        "reasoning": "Correctly said 'I don't know'",
-        "is_unanswerable_query": True,
-    })
-    result = answer_relevancy(
-        judge=judge, question="asdfgh", answer="I don't have information"
+    judge = _FakeJudge(
+        {
+            "score": 1.0,
+            "reasoning": "Correctly said 'I don't know'",
+            "is_unanswerable_query": True,
+        }
     )
+    result = answer_relevancy(judge=judge, question="asdfgh", answer="I don't have information")
     assert result.score == 1.0
     assert result.details["is_unanswerable_query"] is True
 

@@ -2,13 +2,13 @@
 
 Tests use a FakeCrossEncoder that avoids downloading the real model.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import RetrievalResult, ReviewMetadata
-
 
 # Fake cross-encoder
 
@@ -125,9 +125,7 @@ def test_rerank_single_candidate_still_gets_rerank_score() -> None:
 
 
 def test_rerank_falls_back_to_vector_order_on_model_error() -> None:
-    candidates = _make_results(
-        [("doc-A", 0.9), ("doc-B", 0.7), ("doc-C", 0.5)]
-    )
+    candidates = _make_results([("doc-A", 0.9), ("doc-B", 0.7), ("doc-C", 0.5)])
 
     class BrokenModel(FakeCrossEncoder):
         def predict(self, *a: Any, **k: Any) -> list[float]:

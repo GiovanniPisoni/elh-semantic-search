@@ -3,6 +3,7 @@ DescriptionsPipeline — retrieval over the house+room descriptions corpus.
 
 Concrete subclass of CorpusPipeline.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -31,9 +32,7 @@ class DescriptionsPipeline(CorpusPipeline):
     ) -> None:
         super().__init__(
             vector_store=vector_store
-            or PineconeVectorStore(
-                index_name=settings.pinecone_descriptions_index_name
-            ),
+            or PineconeVectorStore(index_name=settings.pinecone_descriptions_index_name),
             embedder=embedder,
             query_rewriter=query_rewriter,
             reranker=reranker,

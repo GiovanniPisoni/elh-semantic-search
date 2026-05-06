@@ -1,15 +1,16 @@
 """
 Qualitative benchmark for the RAG pipeline.
 
-Evaluates the system across three configurations (Naive, +Rewrite, +Rerank) 
-to demonstrate behavioral changes and pipeline latency. It logs the rewritten 
-queries, top-5 retrieved sources, final answers, and execution times, 
+Evaluates the system across three configurations (Naive, +Rewrite, +Rerank)
+to demonstrate behavioral changes and pipeline latency. It logs the rewritten
+queries, top-5 retrieved sources, final answers, and execution times,
 exporting the results to JSONL (raw) and Markdown (supervisor report).
 
-Note: This is strictly a qualitative assessment. Lacking a ground-truth 
-dataset, it tracks observable metrics (latency, answer comparisons) 
+Note: This is strictly a qualitative assessment. Lacking a ground-truth
+dataset, it tracks observable metrics (latency, answer comparisons)
 rather than rigorous quantitative metrics like precision or recall.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,7 +26,6 @@ from elh_rag import config as cfg_module
 from elh_rag.logging_setup import setup_logging
 from elh_rag.pipeline import RAGPipeline
 from elh_rag.schemas import RAGResponse
-
 
 # Configurations under test
 
@@ -66,9 +66,7 @@ def apply_config(config: dict[str, Any]) -> None:
     cfg_module.settings.enable_reranking = config["enable_reranking"]
 
 
-def run_single_query(
-    pipeline: RAGPipeline, question: str
-) -> tuple[RAGResponse, float]:
+def run_single_query(pipeline: RAGPipeline, question: str) -> tuple[RAGResponse, float]:
     """Run a single query, returning the response and wall-clock latency."""
     start = time.perf_counter()
     response = pipeline.query(question)
@@ -76,9 +74,7 @@ def run_single_query(
     return response, elapsed
 
 
-def run_benchmark(
-    queries: list[dict[str, Any]], pipeline: RAGPipeline
-) -> list[dict[str, Any]]:
+def run_benchmark(queries: list[dict[str, Any]], pipeline: RAGPipeline) -> list[dict[str, Any]]:
     """Run all queries through all configurations."""
     results: list[dict[str, Any]] = []
 
@@ -298,7 +294,7 @@ def generate_markdown_report(
     lines.append("")
     lines.append("| Configuration | Avg (s) | Median (s) | Min | Max | Sources |")
     lines.append("|---|---:|---:|---:|---:|---:|")
-    for cfg_name, stats in metrics["per_config"].items():
+    for _cfg_name, stats in metrics["per_config"].items():
         if not stats.get("ok"):
             continue
         lines.append(
@@ -407,9 +403,7 @@ def generate_markdown_report(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Run qualitative benchmark of the RAG pipeline."
-    )
+    parser = argparse.ArgumentParser(description="Run qualitative benchmark of the RAG pipeline.")
     parser.add_argument(
         "--queries",
         type=Path,
@@ -461,7 +455,7 @@ def main() -> None:
     print("=" * 60)
     print()
     print("Summary:")
-    for cfg_name, stats in metrics["per_config"].items():
+    for _cfg_name, stats in metrics["per_config"].items():
         if stats.get("ok"):
             print(
                 f"  {stats['label']:<55} "

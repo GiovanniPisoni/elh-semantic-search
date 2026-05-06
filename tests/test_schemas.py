@@ -1,9 +1,9 @@
 """Tests for the typed schemas, especially Pinecone round-tripping."""
+
 from __future__ import annotations
 
 from elh_rag.schemas import (
     Document,
-    DocumentMetadata,
     DocumentSource,
     HouseMetadata,
     RAGResponse,
@@ -12,7 +12,6 @@ from elh_rag.schemas import (
     RoomMetadata,
     metadata_from_pinecone_dict,
 )
-
 
 # ReviewMetadata
 
@@ -185,9 +184,7 @@ def test_retrieval_result_distance_is_one_minus_vector_score() -> None:
 def test_retrieval_result_score_prefers_rerank_when_present() -> None:
     meta = ReviewMetadata(id="x")
     vector_only = RetrievalResult(text="t", metadata=meta, vector_score=0.6)
-    reranked = RetrievalResult(
-        text="t", metadata=meta, vector_score=0.6, rerank_score=0.92
-    )
+    reranked = RetrievalResult(text="t", metadata=meta, vector_score=0.6, rerank_score=0.92)
 
     assert vector_only.score == 0.6
     assert reranked.score == 0.92
@@ -220,11 +217,7 @@ def test_rag_response_to_dict_exposes_both_scores_when_reranked() -> None:
     response = RAGResponse(
         query="q",
         answer="a",
-        sources=[
-            RetrievalResult(
-                text="t", metadata=meta, vector_score=0.7, rerank_score=0.95
-            )
-        ],
+        sources=[RetrievalResult(text="t", metadata=meta, vector_score=0.7, rerank_score=0.95)],
     )
 
     src = response.to_dict()["sources"][0]

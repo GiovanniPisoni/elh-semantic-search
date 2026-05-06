@@ -1,4 +1,5 @@
 """ELH Semantic Search — RAG-based system for Erasmus Life Housing."""
+
 from __future__ import annotations
 
 from elh_rag.config import settings
@@ -12,13 +13,13 @@ from elh_rag.schemas import (
 )
 
 __all__ = [
-    "settings",
-    "RAGPipeline",
     "Document",
     "DocumentSource",
+    "RAGPipeline",
     "RAGResponse",
     "RetrievalResult",
     "ReviewMetadata",
+    "settings",
 ]
 
 __version__ = "0.2.0"

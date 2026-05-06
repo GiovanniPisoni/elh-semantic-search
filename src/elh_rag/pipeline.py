@@ -1,10 +1,11 @@
 """
 RAG pipeline orchestration.
 """
+
 from __future__ import annotations
- 
+
 import logging
- 
+
 from elh_rag.generation.llm_client import LLMClient
 from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.pinecone_store import PineconeVectorStore
@@ -18,14 +19,14 @@ from elh_rag.retrieval.intent_router import IntentRouter
 from elh_rag.retrieval.query_rewriter import QueryRewriter
 from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import RAGResponse
- 
+
 logger = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
 
 
 class RAGPipeline:
     """Facade maintaining the Phase-1 public API on top of the Orchestrator."""
- 
+
     def __init__(
         self,
         vector_store: VectorStore | None = None,
@@ -56,7 +57,7 @@ class RAGPipeline:
             llm_client=llm_client,
             followup_rewriter=followup_rewriter,
         )
- 
+
     def query(
         self,
         question: str,

@@ -7,6 +7,7 @@ Binds together:
     - DescriptionsPipeline → retrieval over house+room descriptions
     - LLMClient         → final answer generation
 """
+
 from __future__ import annotations
 
 import logging
@@ -67,9 +68,7 @@ class Orchestrator:
         """Run the full orchestrated pipeline on a single question."""
         top_k = top_k or settings.retrieval_top_k
 
-        retrieval_question = self._resolve_followup(
-            question=question, memory=conversation_memory
-        )
+        retrieval_question = self._resolve_followup(question=question, memory=conversation_memory)
 
         routing = self._decide_route(retrieval_question)
 
@@ -159,9 +158,7 @@ class Orchestrator:
         if routing.intent in (Intent.REVIEWS, Intent.BOTH):
             filter_reviews = _build_reviews_filter(city_filter, min_rating)
             results.append(
-                self._reviews.retrieve(
-                    question, top_k=top_k, metadata_filter=filter_reviews
-                )
+                self._reviews.retrieve(question, top_k=top_k, metadata_filter=filter_reviews)
             )
 
         if routing.intent in (Intent.DESCRIPTIONS, Intent.BOTH):
@@ -198,9 +195,7 @@ class Orchestrator:
 # Helpers (module-level for easier testing and reuse)
 
 
-def _build_reviews_filter(
-    city_filter: str | None, min_rating: int | None
-) -> dict[str, Any] | None:
+def _build_reviews_filter(city_filter: str | None, min_rating: int | None) -> dict[str, Any] | None:
     """Compose a Pinecone metadata filter for the reviews index."""
     f: dict[str, Any] = {}
     if city_filter:
@@ -257,8 +252,7 @@ def _select_prompts(
 ) -> tuple[str, str]:
     """Pick the system+user prompts that match the kinds of sources retrieved."""
     has_description = any(
-        s.metadata.source in (DocumentSource.HOUSE, DocumentSource.ROOM)
-        for s in sources
+        s.metadata.source in (DocumentSource.HOUSE, DocumentSource.ROOM) for s in sources
     )
 
     if has_description:

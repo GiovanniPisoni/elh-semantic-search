@@ -6,6 +6,7 @@ search query by consulting the past turns stored in `ConversationMemory`.
 The rewriter runs before routing and retrieve, so the downstream pipeline
 always sees a self-contained question.
 """
+
 from __future__ import annotations
 
 import logging
@@ -35,9 +36,7 @@ class FollowUpRewriter:
             max_tokens=settings.followup_rewriter_max_tokens,
         )
 
-    def rewrite(
-        self, question: str, memory: ConversationMemory | None
-    ) -> str:
+    def rewrite(self, question: str, memory: ConversationMemory | None) -> str:
         """Return the standalone form of `question` given the conversation memory."""
         if memory is None or memory.is_empty():
             return question
@@ -75,7 +74,7 @@ def _format_history(turns: list[ConversationTurn]) -> list[str]:
     for i, turn in enumerate(turns, start=1):
         question = turn.question.strip()
         answer = turn.answer.strip()
-        
+
         if len(answer) > _ANSWER_SNIPPET_CHARS:
             answer = answer[:_ANSWER_SNIPPET_CHARS].rstrip() + "…"
         if question:

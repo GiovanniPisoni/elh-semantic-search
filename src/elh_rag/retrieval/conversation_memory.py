@@ -5,10 +5,11 @@ Keeps the last N `(question, answer)` pairs in order. The `FollowUpRewriter`
 reads this buffer to decide whether the next user question is a follow-up
 that needs rewriting.
 """
+
 from __future__ import annotations
 
 from collections import deque
-from typing import Iterable
+from collections.abc import Iterable
 
 from elh_rag.config import settings
 from elh_rag.schemas import ConversationTurn
@@ -19,9 +20,7 @@ class ConversationMemory:
 
     def __init__(self, max_turns: int | None = None) -> None:
         self._max_turns = (
-            max_turns
-            if max_turns is not None
-            else settings.conversational_memory_max_turns
+            max_turns if max_turns is not None else settings.conversational_memory_max_turns
         )
         self._turns: deque[ConversationTurn] = deque(maxlen=self._max_turns)
 

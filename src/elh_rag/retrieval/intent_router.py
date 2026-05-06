@@ -7,6 +7,7 @@ query, it classifies the intent into one of three outcomes:
     - DESCRIPTIONS   → the query is about factual attributes
     - BOTH           → the query is mixed or ambiguous, query both corpora
 """
+
 from __future__ import annotations
 
 import json
@@ -30,43 +31,127 @@ logger = logging.getLogger(__name__)
 
 _REVIEWS_KEYWORDS: tuple[str, ...] = (
     # English
-    "experience", "experienced", "felt", "feel", "atmosphere", "vibe",
-    "friendly", "unfriendly", "noisy", "quiet actually",
-    "landlord", "host", "hosts", "landlords",
-    "flatmate", "flatmates", "roommate", "roommates",
-    "neighbour", "neighbours", "neighbor", "neighbors",
-    "complain", "complaint", "complaints", "issue", "problem", "problems",
-    "recommend", "recommendation", "recommendations",
-    "stay", "stayed", "staying",
-    "impression", "impressions", "opinion", "opinions",
-    "loved", "hated", "enjoyed", "disappointed",
+    "experience",
+    "experienced",
+    "felt",
+    "feel",
+    "atmosphere",
+    "vibe",
+    "friendly",
+    "unfriendly",
+    "noisy",
+    "quiet actually",
+    "landlord",
+    "host",
+    "hosts",
+    "landlords",
+    "flatmate",
+    "flatmates",
+    "roommate",
+    "roommates",
+    "neighbour",
+    "neighbours",
+    "neighbor",
+    "neighbors",
+    "complain",
+    "complaint",
+    "complaints",
+    "issue",
+    "problem",
+    "problems",
+    "recommend",
+    "recommendation",
+    "recommendations",
+    "stay",
+    "stayed",
+    "staying",
+    "impression",
+    "impressions",
+    "opinion",
+    "opinions",
+    "loved",
+    "hated",
+    "enjoyed",
+    "disappointed",
     # Portuguese
-    "experiência", "experiencia", "gostei", "gostaram", "senhorio",
-    "senhoria", "colegas",
+    "experiência",
+    "experiencia",
+    "gostei",
+    "gostaram",
+    "senhorio",
+    "senhoria",
+    "colegas",
     # Italian
-    "esperienza", "proprietario", "proprietaria", "coinquilini",
+    "esperienza",
+    "proprietario",
+    "proprietaria",
+    "coinquilini",
     # Spanish
-    "experiencia", "casero", "casera",
+    "experiencia",
+    "casero",
+    "casera",
 )
 
 _DESCRIPTIONS_KEYWORDS: tuple[str, ...] = (
     # English
-    "m2", "m²", "square meters", "square metres", "sqm",
-    "price", "prices", "cost", "rent", "monthly", "deposit",
-    "wifi", "internet", "mbps", "speed",
-    "amenity", "amenities", "equipment", "appliances",
-    "kitchen", "bathroom", "bathrooms", "balcony", "elevator",
-    "bed", "beds", "bedroom", "double bed", "single bed", "queen bed",
-    "furnished", "furniture", "desk", "wardrobe", "closet",
-    "air conditioning", "heating", "washing machine",
-    "how much", "how many", "what does",
-    "distance", "minutes from", "metres from", "meters from",
+    "m2",
+    "m²",
+    "square meters",
+    "square metres",
+    "sqm",
+    "price",
+    "prices",
+    "cost",
+    "rent",
+    "monthly",
+    "deposit",
+    "wifi",
+    "internet",
+    "mbps",
+    "speed",
+    "amenity",
+    "amenities",
+    "equipment",
+    "appliances",
+    "kitchen",
+    "bathroom",
+    "bathrooms",
+    "balcony",
+    "elevator",
+    "bed",
+    "beds",
+    "bedroom",
+    "double bed",
+    "single bed",
+    "queen bed",
+    "furnished",
+    "furniture",
+    "desk",
+    "wardrobe",
+    "closet",
+    "air conditioning",
+    "heating",
+    "washing machine",
+    "how much",
+    "how many",
+    "what does",
+    "distance",
+    "minutes from",
+    "metres from",
+    "meters from",
     # Portuguese
-    "quarto", "metros", "preço", "aluguel",
+    "quarto",
+    "metros",
+    "preço",
+    "aluguel",
     # Italian
-    "prezzo", "affitto", "metri",
+    "prezzo",
+    "affitto",
+    "metri",
     # Spanish
-    "precio", "alquiler", "metros cuadrados",
+    "precio",
+    "alquiler",
+    "metros cuadrados",
 )
 
 
@@ -139,9 +224,7 @@ def _keyword_fallback(query: str) -> RoutingDecision:
         return RoutingDecision(
             intent=Intent.DESCRIPTIONS,
             confidence=0.6,
-            reasoning=(
-                f"Keyword fallback: {descriptions_hits} description keyword(s) matched"
-            ),
+            reasoning=(f"Keyword fallback: {descriptions_hits} description keyword(s) matched"),
             source="keyword",
         )
 
@@ -186,7 +269,7 @@ class IntentRouter:
 
         return self._route_cached(query)
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=128)  # noqa: B019
     def _route_cached(self, query: str) -> RoutingDecision:
         """Memoised routing logic. See `route` for the public entry point."""
         try:

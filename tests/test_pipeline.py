@@ -1,21 +1,20 @@
 """Tests for the RAGPipeline orchestration."""
+
 from __future__ import annotations
 
 from typing import Any
 
 import pytest
 
-from elh_rag.indexing.embeddings import Embedder
 from elh_rag.generation.llm_client import LLMClient
+from elh_rag.indexing.embeddings import Embedder
 from elh_rag.indexing.vector_store import VectorStore
 from elh_rag.orchestration.orchestrator import _build_reviews_filter
 from elh_rag.pipeline import RAGPipeline
 from elh_rag.retrieval.query_rewriter import QueryRewriter
 from elh_rag.retrieval.reranker import Reranker
 from elh_rag.schemas import RAGResponse, ReviewMetadata
-
 from tests.conftest import FakeQueryRewriter, FakeReranker, FakeVectorStore
-
 
 # Helpers
 
@@ -315,9 +314,7 @@ def test_reranking_fetches_pool_size_candidates_from_store(
     monkeypatch.setattr(cfg.settings, "reranker_pool_size", 20)
 
     store = FakeVectorStore(canned_matches=_make_matches(20))
-    pipeline = _make_pipeline(
-        store, fake_embedder, fake_llm, reranker=FakeReranker(reverse=False)
-    )
+    pipeline = _make_pipeline(store, fake_embedder, fake_llm, reranker=FakeReranker(reverse=False))
 
     pipeline.query("q", top_k=5)
 
@@ -340,9 +337,7 @@ def test_reranking_uses_retrieval_query_not_original_when_rewriting_also_on(
     store = FakeVectorStore(canned_matches=_make_matches(5))
     rewriter = FakeQueryRewriter(canned_output="rewritten text")
     reranker = FakeReranker(reverse=False)
-    pipeline = _make_pipeline(
-        store, fake_embedder, fake_llm, rewriter=rewriter, reranker=reranker
-    )
+    pipeline = _make_pipeline(store, fake_embedder, fake_llm, rewriter=rewriter, reranker=reranker)
 
     pipeline.query("original question")
 

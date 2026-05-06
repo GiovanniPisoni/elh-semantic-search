@@ -4,12 +4,11 @@ The indexer accepts any `Extractor` and any `VectorStore`. These tests
 verify the injection works end-to-end with fakes (no Pinecone, no
 Supabase, no real model downloads).
 """
+
 from __future__ import annotations
 
-from typing import Any, Iterable
-from unittest.mock import patch
-
-import pytest
+from collections.abc import Iterable
+from typing import Any
 
 from elh_rag.data.extractor import Extractor
 from elh_rag.indexing.indexer import (
@@ -18,7 +17,6 @@ from elh_rag.indexing.indexer import (
     _summarise_by_source,
     run_indexing,
 )
-from elh_rag.indexing.vector_store import VectorStore
 from elh_rag.schemas import (
     Document,
     DocumentSource,
@@ -26,7 +24,6 @@ from elh_rag.schemas import (
     ReviewMetadata,
     RoomMetadata,
 )
-
 
 # Fake Extractor
 
@@ -39,9 +36,11 @@ class _FakeExtractor:
 
     @property
     def source(self) -> DocumentSource:
-        return DocumentSource.REVIEW if self._documents and isinstance(
-            self._documents[0].metadata, ReviewMetadata
-        ) else DocumentSource.HOUSE
+        return (
+            DocumentSource.REVIEW
+            if self._documents and isinstance(self._documents[0].metadata, ReviewMetadata)
+            else DocumentSource.HOUSE
+        )
 
     def extract(self) -> Iterable[Document]:
         return iter(self._documents)
@@ -84,9 +83,7 @@ class _FakeVectorStore:
 class _FakeEmbedder:
     """Emits one-dim embeddings equal to the length of the text, for traceability."""
 
-    def encode_batch(
-        self, texts: list[str], batch_size: int = 16
-    ) -> list[list[float]]:
+    def encode_batch(self, texts: list[str], batch_size: int = 16) -> list[list[float]]:
         return [[float(len(t))] for t in texts]
 
     def encode_query(self, text: str) -> list[float]:

@@ -5,6 +5,7 @@ Collapsed by default (the default welcome view hides it). The user can
 expand it to refine retrieval behaviour (top-k, city, min rating) or to
 jump back to a previous query.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,7 +29,7 @@ def render() -> SidebarFilters:
     with st.sidebar:
         st.markdown(
             '<p style="font-size:.75rem;font-weight:700;color:#64748B;'
-            "text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem;\">"
+            'text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem;">'
             "Search settings</p>",
             unsafe_allow_html=True,
         )

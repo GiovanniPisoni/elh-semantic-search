@@ -1,13 +1,13 @@
 """
 Logging setup for the ELH RAG system.
 """
+
 from __future__ import annotations
 
 import logging
 import sys
 
 from elh_rag.config import settings
-
 
 _LOG_FORMAT = "%(asctime)s | %(levelname)-7s | %(name)-30s | %(message)s"
 _DATE_FORMAT = "%H:%M:%S"

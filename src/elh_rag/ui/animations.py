@@ -8,8 +8,8 @@ freezes the runner at the last house with a celebration pose.
 Both animations render inside a fixed-height iframe, embedded via
 `streamlit.components.v1.html`.
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 LOADING_HTML = """<!DOCTYPE html>
 <html>

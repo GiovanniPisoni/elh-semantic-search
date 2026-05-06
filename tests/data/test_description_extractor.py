@@ -5,6 +5,7 @@ Two layers of testing:
     2. Integration tests on the extract() method with psycopg2 patched
        out
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -27,7 +28,6 @@ from elh_rag.schemas import (
     HouseMetadata,
     RoomMetadata,
 )
-
 
 # _format_location
 
@@ -268,9 +268,7 @@ def _mock_psycopg2_connection(
     conn.__exit__ = MagicMock(return_value=None)
 
     connect_mock = MagicMock(return_value=conn)
-    monkeypatch.setattr(
-        "elh_rag.data.description_extractor.psycopg2.connect", connect_mock
-    )
+    monkeypatch.setattr("elh_rag.data.description_extractor.psycopg2.connect", connect_mock)
     return cursor
 
 

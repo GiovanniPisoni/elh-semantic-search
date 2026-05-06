@@ -4,6 +4,7 @@ Embedding model wrapper.
 Encapsulates the SentenceTransformer model behind a small interface,
 making it injectable into the pipeline and easy to mock in tests.
 """
+
 from __future__ import annotations
 
 import logging
@@ -29,9 +30,7 @@ class Embedder:
 
             logger.info("Loading embedding model: %s", self._model_name)
             self._model = SentenceTransformer(self._model_name)
-            logger.info(
-                "Embedding dim: %d", self._model.get_sentence_embedding_dimension()
-            )
+            logger.info("Embedding dim: %d", self._model.get_sentence_embedding_dimension())
         return self._model
 
     @property
@@ -44,9 +43,7 @@ class Embedder:
         vec = self.model.encode(text, normalize_embeddings=True)
         return vec.tolist()
 
-    def encode_batch(
-        self, texts: list[str], batch_size: int | None = None
-    ) -> list[list[float]]:
+    def encode_batch(self, texts: list[str], batch_size: int | None = None) -> list[list[float]]:
         """Encode a batch of texts into normalised vectors."""
         bs = batch_size or settings.indexing_batch_size
         vecs = self.model.encode(

@@ -1,12 +1,11 @@
 """Tests for the QueryRewriter component"""
+
 from __future__ import annotations
 
 import pytest
-
-from elh_rag.retrieval.query_rewriter import QueryRewriter
-
 from tests.conftest import FakeLLMClient
 
+from elh_rag.retrieval.query_rewriter import QueryRewriter
 
 # Output cleaning
 

@@ -1,10 +1,10 @@
 """Tests for the extractor's pure logic (no database calls)."""
+
 from __future__ import annotations
 
 from datetime import date
 
 from elh_rag.data.review_extractor import _build_enriched_text, _row_to_document
-
 
 # _build_enriched_text
 

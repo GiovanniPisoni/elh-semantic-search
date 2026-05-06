@@ -11,6 +11,7 @@ Each metric also returns a `details` dict with per-item reasoning,
 persisted to the JSONL output for diagnosis. When something goes wrong,
 metrics return None — they never raise, never produce misleading 0.0.
 """
+
 from __future__ import annotations
 
 import logging
@@ -28,6 +29,7 @@ class MetricResult:
 
     score: float | None
     details: dict[str, Any]
+
 
 # Metric 1 — Faithfulness
 
@@ -79,9 +81,7 @@ def faithfulness(
     if not answer.strip() or not contexts:
         return MetricResult(score=None, details={"reason": "empty answer or no contexts"})
 
-    sources_block = "\n\n".join(
-        f"[Source {i+1}]\n{ctx}" for i, ctx in enumerate(contexts)
-    )
+    sources_block = "\n\n".join(f"[Source {i + 1}]\n{ctx}" for i, ctx in enumerate(contexts))
     user_prompt = (
         f"ANSWER:\n{answer}\n\n"
         f"SOURCES:\n{sources_block}\n\n"
@@ -96,9 +96,7 @@ def faithfulness(
 
     claims = result.get("claims", [])
     if not isinstance(claims, list):
-        return MetricResult(
-            score=None, details={"error": "judge output 'claims' not a list"}
-        )
+        return MetricResult(score=None, details={"error": "judge output 'claims' not a list"})
 
     if not claims:
         return MetricResult(
@@ -112,6 +110,7 @@ def faithfulness(
         score=round(score, 3),
         details={"total_claims": len(claims), "supported": supported, "claims": claims},
     )
+
 
 # Metric 2 — Context Recall
 
@@ -165,9 +164,7 @@ def context_recall(
             details={"concepts": [{"concept": k, "covered": False} for k in must_mention]},
         )
 
-    sources_block = "\n\n".join(
-        f"[Source {i+1}]\n{ctx}" for i, ctx in enumerate(contexts)
-    )
+    sources_block = "\n\n".join(f"[Source {i + 1}]\n{ctx}" for i, ctx in enumerate(contexts))
     concepts_block = "\n".join(f"- {kw}" for kw in must_mention)
     user_prompt = (
         f"EXPECTED CONCEPTS:\n{concepts_block}\n\n"
@@ -194,6 +191,7 @@ def context_recall(
         score=round(score, 3),
         details={"total_concepts": len(concepts), "covered": covered, "concepts": concepts},
     )
+
 
 # Metric 3 — Answer Relevancy
 

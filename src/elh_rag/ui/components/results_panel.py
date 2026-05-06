@@ -4,6 +4,7 @@ Results panel (right column of the chat view).
 Shows a header with the property count, followed by a scrollable list of
 property cards — one card per retrieval source.
 """
+
 from __future__ import annotations
 
 import streamlit as st

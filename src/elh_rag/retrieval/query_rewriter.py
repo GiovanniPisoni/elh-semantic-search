@@ -5,6 +5,7 @@ Rewrites natural-language questions into search-optimized queries using a small 
 - Injectable: uses Anthropic Haiku in prod, fake in tests.
 - Memoized: caches results to save API costs.
 """
+
 from __future__ import annotations
 
 import logging
@@ -43,9 +44,7 @@ class QueryRewriter:
         try:
             rewritten = self._rewrite_cached(question)
         except Exception as exc:
-            logger.warning(
-                "Query rewriting failed (%s) — falling back to original", exc
-            )
+            logger.warning("Query rewriting failed (%s) — falling back to original", exc)
             return question
 
         logger.debug("Rewrote %r -> %r", question, rewritten)
@@ -65,7 +64,7 @@ class QueryRewriter:
         text = raw.strip()
         for prefix in ("Rewritten search query:", "Rewritten query:", "Query:"):
             if text.lower().startswith(prefix.lower()):
-                text = text[len(prefix):].strip()
+                text = text[len(prefix) :].strip()
         if len(text) >= 2 and text[0] == text[-1] and text[0] in ('"', "'"):
             text = text[1:-1].strip()
         return text

@@ -1,12 +1,12 @@
 """
 Property card component: renders a single retrieved source as an ELH listing.
 """
+
 from __future__ import annotations
 
 import html as _html
 
 from elh_rag.schemas import RetrievalResult
-
 
 _PRICE_POOL = [350, 380, 420, 450, 490, 520, 390, 410, 460, 505]
 _ROOMS_POOL = [1, 1, 1, 2, 2, 3]

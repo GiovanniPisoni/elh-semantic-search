@@ -1,4 +1,5 @@
 """Tests for the IntentRouter."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,10 @@ from typing import Any
 import pytest
 
 from elh_rag.generation.llm_client import LLMClient
+from elh_rag.generation.prompts import INTENT_ROUTER_SYSTEM_PROMPT
 from elh_rag.retrieval.intent_router import (
+    _DESCRIPTIONS_KEYWORDS,
+    _REVIEWS_KEYWORDS,
     IntentRouter,
     _extract_json,
     _keyword_fallback,
@@ -14,7 +18,6 @@ from elh_rag.retrieval.intent_router import (
     _parse_intent,
 )
 from elh_rag.schemas import Intent, RoutingDecision
-
 
 # Fake LLMClient
 
@@ -140,9 +143,7 @@ def test_keyword_fallback_routes_to_both_on_ambiguous_query() -> None:
 
 def test_keyword_fallback_prefers_both_when_both_kinds_of_keywords_are_present() -> None:
     """If a query mixes review-style + description-style keywords, play it safe."""
-    decision = _keyword_fallback(
-        "what is the price and how did students feel about the landlord"
-    )
+    decision = _keyword_fallback("what is the price and how did students feel about the landlord")
     assert decision.intent == Intent.BOTH
 
 
@@ -311,14 +312,6 @@ def test_routing_decision_is_frozen() -> None:
 
 # Phase 2.5 light
 
-
-from elh_rag.generation.prompts import INTENT_ROUTER_SYSTEM_PROMPT
-from elh_rag.retrieval.intent_router import (
-    _DESCRIPTIONS_KEYWORDS,
-    _REVIEWS_KEYWORDS,
-)
-
-
 # Structural sentinels
 
 
@@ -375,9 +368,7 @@ def test_keyword_fallback_diverges_from_llm_for_q17_pattern() -> None:
 
     Same caveat as the q16 test: divergence is by design and documented.
     """
-    decision = _keyword_fallback(
-        "double room with fast wifi and washing machine"
-    )
+    decision = _keyword_fallback("double room with fast wifi and washing machine")
     assert decision.intent == Intent.DESCRIPTIONS
     assert decision.source == "keyword"
 

@@ -1,6 +1,7 @@
 """
 Typed wrapper around Streamlit's `st.session_state`.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -33,7 +34,7 @@ def init() -> None:
     for key, value in _DEFAULTS.items():
         if key not in st.session_state:
             st.session_state[key] = value
-    
+
     if "conversation_memory" not in st.session_state:
         st.session_state["conversation_memory"] = ConversationMemory()
 

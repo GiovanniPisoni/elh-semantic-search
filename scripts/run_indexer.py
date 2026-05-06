@@ -5,6 +5,7 @@ The indexer supports two corpora:
     - reviews       (elh-reviews index)
     - descriptions  (elh-descriptions index)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,16 +54,12 @@ def index_descriptions(reset: bool) -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Index ELH data into Pinecone."
-    )
+    parser = argparse.ArgumentParser(description="Index ELH data into Pinecone.")
     parser.add_argument(
         "--source",
         choices=SOURCE_CHOICES,
         default="reviews",
-        help=(
-            "Which corpus to index: reviews (default), descriptions, or all."
-        ),
+        help=("Which corpus to index: reviews (default), descriptions, or all."),
     )
     parser.add_argument(
         "--reset",

@@ -14,6 +14,7 @@ Outputs:
     - Markdown report with aggregates, problems prioritised, per-query
       breakdown, and an interpretation guide
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,7 +36,6 @@ from elh_rag.evaluation.metrics import (
 from elh_rag.logging_setup import setup_logging
 from elh_rag.pipeline import RAGPipeline
 from elh_rag.schemas import RAGResponse
-
 
 # Golden set loading
 
@@ -132,14 +132,16 @@ def identify_problems(
             if score is None:
                 continue
             if score < threshold:
-                problems.append({
-                    "query_id": r["id"],
-                    "question": r["question"],
-                    "metric": metric,
-                    "score": score,
-                    "threshold": threshold,
-                    "severity": round(threshold - score, 3),
-                })
+                problems.append(
+                    {
+                        "query_id": r["id"],
+                        "question": r["question"],
+                        "metric": metric,
+                        "score": score,
+                        "threshold": threshold,
+                        "severity": round(threshold - score, 3),
+                    }
+                )
     problems.sort(key=lambda p: -p["severity"])
     return problems
 
@@ -260,8 +262,7 @@ def write_markdown_report(
         lines.append("")
 
         lines.append(
-            f"**Latency:** {r.get('latency_sec', '?')}s · "
-            f"**Sources:** {len(r.get('contexts', []))}"
+            f"**Latency:** {r.get('latency_sec', '?')}s · **Sources:** {len(r.get('contexts', []))}"
         )
         if r.get("routing"):
             rt = r["routing"]
@@ -329,9 +330,7 @@ def write_markdown_report(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Run custom evaluation on the ELH RAG golden set."
-    )
+    parser = argparse.ArgumentParser(description="Run custom evaluation on the ELH RAG golden set.")
     parser.add_argument(
         "--golden-set",
         type=Path,
@@ -426,8 +425,14 @@ def main() -> None:
         eval_elapsed = time.perf_counter() - eval_start
 
         f_str = "N/A" if rec["faithfulness_score"] is None else f"{rec['faithfulness_score']:.2f}"
-        cr_str = "N/A" if rec["context_recall_score"] is None else f"{rec['context_recall_score']:.2f}"
-        ar_str = "N/A" if rec["answer_relevancy_score"] is None else f"{rec['answer_relevancy_score']:.2f}"
+        cr_str = (
+            "N/A" if rec["context_recall_score"] is None else f"{rec['context_recall_score']:.2f}"
+        )
+        ar_str = (
+            "N/A"
+            if rec["answer_relevancy_score"] is None
+            else f"{rec['answer_relevancy_score']:.2f}"
+        )
         print(
             f"      pipeline {latency:.1f}s + eval {eval_elapsed:.1f}s  "
             f"f={f_str} cr={cr_str} ar={ar_str}"

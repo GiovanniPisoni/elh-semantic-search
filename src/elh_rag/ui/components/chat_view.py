@@ -1,9 +1,10 @@
 """
-Chat view: the 2-column result screen (mockups #2–#4).
+Chat view: the 2-column result screen.
 
 Left column: chat header + bubbles + bottom input.
 Right column: results header + scrollable property cards.
 """
+
 from __future__ import annotations
 
 import streamlit as st

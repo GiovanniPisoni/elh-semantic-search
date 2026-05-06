@@ -1,15 +1,15 @@
 """
 Welcome view: the first screen the user sees (mockup #1).
 
-Centred logo + title, search input, and a 2×2 grid of suggestion chips.
+Centred logo + title, search input, and a 2x2 grid of suggestion chips.
 Clicking a chip pre-fills the input and auto-submits on the next rerun.
 """
+
 from __future__ import annotations
 
 import streamlit as st
 
 from elh_rag.ui import state
-
 
 _SUGGESTIONS: list[str] = [
     "Rooms with a comfortable bed",
@@ -61,9 +61,7 @@ def render() -> tuple[bool, str, st.delta_generator.DeltaGenerator]:
                     label_visibility="collapsed",
                 )
             with btn_col:
-                submitted = st.form_submit_button(
-                    "➤", type="primary", use_container_width=True
-                )
+                submitted = st.form_submit_button("➤", type="primary", use_container_width=True)
 
         if state.consume_auto_submit():
             submitted = True
@@ -77,9 +75,7 @@ def render() -> tuple[bool, str, st.delta_generator.DeltaGenerator]:
         for idx, suggestion in enumerate(_SUGGESTIONS):
             target = col_left if idx % 2 == 0 else col_right
             with target:
-                if st.button(
-                    suggestion, key=f"sug_{idx}", use_container_width=True
-                ):
+                if st.button(suggestion, key=f"sug_{idx}", use_container_width=True):
                     state.set_prefill(suggestion, auto_submit=True)
                     st.rerun()
 

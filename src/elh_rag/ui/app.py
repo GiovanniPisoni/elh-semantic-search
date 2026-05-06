@@ -1,6 +1,7 @@
 """
 ErASKmus — Streamlit entry point.
 """
+
 from __future__ import annotations
 
 import time
@@ -13,7 +14,6 @@ from elh_rag.schemas import RAGResponse
 from elh_rag.ui import state, styles
 from elh_rag.ui.animations import DONE_HTML, LOADING_HTML
 from elh_rag.ui.components import chat_view, sidebar, welcome_view
-
 
 # Page config
 
@@ -34,9 +34,7 @@ def get_pipeline() -> RAGPipeline:
     return RAGPipeline()
 
 
-def run_query(
-    question: str, filters: sidebar.SidebarFilters
-) -> RAGResponse:
+def run_query(question: str, filters: sidebar.SidebarFilters) -> RAGResponse:
     """Execute a single RAG query with the current sidebar filters."""
     return get_pipeline().query(
         question,

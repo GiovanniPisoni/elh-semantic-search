@@ -1,23 +1,25 @@
 """
 Typed data schemas used across the RAG pipeline.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from enum import Enum
-from typing import Any, Union
+from dataclasses import asdict, dataclass
+from enum import StrEnum
+from typing import Any
 
 
-class DocumentSource(str, Enum):
+class DocumentSource(StrEnum):
     """Where a document originated in the ELH database."""
 
     REVIEW = "review"
     HOUSE = "house"
     ROOM = "room"
 
-class Intent(str, Enum):
+
+class Intent(StrEnum):
     """Which corpus the IntentRouter decide to target.
-    
+
     - REVIEWS: user asks about experience, atmosphere, landlord, issues
     - DESCRIPTIONS: user asks about facts, amenities, prices, location
     - BOTH: intent is ambiguous or multi-faceted, query both corpora
@@ -26,6 +28,7 @@ class Intent(str, Enum):
     REVIEWS = "reviews"
     DESCRIPTIONS = "descriptions"
     BOTH = "both"
+
 
 @dataclass(frozen=True, slots=True)
 class RoutingDecision:
@@ -36,11 +39,11 @@ class RoutingDecision:
     reasoning: str = ""
     source: str = "llm"
 
- 
+
 @dataclass(frozen=True, slots=True)
 class ConversationTurn:
     """A single (question, answer) pair in a conversation."""
- 
+
     question: str
     answer: str
 
@@ -69,7 +72,7 @@ class ReviewMetadata:
     date_review: str = ""
     review_title: str = ""
     review_text_original: str = ""
- 
+
     def to_pinecone_dict(self) -> dict[str, Any]:
         """Convert to a Pinecone-safe dict (str/int/float/bool/list[str] only)."""
         d = asdict(self)
@@ -77,7 +80,7 @@ class ReviewMetadata:
         return d
 
     @classmethod
-    def from_pinecone_dict(cls, data: dict[str, Any]) -> "ReviewMetadata":
+    def from_pinecone_dict(cls, data: dict[str, Any]) -> ReviewMetadata:
         """Reconstruct from a Pinecone match.metadata dict."""
         known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
         clean = {k: v for k, v in data.items() if k in known}
@@ -103,15 +106,16 @@ class HouseMetadata:
         d = asdict(self)
         d["source"] = self.source.value
         return d
-    
+
     @classmethod
-    def from_pinecone_dict(cls, data: dict[str, Any]) -> "HouseMetadata":
+    def from_pinecone_dict(cls, data: dict[str, Any]) -> HouseMetadata:
         """Reconstruct from a Pinecone match.metadata dict."""
-        known = {f.name for f in cls.__dataclass_fields__.values()} # type: ignore[attr-defined]
+        known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
         clean = {k: v for k, v in data.items() if k in known}
         if "source" in clean and isinstance(clean["source"], str):
             clean["source"] = DocumentSource(clean["source"])
         return cls(**clean)
+
 
 @dataclass(frozen=True, slots=True)
 class RoomMetadata:
@@ -132,25 +136,27 @@ class RoomMetadata:
         d = asdict(self)
         d["source"] = self.source.value
         return d
- 
+
     @classmethod
-    def from_pinecone_dict(cls, data: dict[str, Any]) -> "RoomMetadata":
+    def from_pinecone_dict(cls, data: dict[str, Any]) -> RoomMetadata:
         """Reconstruct from a Pinecone match.metadata dict."""
         known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
         clean = {k: v for k, v in data.items() if k in known}
         if "source" in clean and isinstance(clean["source"], str):
             clean["source"] = DocumentSource(clean["source"])
         return cls(**clean)
-    
+
+
 # Union type for any metadata
 
-DocumentMetadata = Union[ReviewMetadata, HouseMetadata, RoomMetadata]
+DocumentMetadata = ReviewMetadata | HouseMetadata | RoomMetadata
 """Type alias for any metadata type in the system."""
+
 
 def metadata_from_pinecone_dict(data: dict[str, Any]) -> DocumentMetadata:
     """
     Dispatch-by-source reconstruction of metadata from a Pinecone record.
- 
+
     Looks at the `source` field and delegates to the right class.
     """
     source_str = data.get("source", DocumentSource.REVIEW.value)
@@ -160,7 +166,9 @@ def metadata_from_pinecone_dict(data: dict[str, Any]) -> DocumentMetadata:
         return RoomMetadata.from_pinecone_dict(data)
     return ReviewMetadata.from_pinecone_dict(data)
 
+
 # Document and retrievl wrappers
+
 
 @dataclass(frozen=True, slots=True)
 class Document:
@@ -173,7 +181,7 @@ class Document:
 @dataclass(frozen=True, slots=True)
 class RetrievalResult:
     """A single document returned by the retriever.
-    
+
     Carries both the original vector-similarity score and (optionally) the
     cross-encoder rerank score.
     """
@@ -187,7 +195,7 @@ class RetrievalResult:
     def score(self) -> float:
         """
         The score used for final ranking
-        
+
         Prefers the rerank score when available, falls back to the raw
         vector score.
         """
@@ -210,7 +218,7 @@ class RAGResponse:
     rewritten_query: str | None = None
     sources_by_source: dict[str, list[RetrievalResult]] | None = None
     routing: RoutingDecision | None = None
- 
+
     def to_dict(self) -> dict[str, Any]:
         """JSON-serialisable dict representation."""
         payload: dict[str, Any] = {

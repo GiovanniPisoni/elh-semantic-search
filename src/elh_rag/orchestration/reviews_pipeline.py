@@ -3,6 +3,7 @@ ReviewsPipeline — retrieval over the student-reviews corpus.
 
 Concrete subclass of CorpusPipeline.
 """
+
 from __future__ import annotations
 
 from typing import Any

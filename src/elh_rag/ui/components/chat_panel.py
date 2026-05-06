@@ -4,6 +4,7 @@ Chat panel (left column of the chat view).
 Shows the conversation history as bubbles, plus a fixed input at the
 bottom for follow-up questions.
 """
+
 from __future__ import annotations
 
 import html as _html
@@ -12,7 +13,6 @@ import streamlit as st
 
 from elh_rag.ui import state
 from elh_rag.ui.state import ChatMessage
-
 
 _AI_AVATAR_SVG = """\
 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -84,9 +84,7 @@ def render_input() -> tuple[bool, str, st.delta_generator.DeltaGenerator]:
                 help="Clear the conversation and start fresh",
             )
         with btn_col:
-            submitted = st.form_submit_button(
-                "➤", type="primary", use_container_width=True
-            )
+            submitted = st.form_submit_button("➤", type="primary", use_container_width=True)
 
     if state.consume_auto_submit():
         submitted = True

@@ -1,9 +1,9 @@
 """Tests for the ConversationMemory bounded FIFO buffer."""
+
 from __future__ import annotations
 
 from elh_rag.retrieval.conversation_memory import ConversationMemory
 from elh_rag.schemas import ConversationTurn
-
 
 # Empty / lifecycle
 

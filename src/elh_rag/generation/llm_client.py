@@ -4,6 +4,7 @@ LLM client wrapper.
 Encapsulates the Anthropic SDK behind a small, swappable interface,
 making the pipeline independent from any specific provider.
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,9 +25,7 @@ class LLMClient:
         max_tokens: int | None = None,
     ) -> None:
         self._model = model or settings.llm_model
-        self._temperature = (
-            temperature if temperature is not None else settings.llm_temperature
-        )
+        self._temperature = temperature if temperature is not None else settings.llm_temperature
         self._max_tokens = max_tokens or settings.llm_max_tokens
         self._client: Any | None = None
 

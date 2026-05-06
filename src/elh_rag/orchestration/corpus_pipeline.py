@@ -8,6 +8,7 @@ The base class encapsulates three retrieval concerns:
 
 Crucially it does NOT call the generation LLM.
 """
+
 from __future__ import annotations
 
 import logging
@@ -36,6 +37,7 @@ class CorpusResult:
 
 class CorpusPipeline(ABC):
     """Base class for a retrieval pipeline over a single corpus."""
+
     corpus_name: str = "generic"
 
     def __init__(

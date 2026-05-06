@@ -5,6 +5,7 @@ Runs 20 queries through the complete system — rewrite + retrieve + rerank
 + intent routing + dual-corpus retrieval + generation — and produces a
 Markdown report.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,8 +20,7 @@ import yaml
 
 from elh_rag.logging_setup import setup_logging
 from elh_rag.pipeline import RAGPipeline
-from elh_rag.schemas import Intent, RAGResponse
-
+from elh_rag.schemas import RAGResponse
 
 # Cost model (USD per million tokens)
 
@@ -127,12 +127,8 @@ def _serialise_sources(sources: list) -> list[dict[str, Any]]:
                 "roomname": getattr(m, "roomname", ""),
                 "city": m.city,
                 "zone": getattr(m, "zone", ""),
-                "vector_score": round(s.vector_score, 3)
-                if s.vector_score is not None
-                else None,
-                "rerank_score": round(s.rerank_score, 3)
-                if s.rerank_score is not None
-                else None,
+                "vector_score": round(s.vector_score, 3) if s.vector_score is not None else None,
+                "rerank_score": round(s.rerank_score, 3) if s.rerank_score is not None else None,
             }
         )
     return out
@@ -164,9 +160,7 @@ def compute_metrics(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "median": round(statistics.median(latencies), 3),
         "min": round(min(latencies), 3),
         "max": round(max(latencies), 3),
-        "p95": round(
-            latencies_sorted[max(0, int(0.95 * len(latencies_sorted)) - 1)], 3
-        ),
+        "p95": round(latencies_sorted[max(0, int(0.95 * len(latencies_sorted)) - 1)], 3),
     }
 
     # Routing accuracy vs expected_intent
@@ -229,10 +223,7 @@ def _routing_accuracy(ok: list[dict[str, Any]]) -> tuple[int, int]:
 def _cost_estimate(n_queries: int) -> dict[str, Any]:
     """Estimate total API cost (USD) for the benchmark run."""
     haiku_in = _EST_TOKENS_PER_QUERY["router_input"] + _EST_TOKENS_PER_QUERY["rewriter_input"]
-    haiku_out = (
-        _EST_TOKENS_PER_QUERY["router_output"]
-        + _EST_TOKENS_PER_QUERY["rewriter_output"]
-    )
+    haiku_out = _EST_TOKENS_PER_QUERY["router_output"] + _EST_TOKENS_PER_QUERY["rewriter_output"]
     sonnet_in = _EST_TOKENS_PER_QUERY["generator_input"]
     sonnet_out = _EST_TOKENS_PER_QUERY["generator_output"]
 
@@ -278,7 +269,9 @@ def generate_report(
     lines.append("# ELH RAG — Orchestrator Qualitative Benchmark")
     lines.append("")
     lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    lines.append(f"**Queries:** {metrics['total_queries']}  ·  **OK:** {metrics['ok']}  ·  **Errored:** {metrics['errored']}")
+    lines.append(
+        f"**Queries:** {metrics['total_queries']}  ·  **OK:** {metrics['ok']}  ·  **Errored:** {metrics['errored']}"
+    )
     if config_label:
         lines.append(f"**Configuration label:** `{config_label}`")
     lines.append(
@@ -335,8 +328,7 @@ def generate_report(
             src = "—"
         conf_str = f"{conf:.2f}" if conf is not None else "—"
         lines.append(
-            f"| {r['id']} | {r['category']} | {expected} | {got} | "
-            f"{conf_str} | {src} | {match} |"
+            f"| {r['id']} | {r['category']} | {expected} | {got} | {conf_str} | {src} | {match} |"
         )
     lines.append("")
 
@@ -364,13 +356,8 @@ def _write_exec_summary(lines: list[str], metrics: dict[str, Any]) -> None:
     acc = metrics.get("routing_accuracy", {})
     lines.append("### Routing agreement with expected intents")
     lines.append("")
-    lines.append(
-        f"- **Matched:** {acc.get('matched')}/{acc.get('total')} "
-        f"({acc.get('pct')}%)"
-    )
-    lines.append(
-        f"- **Mismatched:** {acc.get('mismatched')}/{acc.get('total')}"
-    )
+    lines.append(f"- **Matched:** {acc.get('matched')}/{acc.get('total')} ({acc.get('pct')}%)")
+    lines.append(f"- **Mismatched:** {acc.get('mismatched')}/{acc.get('total')}")
     lines.append("")
     lines.append(
         "_'Expected intent' labels are our own annotation in the YAML. "
@@ -448,9 +435,7 @@ def _write_query_section(lines: list[str], r: dict[str, Any]) -> None:
         lines.append(f"  _→ {routing['reasoning']}_")
     lines.append("")
 
-    lines.append(
-        f"**Latency:** {r['latency_sec']}s · **Mode:** `{r.get('mode', '?')}`"
-    )
+    lines.append(f"**Latency:** {r['latency_sec']}s · **Mode:** `{r.get('mode', '?')}`")
     if r.get("rewritten_query"):
         lines.append(f"**Rewritten:** *{r['rewritten_query']}*")
     lines.append("")
@@ -469,9 +454,7 @@ def _write_query_section(lines: list[str], r: dict[str, Any]) -> None:
                 loc = ", ".join(filter(None, [s.get("zone"), s.get("city")])) or "—"
                 vs = f"{s['vector_score']:.3f}" if s.get("vector_score") is not None else "—"
                 rs = f"{s['rerank_score']:.3f}" if s.get("rerank_score") is not None else "—"
-                lines.append(
-                    f"| {i} | {s.get('source', '?')} | {name} | {loc} | {vs} | {rs} |"
-                )
+                lines.append(f"| {i} | {s.get('source', '?')} | {name} | {loc} | {vs} | {rs} |")
             lines.append("")
 
     answer = r.get("answer", "")
@@ -488,9 +471,7 @@ def _write_query_section(lines: list[str], r: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Run the Step 4 orchestrator benchmark."
-    )
+    parser = argparse.ArgumentParser(description="Run the Step 4 orchestrator benchmark.")
     parser.add_argument(
         "--queries",
         type=Path,
@@ -613,14 +594,8 @@ def main() -> None:
     if metrics.get("ok"):
         lat = metrics["latency"]
         acc = metrics["routing_accuracy"]
-        print(
-            f"  Latency  avg={lat['avg']}s  median={lat['median']}s  "
-            f"p95={lat['p95']}s"
-        )
-        print(
-            f"  Routing agreement: {acc['matched']}/{acc['total']} "
-            f"({acc['pct']}%)"
-        )
+        print(f"  Latency  avg={lat['avg']}s  median={lat['median']}s  p95={lat['p95']}s")
+        print(f"  Routing agreement: {acc['matched']}/{acc['total']} ({acc['pct']}%)")
         dist = metrics["routing_distribution"]
         print(
             f"  Intent distribution: reviews={dist.get('reviews', 0)}, "
