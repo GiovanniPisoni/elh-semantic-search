@@ -44,9 +44,7 @@ class ToolValidationError(ToolError):
     def __init__(self, tool_name: str, original: Exception) -> None:
         self.tool_name = tool_name
         self.original = original
-        super().__init__(
-            f"Invalid input for tool {tool_name!r}: {original}"
-        )
+        super().__init__(f"Invalid input for tool {tool_name!r}: {original}")
 
 
 class ToolExecutionError(ToolError):

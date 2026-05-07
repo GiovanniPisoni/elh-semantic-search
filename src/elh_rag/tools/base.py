@@ -22,8 +22,9 @@ It exposes three things:
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
@@ -62,10 +63,7 @@ def register_tool(
     if not name or not name.strip():
         raise ValueError("Tool name must be a non-empty string.")
     if not isinstance(input_model, type) or not issubclass(input_model, BaseModel):
-        raise ValueError(
-            f"input_model must be a pydantic.BaseModel subclass, "
-            f"got {input_model!r}."
-        )
+        raise ValueError(f"input_model must be a pydantic.BaseModel subclass, got {input_model!r}.")
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         if name in TOOLS_REGISTRY:
@@ -75,16 +73,17 @@ def register_tool(
             )
         sig = inspect.signature(func)
         params = list(sig.parameters.values())
-        accepts_ctx = (
-            len(params) >= 2
-            and any(
-                p.name == "ctx"
-                or (idx == 1 and p.kind in (
+        accepts_ctx = len(params) >= 2 and any(
+            p.name == "ctx"
+            or (
+                idx == 1
+                and p.kind
+                in (
                     inspect.Parameter.POSITIONAL_ONLY,
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                ))
-                for idx, p in enumerate(params)
+                )
             )
+            for idx, p in enumerate(params)
         )
         TOOLS_REGISTRY[name] = ToolSpec(
             name=name,

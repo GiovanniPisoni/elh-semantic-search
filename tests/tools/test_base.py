@@ -7,20 +7,21 @@ dispatch, and error normalisation.
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 from pydantic import BaseModel, Field
 
-from elh_rag.tools import base
 from elh_rag.tools import (
     ToolExecutionError,
     ToolNotFoundError,
     ToolValidationError,
+    base,
     execute_tool,
     get_tool,
     list_tools,
     register_tool,
 )
-
 
 # Fixtures
 
@@ -330,7 +331,7 @@ class TestIntrospection:
             return None
 
         spec = get_tool("frozen")
-        with pytest.raises(Exception):
+        with pytest.raises(FrozenInstanceError):
             # frozen dataclass: assignment should raise FrozenInstanceError
             spec.name = "tampered"  # type: ignore[misc]
 
