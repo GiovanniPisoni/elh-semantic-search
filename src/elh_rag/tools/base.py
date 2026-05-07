@@ -1,5 +1,4 @@
-"""
-Tool resgistry, decorator factory and dispatcher.
+"""Tool registry, decorator factory and dispatcher.
 
 This module is the backbone of the tool-augmented RAG architecture.
 It exposes three things:
@@ -12,18 +11,19 @@ It exposes three things:
     * ``TOOLS_REGISTRY`` — module-level dict, single source of truth
       mapping tool names to their callable + metadata.
 
-    * ``execute_tool(name, payload)`` — dispatcher. Looks up the tool,
-      validates the payload against the registered Pydantic model,
-      runs the function, and returns its raw output. Errors are
-      normalised to ``ToolValidationError`` / ``ToolExecutionError`` /
+    * ``execute_tool(name, payload, ctx=None)`` — dispatcher. Looks up
+      the tool, validates the payload against the registered Pydantic
+      model, runs the function (passing ``ctx`` if the tool accepts
+      it), and returns its raw output. Errors are normalised to
+      ``ToolValidationError`` / ``ToolExecutionError`` /
       ``ToolNotFoundError``.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+import inspect
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable, Mapping
 
 from pydantic import BaseModel, ValidationError
 
@@ -38,17 +38,16 @@ from .errors import (
 
 @dataclass(frozen=True)
 class ToolSpec:
-    """
-    Frozen metadata about a registered tool.
-    """
+    """Frozen metadata about a registered tool."""
 
     name: str
     description: str
     input_model: type[BaseModel]
-    func: Callable[[BaseModel], Any]
+    func: Callable[..., Any]
+    accepts_ctx: bool
 
 
-# Single source of truth.
+# Single source of truth. Populated at import time by ``@register_tool``.
 TOOLS_REGISTRY: dict[str, ToolSpec] = {}
 
 # Decorator factory
@@ -59,11 +58,14 @@ def register_tool(
     description: str,
     input_model: type[BaseModel],
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    """Register a callable as a tool, attaching schema and metadata"""
+    """Register a callable as a tool, attaching schema and metadata."""
     if not name or not name.strip():
         raise ValueError("Tool name must be a non-empty string.")
     if not isinstance(input_model, type) or not issubclass(input_model, BaseModel):
-        raise ValueError(f"input_model must be a pydantic.BaseModel subclass, got {input_model!r}")
+        raise ValueError(
+            f"input_model must be a pydantic.BaseModel subclass, "
+            f"got {input_model!r}."
+        )
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         if name in TOOLS_REGISTRY:
@@ -71,11 +73,25 @@ def register_tool(
                 f"Tool {name!r} is already registered "
                 f"(by {TOOLS_REGISTRY[name].func.__qualname__})."
             )
+        sig = inspect.signature(func)
+        params = list(sig.parameters.values())
+        accepts_ctx = (
+            len(params) >= 2
+            and any(
+                p.name == "ctx"
+                or (idx == 1 and p.kind in (
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                ))
+                for idx, p in enumerate(params)
+            )
+        )
         TOOLS_REGISTRY[name] = ToolSpec(
             name=name,
             description=description,
             input_model=input_model,
             func=func,
+            accepts_ctx=accepts_ctx,
         )
         return func
 
@@ -85,8 +101,12 @@ def register_tool(
 # Dispatcher
 
 
-def execute_tool(name: str, payload: Mapping[str, Any]) -> Any:
-    """validate a raw payload and run the registered tool."""
+def execute_tool(
+    name: str,
+    payload: Mapping[str, Any],
+    ctx: Any | None = None,
+) -> Any:
+    """Validate a raw payload and run the registered tool."""
     spec = TOOLS_REGISTRY.get(name)
     if spec is None:
         raise ToolNotFoundError(name, available=list(TOOLS_REGISTRY))
@@ -97,6 +117,9 @@ def execute_tool(name: str, payload: Mapping[str, Any]) -> Any:
         raise ToolValidationError(spec.name, e) from e
 
     try:
+        if spec.accepts_ctx:
+            # Pass ctx as keyword to handle both positional and keyword-only signatures
+            return spec.func(validated, ctx=ctx)
         return spec.func(validated)
     except (ToolValidationError, ToolNotFoundError):
         # These are programming errors from inside a tool — bubble up
@@ -114,7 +137,7 @@ def execute_tool(name: str, payload: Mapping[str, Any]) -> Any:
 
 
 def list_tools() -> list[str]:
-    """Return registered tool names (sorted, for stable test outputs)"""
+    """Return registered tool names (sorted, for stable test output)."""
     return sorted(TOOLS_REGISTRY)
 
 

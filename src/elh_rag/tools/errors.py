@@ -3,13 +3,13 @@
 Three levels of error, with clear semantics so the orchestrator can
 decide the user-facing reaction:
 
-    * ToolNotFoundError: orchestrator picked a non-existent tool name
+    * ToolNotFoundError  → orchestrator picked a non-existent tool name
                           (programming bug or LLM hallucination on tool
                           names — should bubble up).
-    * ToolValidationError: input dict failed Pydantic validation
+    * ToolValidationError → input dict failed Pydantic validation
                            (malformed args from the LLM — orchestrator
                            may retry with a corrective prompt).
-    * ToolExecutionError: tool ran but failed at runtime (DB down,
+    * ToolExecutionError → tool ran but failed at runtime (DB down,
                           empty result, downstream API error).
                           Orchestrator should surface a graceful message
                           to the user and log the cause.
@@ -44,7 +44,9 @@ class ToolValidationError(ToolError):
     def __init__(self, tool_name: str, original: Exception) -> None:
         self.tool_name = tool_name
         self.original = original
-        super().__init__(f"Invalid input for tool {tool_name!r}: {original}")
+        super().__init__(
+            f"Invalid input for tool {tool_name!r}: {original}"
+        )
 
 
 class ToolExecutionError(ToolError):

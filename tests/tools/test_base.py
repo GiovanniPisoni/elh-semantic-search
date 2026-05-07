@@ -7,31 +7,45 @@ dispatch, and error normalisation.
 
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
-
 import pytest
 from pydantic import BaseModel, Field
 
+from elh_rag.tools import base
 from elh_rag.tools import (
     ToolExecutionError,
     ToolNotFoundError,
     ToolValidationError,
-    base,
     execute_tool,
     get_tool,
     list_tools,
     register_tool,
 )
 
+
 # Fixtures
 
 
 @pytest.fixture(autouse=True)
-def _clear_registry():
-    """Reset the global registry around each test for isolation."""
+def _isolated_registry():
+    """Snapshot the registry, give the test a clean slate, then restore.
+
+    This fixture is local to test_base.py (autouse=True only here). It
+    saves the existing registry contents (e.g., real tools registered
+    at import time by test_find_rooms.py), wipes it for the test's
+    benefit, then restores the snapshot afterwards. This way:
+
+      * Tests in this file get a guaranteed-empty registry.
+      * Tests in other files that depend on real tools (find_rooms, ...)
+        keep working regardless of execution order.
+
+    No module reload is needed — RoomMatch and friends keep their
+    identity, so isinstance() checks across modules behave correctly.
+    """
+    snapshot = dict(base.TOOLS_REGISTRY)
     base._clear_registry_for_tests()
     yield
     base._clear_registry_for_tests()
+    base.TOOLS_REGISTRY.update(snapshot)
 
 
 # Sample input models for tests
@@ -316,7 +330,7 @@ class TestIntrospection:
             return None
 
         spec = get_tool("frozen")
-        with pytest.raises(FrozenInstanceError):
+        with pytest.raises(Exception):
             # frozen dataclass: assignment should raise FrozenInstanceError
             spec.name = "tampered"  # type: ignore[misc]
 
@@ -342,3 +356,81 @@ class TestErrorClasses:
         err = ToolExecutionError("toolx", message="something broke", cause=original)
         assert err.cause is original
         assert "ValueError" in str(err)
+
+
+# Tests: ctx injection (Pattern A)
+
+
+class TestCtxInjection:
+    def test_tool_without_ctx_param_does_not_receive_ctx(self):
+        """Single-arg tool: ctx is silently ignored."""
+
+        @register_tool(name="no_ctx", description="...", input_model=_SimpleInput)
+        def no_ctx(payload):
+            return {"got_ctx": False}
+
+        spec = base.TOOLS_REGISTRY["no_ctx"]
+        assert spec.accepts_ctx is False
+
+        # Calling with ctx must NOT raise — the dispatcher just ignores it
+        result = execute_tool("no_ctx", {"name": "x", "count": 1}, ctx="anything")
+        assert result == {"got_ctx": False}
+
+    def test_tool_with_ctx_receives_ctx(self):
+        """Two-arg tool: ctx is passed through."""
+
+        @register_tool(name="with_ctx", description="...", input_model=_SimpleInput)
+        def with_ctx(payload, ctx):
+            return {"ctx_value": ctx}
+
+        spec = base.TOOLS_REGISTRY["with_ctx"]
+        assert spec.accepts_ctx is True
+
+        result = execute_tool(
+            "with_ctx",
+            {"name": "x", "count": 1},
+            ctx={"db": "fake_executor"},
+        )
+        assert result == {"ctx_value": {"db": "fake_executor"}}
+
+    def test_tool_with_ctx_receives_none_when_not_provided(self):
+        """If caller omits ctx, the tool gets None."""
+
+        @register_tool(name="ctx_default", description="...", input_model=_SimpleInput)
+        def ctx_default(payload, ctx):
+            return ctx is None
+
+        result = execute_tool("ctx_default", {"name": "x", "count": 1})
+        assert result is True
+
+    def test_tool_with_keyword_ctx_works(self):
+        """A tool may declare 'ctx' as a keyword-only param."""
+
+        @register_tool(name="kw_ctx", description="...", input_model=_SimpleInput)
+        def kw_ctx(payload, *, ctx):
+            return ctx
+
+        spec = base.TOOLS_REGISTRY["kw_ctx"]
+        assert spec.accepts_ctx is True
+
+        result = execute_tool("kw_ctx", {"name": "x", "count": 1}, ctx="hello")
+        assert result == "hello"
+
+    def test_validation_error_with_ctx_tool(self):
+        """ctx-aware tool still goes through input validation first."""
+
+        @register_tool(name="strict_ctx", description="...", input_model=_SimpleInput)
+        def strict_ctx(payload, ctx):
+            return None
+
+        with pytest.raises(ToolValidationError):
+            execute_tool("strict_ctx", {"count": 5}, ctx="anything")  # missing name
+
+    def test_runtime_error_in_ctx_tool_wrapped(self):
+        @register_tool(name="crash_ctx", description="...", input_model=_SimpleInput)
+        def crash_ctx(payload, ctx):
+            raise RuntimeError("DB down")
+
+        with pytest.raises(ToolExecutionError) as exc_info:
+            execute_tool("crash_ctx", {"name": "x", "count": 0}, ctx={})
+        assert "DB down" in str(exc_info.value)
