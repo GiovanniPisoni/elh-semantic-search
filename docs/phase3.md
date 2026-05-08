@@ -214,7 +214,6 @@ girls, max 6 ppl, female only, 500€ bills included"*
   "max_house_occupancy": 6,
   "gender_preference": "female_only",
   "max_price_eur": 500,
-  "bills_included": true,
   "num_rooms_needed": 3
 }
 ```
@@ -409,7 +408,7 @@ Sintesi delle 16 domande reali ricevute dal marketing manager ELH:
 | # | Query | Tool |
 |---|---|---|
 | 1 | Couples + green line + max 5 ppl + sett-gen | `find_rooms` |
-| 2 | 3 stanze + 20 ago–fine dic + NOVA + 3 ragazze ITA + female + 500€ + bills | `find_available_rooms` |
+| 2 | 3 stanze + 20 ago–fine dic + NOVA + 3 ragazze ITA + female + 500€ (bills via descr.) | `find_available_rooms` |
 | 3 | Porto + year contract + metro + accepts cat | `find_rooms` |
 | 4 | "Long term rental? Max e min?" | `answer_policy` |
 | 5 | "Reservation fee?" (generica) | `answer_policy` |
