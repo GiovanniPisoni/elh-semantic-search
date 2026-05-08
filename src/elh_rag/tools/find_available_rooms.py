@@ -3,21 +3,31 @@
 Specialisation of :func:`find_rooms` with **dates as a hard constraint**.
 
 The base tool (Tool 1) treats ``available_from`` / ``available_to`` as
-soft hints: if absent, it falls back to autumn pricing and ignores
-reservation overlap. Tool 2 makes them mandatory and adds two pieces
-of logic on top of Tool 1's structural filtering:
+soft hints: if absent it falls back to autumn pricing and ignores
+reservation overlap. Tool 2 promotes both fields to required and adds
+two pieces of logic on top of Tool 1's structural filtering:
 
-    1. **Reservation overlap exclusion** — rooms with any
-       ``reservation`` row whose ``[blockeddatestart, blockeddataend)``
-       interval overlaps the requested window are removed from the
-       result.
+    1. **Reservation overlap exclusion** — rooms whose
+       ``[blockeddatestart, blockeddataend]`` interval overlaps the
+       requested window are removed from the result. Implemented in
+       :mod:`elh_rag.tools._reservation`.
 
-    2. **Season-aware weighted pricing** — instead of selecting a single
-       seasonal column (``springprice`` / ``summerprice`` /
-       ``autumnprice``), the monthly price is the weighted average over
-       the days of the requested period that fall in each season.
+    2. **Season-aware weighted pricing** — instead of a single seasonal
+       column, the monthly price is computed by
+       :func:`elh_rag.tools._pricing.compute_room_monthly_price`.
        Rooms with ``fixedprice = 'Y'`` keep their flat price and are
-       flagged via ``is_fixed_price`` on the output.
+       flagged via ``RoomMatch.is_fixed_price``.
+
+DB roundtrips: this tool issues **up to 3 queries** in sequence:
+
+    1. Tool 1's structural filter   (always, unless 0 rows)
+    2. Reservation overlap          (skipped if step 1 returned 0)
+    3. Seasonal price lookup        (skipped if step 2 emptied result)
+
+The Pydantic input model is intentionally a subclass of
+:class:`FindRoomsInput`, so the same payload can be forwarded straight
+to Tool 1's raw function (skipping its registry dispatcher to avoid
+double-validation).
 """
 
 from __future__ import annotations
@@ -32,14 +42,14 @@ from pydantic import Field, model_validator
 from ._db import DBExecutor
 from ._pricing import compute_room_monthly_price
 from ._reservation import _find_occupied_room_ids
-from ._room_id import decode_room_id
+from ._room_id import decode_room_id, normalize_id
 from .base import register_tool
 from .find_rooms import FindRoomsInput, FindRoomsOutput, RoomMatch, find_rooms
 
 # Input model
 
 _MAX_PERIOD_YEARS = 3
-_MAX_PERIOD_DAYS = _MAX_PERIOD_YEARS * 366  # 366 to be safe across leap years
+_MAX_PERIOD_DAYS = _MAX_PERIOD_YEARS * 366
 
 
 class FindAvailableRoomsInput(FindRoomsInput):
@@ -57,7 +67,6 @@ class FindAvailableRoomsInput(FindRoomsInput):
 
     @model_validator(mode="after")
     def check_period_bounds(self) -> FindAvailableRoomsInput:
-        """Reject pathological periods (zero-length already caught upstream)."""
         delta = (self.available_to - self.available_from).days
         if delta > _MAX_PERIOD_DAYS:
             raise ValueError(
@@ -80,8 +89,8 @@ ORDER BY loc_idhouse, idroom, dateupdate DESC
 
 def _fetch_seasonal_prices(
     db: DBExecutor,
-    keys: list[tuple[Any, Any]],
-) -> dict[tuple[Any, Any], dict[str, Any]]:
+    keys: list[tuple[str, str]],
+) -> dict[tuple[str, str], dict[str, Any]]:
     """Fetch raw seasonal price columns for the given (loc_idhouse, idroom) pairs."""
     if not keys:
         return {}
@@ -98,7 +107,10 @@ def _fetch_seasonal_prices(
     rows = db.execute(sql, tuple(params))
 
     return {
-        (row["loc_idhouse"], row["idroom"]): {
+        (
+            normalize_id(row["loc_idhouse"], name="loc_idhouse"),
+            normalize_id(row["idroom"], name="idroom"),
+        ): {
             "springprice": row["springprice"],
             "summerprice": row["summerprice"],
             "autumnprice": row["autumnprice"],
@@ -111,7 +123,7 @@ def _fetch_seasonal_prices(
 # Helpers
 
 
-def _room_match_keys(rm: RoomMatch) -> tuple[Any, Any]:
+def _room_match_keys(rm: RoomMatch) -> tuple[str, str]:
     """Extract the raw ``(loc_idhouse, idroom)`` pair from a RoomMatch."""
     parts = decode_room_id(rm.room_id)
     return (parts.house_id, parts.room_id)
@@ -197,7 +209,7 @@ def find_available_rooms(
         raw = raw_by_key.get(_room_match_keys(rm))
         if raw is None:
             # Room disappeared between the two queries (race) or the
-            # price row was unfetchable, skipp.
+            # price row was unfetchable. Skip rather than guess.
             continue
         enriched.append(
             _enrich_with_seasonal_price(

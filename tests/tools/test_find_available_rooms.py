@@ -184,6 +184,8 @@ class TestTypeCoercion:
             )
 
 
+# Step 4 tests — orchestration
+
 # Helpers
 
 
@@ -208,9 +210,8 @@ def _make_room_row(idroom: int, idhouse: int = 42, **overrides: Any) -> dict[str
         "h_dateupdate": datetime(2024, 9, 15, 10, 30),
         "city": "Lisbon",
         "zone": "Chiado",
-        "neighbourhood": "Chiado",
+        "neighborhood": "Chiado",
         "distancepublictransport": 200,
-        "bills": "Y",
         "maxoccupancy": 5,
     }
     base.update(overrides)
@@ -364,7 +365,7 @@ class TestOrchestration:
 
         assert len(result.rooms) == 2
         room_ids = {_decoded_idroom(rm.room_id) for rm in result.rooms}
-        assert room_ids == {3, 5}
+        assert room_ids == {"3", "5"}
 
     def test_weighted_price_cross_season(self):
         """15 May → 31 Aug → 47 spring + 62 summer days, weighted."""
@@ -482,7 +483,7 @@ class TestGuards:
         )
 
         assert len(result.rooms) == 1
-        assert _decoded_idroom(result.rooms[0].room_id) == 3
+        assert _decoded_idroom(result.rooms[0].room_id) == "3"
 
 
 # _fetch_seasonal_prices unit tests
@@ -502,11 +503,11 @@ class TestFetchSeasonalPrices:
             [_make_price_row(idroom=3)],
         )
 
-        result = _fetch_seasonal_prices(db, [(42, 3)])
+        result = _fetch_seasonal_prices(db, [("42", "3")])
 
-        assert (42, 3) in result
-        assert result[(42, 3)]["springprice"] == Decimal("400.00")
-        assert result[(42, 3)]["fixedprice"] == "N"
+        assert ("42", "3") in result
+        assert result[("42", "3")]["springprice"] == Decimal("400.00")
+        assert result[("42", "3")]["fixedprice"] == "N"
 
     def test_sql_has_distinct_on_for_versioning(self):
         """Anti-regression sentinel: DISTINCT ON must be present to dedupe versions."""
@@ -534,7 +535,7 @@ class TestFetchSeasonalPrices:
 # Helper used by orchestration tests
 
 
-def _decoded_idroom(encoded_id: str) -> int:
+def _decoded_idroom(encoded_id: str) -> str:
     """Quick helper to extract the room number from an encoded room_id."""
     from elh_rag.tools._room_id import decode_room_id
 
@@ -557,11 +558,27 @@ def test_room_match_keys_round_trip_with_helper():
         zone="Chiado",
         neighborhood="Chiado",
         price_per_month_eur=400.0,
-        bills_included=True,
         private_bathroom=True,
         distance_to_transport_m=200,
         nearest_metro_line=None,
         available_from=None,
         min_reserve_months=5,
     )
-    assert _room_match_keys(rm) == (42, 3)
+    assert _room_match_keys(rm) == ("42", "3")
+
+
+def test_find_rooms_sql_uses_db_correct_neighboorhood_spelling():
+    """Tool 1's SQL must reference the actual DB column name."""
+    from elh_rag.tools.find_rooms import FindRoomsInput, _build_sql
+
+    sql, _ = _build_sql(FindRoomsInput(metro_line="green", near_landmark="NOVA"))
+    # The DB column has two 'o's. If anyone "corrects" this, the smoke
+    # test against Supabase will crash. Pin it here.
+    assert "neighboorhood" in sql, (
+        "find_rooms SQL must use 'neighboorhood' (DB column with original "
+        "ELH typo). Detected the wrong spelling 'neighbourhood'."
+    )
+    assert "h.neighbourhood" not in sql, (
+        "find_rooms SQL must NOT use 'neighbourhood' (English-correct but "
+        "absent in the ELH DB). Use 'neighboorhood' to match the column."
+    )

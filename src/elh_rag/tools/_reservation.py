@@ -8,9 +8,10 @@ overlapping the window.
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
 
 from ._db import DBExecutor
+from ._room_id import normalize_id
+
 
 # Standard closed-interval overlap test
 _OVERLAP_SQL = """\
@@ -25,7 +26,7 @@ def _find_occupied_room_ids(
     db: DBExecutor,
     period_start: date,
     period_end: date,
-) -> set[tuple[Any, Any]]:
+) -> set[tuple[str, str]]:
     """Return ``(loc_idhouse, idroom)`` pairs with reservation overlap.
 
     Both ``period_start`` and ``period_end`` are treated as inclusive,
@@ -33,8 +34,16 @@ def _find_occupied_room_ids(
     :class:`elh_rag.tools.find_available_rooms.FindAvailableRoomsInput`.
     """
     if period_end < period_start:
-        raise ValueError(f"period_end ({period_end}) is before period_start ({period_start})")
+        raise ValueError(
+            f"period_end ({period_end}) is before period_start ({period_start})"
+        )
 
     rows = db.execute(_OVERLAP_SQL, (period_end, period_start))
 
-    return {(row["loc_idhouse"], row["idroom"]) for row in rows}
+    return {
+        (
+            normalize_id(row["loc_idhouse"], name="loc_idhouse"),
+            normalize_id(row["idroom"], name="idroom"),
+        )
+        for row in rows
+    }

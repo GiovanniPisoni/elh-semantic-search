@@ -19,6 +19,10 @@ from ._metro_lines import normalize_line, zones_on_line
 from ._room_id import encode_house_id, encode_room_id
 from .base import register_tool
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Allowed values
 
 MetroLineInput = Literal[
@@ -90,14 +94,13 @@ class FindRoomsInput(BaseModel):
         default=None,
         max_length=100,
         description="Free-text landmark (e.g., 'NOVA University'). "
-        "Matched ILIKE on house.zone, neighbourhood, description.",
+        "Matched ILIKE on house.zone, neighboorhood, description.",
     )
     max_distance_to_transport_m: int | None = Field(default=None, ge=0, le=5000)
 
     # 2. PRICE
     max_price_eur: float | None = Field(default=None, ge=0, le=10000)
     min_price_eur: float | None = Field(default=None, ge=0, le=10000)
-    bills_included: bool | None = None
 
     # 3. PERIOD
     available_from: date | None = None
@@ -165,7 +168,6 @@ class RoomMatch:
     zone: str
     neighborhood: str
     price_per_month_eur: float
-    bills_included: bool
     private_bathroom: bool
     distance_to_transport_m: int | None
     nearest_metro_line: str | None
@@ -185,7 +187,6 @@ class RoomMatch:
             "zone": self.zone,
             "neighborhood": self.neighborhood,
             "price_per_month_eur": self.price_per_month_eur,
-            "bills_included": self.bills_included,
             "private_bathroom": self.private_bathroom,
             "distance_to_transport_m": self.distance_to_transport_m,
             "nearest_metro_line": self.nearest_metro_line,
@@ -304,10 +305,8 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
         "h.dateupdate AS h_dateupdate",
         "h.city",
         "h.zone",
-        "h.neighbourhood",
+        "h.neighboorhood AS neighborhood",
         "h.distancepublictransport",
-        "h.bills",
-        "h.maxoccupancy",
     ]
 
     where_parts: list[str] = ["r.status = 'Available'"]
@@ -330,7 +329,7 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
             if zones:
                 placeholders = ",".join(["%s"] * len(zones))
                 where_parts.append(
-                    f"(h.zone IN ({placeholders}) OR h.neighbourhood IN ({placeholders}))"
+                    f"(h.zone IN ({placeholders}) OR h.neighboorhood IN ({placeholders}))"
                 )
                 params.extend(sorted(zones))
                 params.extend(sorted(zones))
@@ -339,10 +338,10 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
                 where_parts.append("FALSE")
 
     if payload.near_landmark is not None:
-        # ILIKE across zone, neighbourhood, description
+        # ILIKE across zone, neighboorhood (sic), description
         like = f"%{payload.near_landmark}%"
         where_parts.append(
-            "(h.zone ILIKE %s OR h.neighbourhood ILIKE %s OR h.description ILIKE %s)"
+            "(h.zone ILIKE %s OR h.neighboorhood ILIKE %s OR h.description ILIKE %s)"
         )
         params.extend([like, like, like])
 
@@ -357,10 +356,6 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
     if payload.min_price_eur is not None:
         where_parts.append(f"{price_col} >= %s")
         params.append(payload.min_price_eur)
-    if payload.bills_included is True:
-        where_parts.append("h.bills = 'Y'")
-    elif payload.bills_included is False:
-        where_parts.append("h.bills = 'N'")
 
     # 3. Period
     if payload.min_contract_months is not None:
@@ -373,17 +368,24 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
 
     # 4. Occupancy
     if payload.accepts_couples is True:
-        where_parts.append("h.acceptscouples = 'Y'")
+        logger.warning(
+            "find_rooms: accepts_couples=True ignored — column not present "
+            "in the ELH schema."
+        )
     if payload.accepts_pets is True:
-        where_parts.append("h.acceptspets = 'Y'")
+        # Schema column is `allowpets` (not `acceptspets`).
+        where_parts.append("h.allowpets = 'Y'")
     if payload.gender_preference == "female_only":
         where_parts.append("r.femalepreferred = 'Y'")
     elif payload.gender_preference == "male_only":
         where_parts.append("r.malepreferred = 'Y'")
     # "any" → no filter
     if payload.max_house_occupancy is not None:
-        where_parts.append("h.maxoccupancy <= %s")
-        params.append(payload.max_house_occupancy)
+        logger.warning(
+            "find_rooms: max_house_occupancy=%s ignored — column not "
+            "present in the ELH schema.",
+            payload.max_house_occupancy,
+        )
 
     # 5. Explicit must_have_* amenities
     for input_field, (table, column) in _EXPLICIT_AMENITY_COLUMN_MAP.items():
@@ -462,9 +464,8 @@ def _row_to_match(
         house_name=f"{row['zone']} #{row['idhouse']}",
         city=row["city"],
         zone=row["zone"],
-        neighborhood=row.get("neighbourhood") or row["zone"],
+        neighborhood=row.get("neighborhood") or row["zone"],
         price_per_month_eur=float(row["price_eur"]),
-        bills_included=(row.get("bills") == "Y"),
         private_bathroom=(row.get("privatebathroom") == "Y"),
         distance_to_transport_m=row.get("distancepublictransport"),
         nearest_metro_line=nearest_line,
@@ -493,8 +494,6 @@ def _summarize_query(payload: FindRoomsInput) -> str:
         bits.append("couples-friendly")
     if payload.accepts_pets:
         bits.append("pets-friendly")
-    if payload.bills_included:
-        bits.append("bills included")
     if payload.num_rooms_needed > 1:
         bits.append(f"{payload.num_rooms_needed} rooms")
 
@@ -510,7 +509,7 @@ def _summarize_query(payload: FindRoomsInput) -> str:
     name="find_rooms",
     description=(
         "Search ELH rooms by structured criteria: location (city, metro line, "
-        "landmark, distance to transport), price (min/max, bills included), "
+        "landmark, distance to transport), price (min/max), "
         "period (preferences, soft constraints), occupancy (couples, pets, "
         "gender, max house size, multi-room), 11 explicit must-have amenities "
         "(private bathroom, balcony, elevator, A/C, heating, washing machine, "

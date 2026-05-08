@@ -46,10 +46,8 @@ def fake_row():
         "h_dateupdate": datetime(2024, 9, 15, 10, 30),
         "city": "Lisbon",
         "zone": "Chiado",
-        "neighbourhood": "Chiado",
+        "neighborhood": "Chiado",
         "distancepublictransport": 200,
-        "bills": "Y",
-        "maxoccupancy": 5,
     }
 
 
@@ -80,7 +78,6 @@ class TestFindRoomsInput:
             near_landmark="NOVA",
             max_price_eur=500,
             min_price_eur=300,
-            bills_included=True,
             available_from=date(2026, 9, 1),
             available_to=date(2027, 1, 31),
             min_reserve_months=4,
@@ -205,7 +202,7 @@ class TestBuildSql:
         """green line → IN clause with Lisbon green-line zones."""
         sql, params = _build_sql(FindRoomsInput(metro_line="green"))
         assert "h.zone IN" in sql
-        assert "h.neighbourhood IN" in sql
+        assert "h.neighboorhood IN" in sql
         # Some green-line zone must appear in params
         assert "Chiado" in params or "Alvalade" in params
 
@@ -230,13 +227,11 @@ class TestBuildSql:
         assert "ILIKE" in sql
         assert "%NOVA%" in params
 
-    def test_couples_filter(self):
-        sql, _ = _build_sql(FindRoomsInput(accepts_couples=True))
-        assert "h.acceptscouples = 'Y'" in sql
-
     def test_pets_filter(self):
+        """The schema column is `allowpets`, not `acceptspets`."""
         sql, _ = _build_sql(FindRoomsInput(accepts_pets=True))
-        assert "h.acceptspets = 'Y'" in sql
+        assert "h.allowpets = 'Y'" in sql
+        assert "acceptspets" not in sql
 
     def test_gender_female_only(self):
         sql, _ = _build_sql(FindRoomsInput(gender_preference="female_only"))
@@ -291,21 +286,30 @@ class TestBuildSql:
         assert "r.minreservemonths >= %s" in sql
         assert 6 in params
 
-    def test_combined_complex_query(self):
-        """Marketing Q1: green line + couples + max 5 ppl"""
-        sql, params = _build_sql(
-            FindRoomsInput(
-                city="Lisbon",
-                metro_line="green",
-                accepts_couples=True,
-                max_house_occupancy=5,
+    def test_combined_complex_query(self, caplog):
+        """Marketing Q1: green line + couples + max 5 ppl."""
+        import logging
+
+        with caplog.at_level(logging.WARNING, logger="elh_rag.tools.find_rooms"):
+            sql, params = _build_sql(
+                FindRoomsInput(
+                    city="Lisbon",
+                    metro_line="green",
+                    accepts_couples=True,
+                    max_house_occupancy=5,
+                )
             )
-        )
+
+        # Working filters
         assert "h.city = %s" in sql
-        assert "h.acceptscouples = 'Y'" in sql
-        assert "h.maxoccupancy <= %s" in sql
-        # Lisbon green zones present
-        assert "Chiado" in params
+        assert "Lisbon" in params
+
+        # Skipped filters (no SQL impact, warnings emitted)
+        assert "acceptscouples" not in sql
+        assert "maxoccupancy" not in sql
+        warning_messages = [r.message for r in caplog.records]
+        assert any("accepts_couples" in m for m in warning_messages)
+        assert any("max_house_occupancy" in m for m in warning_messages)
 
     def test_marketing_q3_porto_year_metro_pets(self):
         """Marketing Q3: Porto + year contract + metro + accepts cat"""
@@ -321,7 +325,7 @@ class TestBuildSql:
         assert "Porto" in params
         assert "r.minreservemonths >= %s" in sql
         assert 12 in params
-        assert "h.acceptspets = 'Y'" in sql
+        assert "h.allowpets = 'Y'" in sql
         assert "h.distancepublictransport <= %s" in sql
 
     def test_marketing_q10_cheapest_internal_ok(self):
@@ -364,19 +368,18 @@ class TestFindRoomsDispatch:
         assert match.zone == "Chiado"
         assert match.price_per_month_eur == 450.0
         assert match.private_bathroom is True
-        assert match.bills_included is True
         assert match.min_reserve_months == 5
 
     def test_room_id_encoded(self, fake_db):
         result = execute_tool("find_rooms", {"city": "Lisbon"}, ctx=fake_db)
         room_id = result.rooms[0].room_id
-        assert room_id.startswith("H42_R3_")
+        assert room_id.startswith("42|3|")
         assert "2024-09-15T10:30:00" in room_id
 
     def test_house_id_encoded(self, fake_db):
         result = execute_tool("find_rooms", {"city": "Lisbon"}, ctx=fake_db)
         house_id = result.rooms[0].house_id
-        assert house_id.startswith("H42_")
+        assert house_id.startswith("42|")
 
     def test_excerpt_extracted(self, fake_db):
         result = execute_tool("find_rooms", {"city": "Lisbon"}, ctx=fake_db)
@@ -440,7 +443,6 @@ class TestOutputSerialisation:
             zone="Chiado",
             neighborhood="Chiado",
             price_per_month_eur=400.0,
-            bills_included=True,
             private_bathroom=False,
             distance_to_transport_m=100,
             nearest_metro_line="blue",
@@ -464,7 +466,6 @@ class TestOutputSerialisation:
             zone="Chiado",
             neighborhood="Chiado",
             price_per_month_eur=400,
-            bills_included=True,
             private_bathroom=False,
             distance_to_transport_m=100,
             nearest_metro_line=None,
