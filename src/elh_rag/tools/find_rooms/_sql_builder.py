@@ -138,9 +138,9 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
         # Schema column is `allowpets` (not `acceptspets`).
         where_parts.append("h.allowpets = 'Y'")
     if payload.gender_preference == "female_only":
-        where_parts.append("r.femalepreferred = 'Y'")
+        where_parts.append("h.femalepreferred = 'Y'")
     elif payload.gender_preference == "male_only":
-        where_parts.append("r.malepreferred = 'Y'")
+        where_parts.append("h.malepreferred = 'Y'")
     # "any" → no filter
     if payload.max_house_occupancy is not None:
         logger.warning(

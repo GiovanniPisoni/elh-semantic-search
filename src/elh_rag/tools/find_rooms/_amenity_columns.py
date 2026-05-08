@@ -8,7 +8,9 @@ Two dicts and one set:
 
 * ``_OTHER_AMENITY_COLUMN_MAP`` — keyed on the ``OtherAmenity``
   Literal. **Audited 2026-05-08** against the production schema.
-  Every Literal value maps 1:1 to an existing ``house`` column.
+  Every Literal value maps 1:1 to an existing Y/N column on either
+  ``house`` (22 entries) or ``room`` (4 entries: closet, bedlinen,
+  pillows, extra_person_allowed).
 
 * ``_OTHER_AMENITY_INVERTED`` — set of amenity names whose user-facing
   semantics are the negation of the column. ``non_smoking`` is True
@@ -22,7 +24,6 @@ as table alias.
 from __future__ import annotations
 
 _EXPLICIT_AMENITY_COLUMN_MAP: dict[str, tuple[str, str]] = {
-    # field name on input → (table, column_name)
     "must_have_private_bathroom": ("room", "privatebathroom"),
     "must_have_balcony": ("room", "balcony"),
     "must_have_elevator": ("house", "elevator"),
@@ -38,19 +39,23 @@ _EXPLICIT_AMENITY_COLUMN_MAP: dict[str, tuple[str, str]] = {
 
 _OTHER_AMENITY_COLUMN_MAP: dict[str, tuple[str, str]] = {
     "armored_door": ("house", "armoreddoor"),
+    "bedlinen": ("room", "bedlinen"),
     "cable_tv": ("house", "cabletv"),
     "cctv": ("house", "cctv"),
     "central_heating": ("house", "centralheating"),
     "city_view": ("house", "cityview"),
+    "closet": ("room", "closet"),
     "coded_entry": ("house", "codeentry"),
     "countryside_view": ("house", "fieldview"),
     "double_glazed_windows": ("house", "doubleglazedwindows"),
     "equipped_kitchen": ("house", "kitchenequipment"),
+    "extra_person_allowed": ("room", "extrapersonallowed"),
     "fridge": ("house", "fridge"),
     "furnished": ("house", "furnished"),
     "microwave": ("house", "microwaveoven"),
     "night_guests_allowed": ("house", "allownightguests"),
     "non_smoking": ("house", "smokingallowed"),  # inverse — see _OTHER_AMENITY_INVERTED
+    "pillows": ("room", "pillows"),
     "sea_view": ("house", "seaview"),
     "security_24h": ("house", "security24h"),
     "shared_space": ("house", "sharedspace"),
@@ -62,7 +67,4 @@ _OTHER_AMENITY_COLUMN_MAP: dict[str, tuple[str, str]] = {
 }
 
 # Amenity names whose user-facing meaning is the negation of the column.
-# When the user sets ``non_smoking=True`` we filter on
-# ``smokingallowed = 'N'`` (not ``= 'Y'``). Keeping this as a separate
-# set rather than a third tuple element keeps the explicit map uniform.
 _OTHER_AMENITY_INVERTED: frozenset[str] = frozenset({"non_smoking"})

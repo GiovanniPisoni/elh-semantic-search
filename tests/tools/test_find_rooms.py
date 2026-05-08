@@ -235,11 +235,11 @@ class TestBuildSql:
 
     def test_gender_female_only(self):
         sql, _ = _build_sql(FindRoomsInput(gender_preference="female_only"))
-        assert "r.femalepreferred = 'Y'" in sql
+        assert "h.femalepreferred = 'Y'" in sql
 
     def test_gender_male_only(self):
         sql, _ = _build_sql(FindRoomsInput(gender_preference="male_only"))
-        assert "r.malepreferred = 'Y'" in sql
+        assert "h.malepreferred = 'Y'" in sql
 
     def test_gender_any_no_filter(self):
         sql, _ = _build_sql(FindRoomsInput(gender_preference="any"))
@@ -259,8 +259,8 @@ class TestBuildSql:
         sql, _ = _build_sql(FindRoomsInput(must_have_private_bathroom=True))
         assert "privatebathroom = 'Y'" in sql
 
-    def test_other_amenities_real_columns(self):
-        """Every Literal value maps to a real Y/N column on `house`."""
+    def test_other_amenities_house_columns(self):
+        """House-level amenities use the `h.` alias."""
         sql, _ = _build_sql(
             FindRoomsInput(
                 required_other_amenities=[
@@ -275,6 +275,35 @@ class TestBuildSql:
         assert "h.sharedspace = 'Y'" in sql
         assert "h.microwaveoven = 'Y'" in sql
         assert "h.reducedmobilityaccess = 'Y'" in sql
+
+    def test_other_amenities_room_columns(self):
+        """Room-level amenities use the `r.` alias."""
+        sql, _ = _build_sql(
+            FindRoomsInput(
+                required_other_amenities=[
+                    "closet",
+                    "bedlinen",
+                    "pillows",
+                    "extra_person_allowed",
+                ]
+            )
+        )
+        assert "r.closet = 'Y'" in sql
+        assert "r.bedlinen = 'Y'" in sql
+        assert "r.pillows = 'Y'" in sql
+        assert "r.extrapersonallowed = 'Y'" in sql
+
+    def test_gender_preference_uses_house_alias(self):
+        """Schema bug fix: malepreferred/femalepreferred live on `house`,
+        not `room`. The previous `r.femalepreferred` produced a runtime
+        error on real DB calls."""
+        sql_f, _ = _build_sql(FindRoomsInput(gender_preference="female_only"))
+        assert "h.femalepreferred = 'Y'" in sql_f
+        assert "r.femalepreferred" not in sql_f
+
+        sql_m, _ = _build_sql(FindRoomsInput(gender_preference="male_only"))
+        assert "h.malepreferred = 'Y'" in sql_m
+        assert "r.malepreferred" not in sql_m
 
     def test_non_smoking_uses_inverse_logic(self):
         """``non_smoking=True`` filters smokingallowed='N', not 'Y'."""
