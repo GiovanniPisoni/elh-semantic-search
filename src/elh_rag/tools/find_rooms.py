@@ -174,6 +174,7 @@ class RoomMatch:
     amenities: list[str] = field(default_factory=list)
     excerpt: str = ""
     match_score: float = 0.0
+    is_fixed_price: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -193,6 +194,7 @@ class RoomMatch:
             "amenities": list(self.amenities),
             "excerpt": self.excerpt,
             "match_score": self.match_score,
+            "is_fixed_price": self.is_fixed_price,
         }
 
 

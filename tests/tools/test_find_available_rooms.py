@@ -1,44 +1,48 @@
-"""Tests for the Tool 2 input model (``FindAvailableRoomsInput``).
+"""Tests for Tool 2 (``find_available_rooms``).
 
-Step 1 scope: input validation only. SQL building, reservation overlap,
-weighted pricing, and dispatch are covered in later steps.
+Covers:
+    * Input model validation (Step 1 — preserved).
+    * Tool registration & dispatch.
+    * End-to-end orchestration: 3-query sequence with FakeDbExecutor,
+      reservation filtering, price enrichment.
+    * Edge cases: empty Tool 1 result, all-occupied, race condition.
 
-Three things to verify here:
-
-    1. The new fields ``available_from`` / ``available_to`` are required
-       (they were optional on the parent ``FindRoomsInput``).
-    2. The parent's ``check_consistency`` validator still fires
-       (``available_to > available_from``).
-    3. The new ``check_period_bounds`` validator rejects pathological
-       multi-year periods.
+The deep calendar arithmetic of the overlap and the weighted-price
+math live in ``test_reservation.py`` and ``test_pricing.py`` and are
+not duplicated here.
 """
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
+from elh_rag.tools import TOOLS_REGISTRY, execute_tool
+from elh_rag.tools._db import FakeDbExecutor
+from elh_rag.tools._room_id import encode_house_id, encode_room_id
 from elh_rag.tools.find_available_rooms import (
     _MAX_PERIOD_DAYS,
     FindAvailableRoomsInput,
+    _fetch_seasonal_prices,
+    find_available_rooms,
 )
 from elh_rag.tools.find_rooms import FindRoomsInput
 
-# Required fields
+# Step 1 tests — input validation
 
 
 class TestRequiredFields:
     def test_minimal_valid_input(self):
-        """Only the two date fields are required; everything else inherits defaults."""
         p = FindAvailableRoomsInput(
             available_from=date(2026, 9, 1),
             available_to=date(2027, 1, 31),
         )
         assert p.available_from == date(2026, 9, 1)
         assert p.available_to == date(2027, 1, 31)
-        # Inherited defaults still apply
         assert p.num_rooms_needed == 1
         assert p.max_results == 10
         assert p.sort_by == "default"
@@ -47,7 +51,6 @@ class TestRequiredFields:
     def test_missing_available_from_rejected(self):
         with pytest.raises(ValidationError) as exc_info:
             FindAvailableRoomsInput(available_to=date(2027, 1, 31))  # type: ignore[call-arg]
-        # Pydantic's "Field required" wording is stable in v2
         assert "available_from" in str(exc_info.value)
 
     def test_missing_available_to_rejected(self):
@@ -60,7 +63,6 @@ class TestRequiredFields:
             FindAvailableRoomsInput()  # type: ignore[call-arg]
 
     def test_explicit_none_rejected_for_required_fields(self):
-        """Passing None must NOT slip through — required means non-null."""
         with pytest.raises(ValidationError):
             FindAvailableRoomsInput(
                 available_from=None,  # type: ignore[arg-type]
@@ -68,15 +70,11 @@ class TestRequiredFields:
             )
 
 
-# Inheritance from FindRoomsInput
-
-
 class TestInheritance:
     def test_is_subclass_of_find_rooms_input(self):
         assert issubclass(FindAvailableRoomsInput, FindRoomsInput)
 
     def test_inherited_fields_accept_values(self):
-        """Smoke check: a sample of parent fields work on the subclass."""
         p = FindAvailableRoomsInput(
             available_from=date(2026, 9, 1),
             available_to=date(2027, 1, 31),
@@ -100,7 +98,6 @@ class TestInheritance:
         assert p.max_results == 20
 
     def test_inherited_constraints_still_apply(self):
-        """Parent-level Field constraints (e.g. num_rooms_needed >= 1) survive."""
         with pytest.raises(ValidationError):
             FindAvailableRoomsInput(
                 available_from=date(2026, 9, 1),
@@ -115,9 +112,6 @@ class TestInheritance:
             )
 
 
-# Date ordering (parent's check_consistency)
-
-
 class TestDateOrdering:
     def test_dates_inverted_rejected(self):
         with pytest.raises(ValidationError) as exc_info:
@@ -128,7 +122,6 @@ class TestDateOrdering:
         assert "available_to must be after available_from" in str(exc_info.value)
 
     def test_same_day_rejected(self):
-        """Period must be strictly positive — same-day = empty stay."""
         with pytest.raises(ValidationError):
             FindAvailableRoomsInput(
                 available_from=date(2026, 9, 1),
@@ -136,15 +129,11 @@ class TestDateOrdering:
             )
 
     def test_minimum_one_day_period_accepted(self):
-        """A period of exactly one calendar day (n+1 - n = 1) is valid."""
         p = FindAvailableRoomsInput(
             available_from=date(2026, 9, 1),
             available_to=date(2026, 9, 2),
         )
         assert (p.available_to - p.available_from).days == 1
-
-
-# Period upper bound
 
 
 class TestPeriodBounds:
@@ -166,15 +155,10 @@ class TestPeriodBounds:
         assert "too long" in str(exc_info.value).lower()
 
     def test_typical_erasmus_periods_accepted(self):
-        """Sanity: the periods we actually expect from real users all pass."""
         cases = [
-            # 1-month summer
             (date(2026, 7, 1), date(2026, 7, 31)),
-            # Full Erasmus semester (Sep -> Jan)
             (date(2026, 9, 1), date(2027, 1, 31)),
-            # Full academic year (Sep -> Jul)
             (date(2026, 9, 1), date(2027, 7, 31)),
-            # Cross-season (May -> Aug)
             (date(2026, 5, 15), date(2026, 8, 31)),
         ]
         for start, end in cases:
@@ -183,13 +167,8 @@ class TestPeriodBounds:
             assert p.available_to == end
 
 
-# Type coercion
-
-
 class TestTypeCoercion:
     def test_iso_string_dates_coerced(self):
-        """Pydantic coerces ISO-8601 strings to date — useful when the LLM
-        sends JSON with string dates."""
         p = FindAvailableRoomsInput(
             available_from="2026-09-01",  # type: ignore[arg-type]
             available_to="2027-01-31",  # type: ignore[arg-type]
@@ -203,3 +182,386 @@ class TestTypeCoercion:
                 available_from="not-a-date",  # type: ignore[arg-type]
                 available_to=date(2027, 1, 31),
             )
+
+
+# Helpers
+
+
+def _make_room_row(idroom: int, idhouse: int = 42, **overrides: Any) -> dict[str, Any]:
+    """Build a fake row matching find_rooms' SELECT projection.
+
+    Defaults are sane and overridable for per-test customisation. The
+    encoded room_id is then ``f"H{idhouse}_R{idroom}_..."`` after
+    Tool 1's ``_row_to_match`` runs.
+    """
+    base = {
+        "idroom": idroom,
+        "loc_idhouse": idhouse,
+        "r_dateupdate": datetime(2024, 9, 15, 10, 30),
+        "loc_dateupdate": datetime(2024, 9, 15, 10, 30),
+        "price_eur": 450.0,
+        "privatebathroom": "Y",
+        "minreservemonths": 5,
+        "room_description": f"Room {idroom} in house {idhouse}",
+        "haswindow": "Y",
+        "idhouse": idhouse,
+        "h_dateupdate": datetime(2024, 9, 15, 10, 30),
+        "city": "Lisbon",
+        "zone": "Chiado",
+        "neighbourhood": "Chiado",
+        "distancepublictransport": 200,
+        "bills": "Y",
+        "maxoccupancy": 5,
+    }
+    base.update(overrides)
+    return base
+
+
+def _make_price_row(
+    idroom: int,
+    idhouse: int = 42,
+    spring: str = "400.00",
+    summer: str = "300.00",
+    autumn: str = "500.00",
+    fixed: str = "N",
+) -> dict[str, Any]:
+    """Build a row for the seasonal prices SELECT."""
+    return {
+        "loc_idhouse": idhouse,
+        "idroom": idroom,
+        "springprice": Decimal(spring),
+        "summerprice": Decimal(summer),
+        "autumnprice": Decimal(autumn),
+        "fixedprice": fixed,
+    }
+
+
+# Registration
+
+
+class TestRegistration:
+    def test_tool_is_registered(self):
+        assert "find_available_rooms" in TOOLS_REGISTRY
+
+    def test_tool_accepts_ctx(self):
+        spec = TOOLS_REGISTRY["find_available_rooms"]
+        assert spec.accepts_ctx is True
+
+    def test_tool_input_model_is_correct_class(self):
+        spec = TOOLS_REGISTRY["find_available_rooms"]
+        assert spec.input_model is FindAvailableRoomsInput
+
+    def test_tool_description_mentions_date_window(self):
+        spec = TOOLS_REGISTRY["find_available_rooms"]
+        # Sanity check: the LLM-facing description should make the
+        # difference vs find_rooms obvious.
+        desc_lower = spec.description.lower()
+        assert "date" in desc_lower or "available_from" in desc_lower
+        assert "find_rooms" in spec.description  # cross-references
+
+
+# End-to-end orchestration
+
+
+class TestOrchestration:
+    def test_no_structural_matches_returns_empty(self):
+        """Tool 1 returns 0 rooms → skip overlap and price queries."""
+        db = FakeDbExecutor()
+        # Tool 1 SQL contains "JOIN house h"
+        db.add_response("JOIN house h", [])
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 9, 1),
+                available_to=date(2027, 1, 31),
+            ),
+            ctx=db,
+        )
+
+        assert result.rooms == []
+        assert result.total_matches == 0
+        # Only the Tool 1 query was issued — no reservation, no prices
+        assert len(db.calls) == 1
+        assert "available 2026-09-01 → 2027-01-31" in result.query_summary
+
+    def test_all_rooms_occupied_returns_empty(self):
+        """Tool 1 returns rooms but every one is occupied → skip prices."""
+        db = FakeDbExecutor()
+        db.add_response("JOIN house h", [_make_room_row(idroom=3)])
+        db.add_response("FROM reservation", [{"loc_idhouse": 42, "idroom": 3}])
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 9, 1),
+                available_to=date(2027, 1, 31),
+            ),
+            ctx=db,
+        )
+
+        assert result.rooms == []
+        # Only 2 queries: structural + reservation. NO price lookup.
+        assert len(db.calls) == 2
+
+    def test_no_occupancy_returns_all_with_weighted_price(self):
+        """Three rooms, none occupied, all-autumn period → autumn price."""
+        db = FakeDbExecutor()
+        db.add_response(
+            "JOIN house h",
+            [
+                _make_room_row(idroom=3),
+                _make_room_row(idroom=4),
+                _make_room_row(idroom=5),
+            ],
+        )
+        db.add_response("FROM reservation", [])
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [
+                _make_price_row(idroom=3, autumn="500.00"),
+                _make_price_row(idroom=4, autumn="600.00"),
+                _make_price_row(idroom=5, autumn="450.00"),
+            ],
+        )
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 9, 1),
+                available_to=date(2027, 1, 31),  # 100% autumn
+            ),
+            ctx=db,
+        )
+
+        assert len(result.rooms) == 3
+        prices = {rm.price_per_month_eur for rm in result.rooms}
+        assert prices == {500.00, 600.00, 450.00}
+        # All 3 queries fired
+        assert len(db.calls) == 3
+
+    def test_partial_occupancy_filters_correctly(self):
+        """Three rooms, one occupied → two survive."""
+        db = FakeDbExecutor()
+        db.add_response(
+            "JOIN house h",
+            [
+                _make_room_row(idroom=3),
+                _make_room_row(idroom=4),
+                _make_room_row(idroom=5),
+            ],
+        )
+        db.add_response("FROM reservation", [{"loc_idhouse": 42, "idroom": 4}])
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [_make_price_row(idroom=3), _make_price_row(idroom=5)],
+        )
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 9, 1),
+                available_to=date(2027, 1, 31),
+            ),
+            ctx=db,
+        )
+
+        assert len(result.rooms) == 2
+        room_ids = {_decoded_idroom(rm.room_id) for rm in result.rooms}
+        assert room_ids == {3, 5}
+
+    def test_weighted_price_cross_season(self):
+        """15 May → 31 Aug → 47 spring + 62 summer days, weighted."""
+        db = FakeDbExecutor()
+        db.add_response("JOIN house h", [_make_room_row(idroom=3)])
+        db.add_response("FROM reservation", [])
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [_make_price_row(idroom=3, spring="400.00", summer="300.00")],
+        )
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 5, 15),
+                available_to=date(2026, 8, 31),
+            ),
+            ctx=db,
+        )
+
+        # Phase 3 doc example: (400*47 + 300*62) / 109 = 343.119... → 343.12
+        assert len(result.rooms) == 1
+        assert result.rooms[0].price_per_month_eur == 343.12
+        assert result.rooms[0].is_fixed_price is False
+
+    def test_fixed_price_room_flagged(self):
+        db = FakeDbExecutor()
+        db.add_response("JOIN house h", [_make_room_row(idroom=3)])
+        db.add_response("FROM reservation", [])
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [
+                _make_price_row(
+                    idroom=3,
+                    spring="400.00",
+                    summer="400.00",
+                    autumn="400.00",
+                    fixed="Y",
+                )
+            ],
+        )
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 5, 15),
+                available_to=date(2026, 8, 31),
+            ),
+            ctx=db,
+        )
+
+        assert len(result.rooms) == 1
+        assert result.rooms[0].price_per_month_eur == 400.00
+        assert result.rooms[0].is_fixed_price is True
+
+    def test_available_from_propagated_to_room_match(self):
+        """RoomMatch.available_from should reflect the query window, not None."""
+        db = FakeDbExecutor()
+        db.add_response("JOIN house h", [_make_room_row(idroom=3)])
+        db.add_response("FROM reservation", [])
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [_make_price_row(idroom=3)],
+        )
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 9, 1),
+                available_to=date(2027, 1, 31),
+            ),
+            ctx=db,
+        )
+
+        assert result.rooms[0].available_from == date(2026, 9, 1)
+
+
+# Defensive guards
+
+
+class TestGuards:
+    def test_missing_ctx_raises_via_dispatcher(self):
+        """ctx=None → execute_tool wraps the RuntimeError as ToolExecutionError."""
+        from elh_rag.tools import ToolExecutionError
+
+        with pytest.raises(ToolExecutionError) as exc_info:
+            execute_tool(
+                "find_available_rooms",
+                {
+                    "available_from": "2026-09-01",
+                    "available_to": "2027-01-31",
+                },
+                ctx=None,
+            )
+        assert "DBExecutor" in str(exc_info.value)
+
+    def test_race_condition_room_disappears_between_queries(self):
+        """If a room is in Tool 1's result but missing from price lookup,
+        skip rather than guess. Defensive: should never happen in practice."""
+        db = FakeDbExecutor()
+        db.add_response(
+            "JOIN house h",
+            [_make_room_row(idroom=3), _make_room_row(idroom=4)],
+        )
+        db.add_response("FROM reservation", [])
+        # Only one of the two rooms shows up in the price lookup
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [_make_price_row(idroom=3)],  # idroom=4 missing
+        )
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 9, 1),
+                available_to=date(2027, 1, 31),
+            ),
+            ctx=db,
+        )
+
+        assert len(result.rooms) == 1
+        assert _decoded_idroom(result.rooms[0].room_id) == 3
+
+
+# _fetch_seasonal_prices unit tests
+
+
+class TestFetchSeasonalPrices:
+    def test_empty_keys_returns_empty_dict_no_db_call(self):
+        db = FakeDbExecutor()
+        result = _fetch_seasonal_prices(db, [])
+        assert result == {}
+        assert db.calls == []
+
+    def test_single_key_dispatches_correct_sql(self):
+        db = FakeDbExecutor()
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [_make_price_row(idroom=3)],
+        )
+
+        result = _fetch_seasonal_prices(db, [(42, 3)])
+
+        assert (42, 3) in result
+        assert result[(42, 3)]["springprice"] == Decimal("400.00")
+        assert result[(42, 3)]["fixedprice"] == "N"
+
+    def test_sql_has_distinct_on_for_versioning(self):
+        """Anti-regression sentinel: DISTINCT ON must be present to dedupe versions."""
+        db = FakeDbExecutor()
+        db.add_response("DISTINCT ON", [])
+        _fetch_seasonal_prices(db, [(42, 3)])
+
+        sql = db.calls[0]["sql"]
+        assert "DISTINCT ON (loc_idhouse, idroom)" in sql
+        assert "ORDER BY" in sql
+        assert "dateupdate DESC" in sql
+
+    def test_param_count_matches_keys(self):
+        """For N keys, 2N params (loc_idhouse, idroom for each)."""
+        db = FakeDbExecutor()
+        db.add_response("DISTINCT ON", [])
+        keys = [(42, 1), (42, 2), (100, 3)]
+        _fetch_seasonal_prices(db, keys)
+
+        params = db.calls[0]["params"]
+        assert len(params) == 6  # 3 keys x 2
+        assert params == (42, 1, 42, 2, 100, 3)
+
+
+# Helper used by orchestration tests
+
+
+def _decoded_idroom(encoded_id: str) -> int:
+    """Quick helper to extract the room number from an encoded room_id."""
+    from elh_rag.tools._room_id import decode_room_id
+
+    return decode_room_id(encoded_id).room_id
+
+
+# Sanity: encoded IDs are exactly what the tool produces
+
+
+def test_room_match_keys_round_trip_with_helper():
+    """Sanity: the helper used internally agrees with manual encoding."""
+    from elh_rag.tools.find_available_rooms import _room_match_keys
+    from elh_rag.tools.find_rooms import RoomMatch
+
+    rm = RoomMatch(
+        room_id=encode_room_id(42, 3, datetime(2024, 9, 15, 10, 30)),
+        house_id=encode_house_id(42, datetime(2024, 9, 15, 10, 30)),
+        house_name="x",
+        city="Lisbon",
+        zone="Chiado",
+        neighborhood="Chiado",
+        price_per_month_eur=400.0,
+        bills_included=True,
+        private_bathroom=True,
+        distance_to_transport_m=200,
+        nearest_metro_line=None,
+        available_from=None,
+        min_reserve_months=5,
+    )
+    assert _room_match_keys(rm) == (42, 3)
