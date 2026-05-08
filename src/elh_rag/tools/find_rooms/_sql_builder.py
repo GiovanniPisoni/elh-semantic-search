@@ -17,6 +17,7 @@ from .._room_id import encode_house_id, encode_room_id
 from ._amenity_columns import (
     _EXPLICIT_AMENITY_COLUMN_MAP,
     _OTHER_AMENITY_COLUMN_MAP,
+    _OTHER_AMENITY_INVERTED,
 )
 from ._inputs import FindRoomsInput
 from ._schemas import RoomMatch
@@ -131,8 +132,7 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
     # 4. Occupancy
     if payload.accepts_couples is True:
         logger.warning(
-            "find_rooms: accepts_couples=True ignored — column not present "
-            "in the ELH schema."
+            "find_rooms: accepts_couples=True ignored — column not present in the ELH schema."
         )
     if payload.accepts_pets is True:
         # Schema column is `allowpets` (not `acceptspets`).
@@ -144,8 +144,7 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
     # "any" → no filter
     if payload.max_house_occupancy is not None:
         logger.warning(
-            "find_rooms: max_house_occupancy=%s ignored — column not "
-            "present in the ELH schema.",
+            "find_rooms: max_house_occupancy=%s ignored — column not present in the ELH schema.",
             payload.max_house_occupancy,
         )
 
@@ -161,8 +160,19 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
     for amenity in payload.required_other_amenities:
         if amenity in _OTHER_AMENITY_COLUMN_MAP:
             table, column = _OTHER_AMENITY_COLUMN_MAP[amenity]
-            where_parts.append(f"{table[0]}.{column} = 'Y'")
-        # Unknown amenity → silently skip (Pydantic Literal already filtered)
+            # Inverted-logic amenities check 'N' instead of 'Y' (e.g.
+            # non_smoking=True means smokingallowed='N').
+            expected = "N" if amenity in _OTHER_AMENITY_INVERTED else "Y"
+            where_parts.append(f"{table[0]}.{column} = '{expected}'")
+        else:
+            # Defensive: the Literal and the map are kept in sync (every
+            # Literal value has an entry). This branch only fires if a
+            # future Literal addition forgets the corresponding map entry.
+            logger.warning(
+                "find_rooms: amenity %r in vocabulary but not mapped — "
+                "_OTHER_AMENITY_COLUMN_MAP is out of sync with the Literal.",
+                amenity,
+            )
 
     # 7. Sort + limit
     if payload.sort_by == "price_asc":

@@ -84,7 +84,7 @@ class TestInheritance:
             gender_preference="female_only",
             accepts_couples=True,
             num_rooms_needed=3,
-            required_other_amenities=["pool", "gym"],
+            required_other_amenities=["shared_space", "wheelchair_accessible"],
             sort_by="price_asc",
             max_results=20,
         )
@@ -93,7 +93,7 @@ class TestInheritance:
         assert p.max_price_eur == 500
         assert p.gender_preference == "female_only"
         assert p.num_rooms_needed == 3
-        assert p.required_other_amenities == ["pool", "gym"]
+        assert p.required_other_amenities == ["shared_space", "wheelchair_accessible"]
         assert p.sort_by == "price_asc"
         assert p.max_results == 20
 

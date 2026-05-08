@@ -82,9 +82,7 @@ class TestEncodeRoomId:
         assert result == "42|3|2024-09-15T10:30:00"
 
     def test_opaque_str_inputs(self):
-        result = encode_room_id(
-            "HSE_00F7359B", "RM_001", datetime(2024, 9, 15, 10, 30, 0)
-        )
+        result = encode_room_id("HSE_00F7359B", "RM_001", datetime(2024, 9, 15, 10, 30, 0))
         assert result == "HSE_00F7359B|RM_001|2024-09-15T10:30:00"
 
     def test_padded_str_inputs(self):
@@ -135,9 +133,7 @@ class TestDecodeRoomId:
         assert result.dateupdate == datetime(2024, 9, 15, 10, 30)
 
     def test_round_trip_with_opaque(self):
-        encoded = encode_room_id(
-            "HSE_00F7359B", "RM_001", datetime(2024, 9, 15, 10, 30)
-        )
+        encoded = encode_room_id("HSE_00F7359B", "RM_001", datetime(2024, 9, 15, 10, 30))
         result = decode_room_id(encoded)
         assert result.house_id == "HSE_00F7359B"
         assert result.room_id == "RM_001"
@@ -186,9 +182,7 @@ class TestEncodeHouseId:
         assert result == "HSE_00F7359B|2024-09-15T10:30:00"
 
     def test_padded_str_input(self):
-        result = encode_house_id(
-            "HSE_001" + " " * 50, datetime(2024, 9, 15, 10, 30)
-        )
+        result = encode_house_id("HSE_001" + " " * 50, datetime(2024, 9, 15, 10, 30))
         assert result == "HSE_001|2024-09-15T10:30:00"
 
     def test_pipe_in_id_raises(self):

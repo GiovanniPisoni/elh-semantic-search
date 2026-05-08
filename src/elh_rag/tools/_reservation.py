@@ -12,7 +12,6 @@ from datetime import date
 from ._db import DBExecutor
 from ._room_id import normalize_id
 
-
 # Standard closed-interval overlap test
 _OVERLAP_SQL = """\
 SELECT DISTINCT loc_idhouse, idroom
@@ -34,9 +33,7 @@ def _find_occupied_room_ids(
     :class:`elh_rag.tools.find_available_rooms.FindAvailableRoomsInput`.
     """
     if period_end < period_start:
-        raise ValueError(
-            f"period_end ({period_end}) is before period_start ({period_start})"
-        )
+        raise ValueError(f"period_end ({period_end}) is before period_start ({period_start})")
 
     rows = db.execute(_OVERLAP_SQL, (period_end, period_start))
 

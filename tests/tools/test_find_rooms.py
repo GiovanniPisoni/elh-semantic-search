@@ -87,12 +87,12 @@ class TestFindRoomsInput:
             num_rooms_needed=3,
             must_have_private_bathroom=True,
             must_have_window=True,
-            required_other_amenities=["pool", "gym"],
+            required_other_amenities=["shared_space", "wheelchair_accessible"],
             sort_by="price_asc",
             max_results=20,
         )
         assert p.metro_line == "green"
-        assert p.required_other_amenities == ["pool", "gym"]
+        assert p.required_other_amenities == ["shared_space", "wheelchair_accessible"]
 
     def test_porto_letter_metro_line(self):
         p = FindRoomsInput(metro_line="A")
@@ -259,10 +259,34 @@ class TestBuildSql:
         sql, _ = _build_sql(FindRoomsInput(must_have_private_bathroom=True))
         assert "privatebathroom = 'Y'" in sql
 
-    def test_other_amenities(self):
-        sql, _ = _build_sql(FindRoomsInput(required_other_amenities=["pool", "gym"]))
-        assert "pool = 'Y'" in sql
-        assert "gym = 'Y'" in sql
+    def test_other_amenities_real_columns(self):
+        """Every Literal value maps to a real Y/N column on `house`."""
+        sql, _ = _build_sql(
+            FindRoomsInput(
+                required_other_amenities=[
+                    "city_view",
+                    "shared_space",
+                    "microwave",
+                    "wheelchair_accessible",
+                ]
+            )
+        )
+        assert "h.cityview = 'Y'" in sql
+        assert "h.sharedspace = 'Y'" in sql
+        assert "h.microwaveoven = 'Y'" in sql
+        assert "h.reducedmobilityaccess = 'Y'" in sql
+
+    def test_non_smoking_uses_inverse_logic(self):
+        """``non_smoking=True`` filters smokingallowed='N', not 'Y'."""
+        sql, _ = _build_sql(FindRoomsInput(required_other_amenities=["non_smoking"]))
+        assert "h.smokingallowed = 'N'" in sql
+        assert "h.smokingallowed = 'Y'" not in sql
+
+    def test_dropped_amenities_rejected_by_pydantic(self):
+        """Schema-audited Literal rejects fictional amenity names."""
+        for dropped in ("pool", "gym", "fireplace", "doorman", "bbq"):
+            with pytest.raises(ValidationError):
+                FindRoomsInput(required_other_amenities=[dropped])  # type: ignore[list-item]
 
     def test_sort_by_price_asc(self):
         sql, _ = _build_sql(FindRoomsInput(sort_by="price_asc"))

@@ -26,8 +26,7 @@ __all__ = [
     "MetroLineInput",
     "OtherAmenity",
     "RoomMatch",
-    "find_rooms",
-    # Test-only re-exports (kept stable for tests/tools/test_find_rooms.py)
     "_build_sql",
     "_select_price_column",
+    "find_rooms",
 ]

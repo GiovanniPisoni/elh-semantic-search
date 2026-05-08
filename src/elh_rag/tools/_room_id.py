@@ -64,9 +64,7 @@ def normalize_id(value: int | str, name: str = "id") -> str:
     elif isinstance(value, str):
         s = value.strip()
     else:
-        raise TypeError(
-            f"{name} must be int or str, got {type(value).__name__}"
-        )
+        raise TypeError(f"{name} must be int or str, got {type(value).__name__}")
 
     if not s:
         raise ValueError(f"{name} must not be empty")
@@ -86,17 +84,13 @@ def _coerce_dateupdate(value: date | datetime) -> datetime:
         return value
     if isinstance(value, date):
         return datetime.combine(value, datetime.min.time())
-    raise TypeError(
-        f"dateupdate must be date or datetime, got {type(value).__name__}"
-    )
+    raise TypeError(f"dateupdate must be date or datetime, got {type(value).__name__}")
 
 
 # Room ID encoder/decoder
 
 
-def encode_room_id(
-    house_id: int | str, room_id: int | str, dateupdate: date | datetime
-) -> str:
+def encode_room_id(house_id: int | str, room_id: int | str, dateupdate: date | datetime) -> str:
     """Encode a composite room key into the opaque string format."""
     h = normalize_id(house_id, name="house_id")
     r = normalize_id(room_id, name="room_id")
@@ -116,8 +110,7 @@ def decode_room_id(raw: str) -> RoomIdParts:
     if match is None:
         raise InvalidRoomIdError(
             raw,
-            f"expected format '{{house_id}}{_SEP}{{room_id}}{_SEP}"
-            f"{{ISO8601_dateupdate}}'",
+            f"expected format '{{house_id}}{_SEP}{{room_id}}{_SEP}{{ISO8601_dateupdate}}'",
         )
 
     house_id, room_id, iso = match.groups()
@@ -154,9 +147,7 @@ def decode_house_id(raw: str) -> HouseIdParts:
         raise InvalidRoomIdError(raw, "empty string")
 
     if _ROOM_ID_RE.match(raw):
-        raise InvalidRoomIdError(
-            raw, "looks like a room ID; use decode_room_id instead"
-        )
+        raise InvalidRoomIdError(raw, "looks like a room ID; use decode_room_id instead")
 
     match = _HOUSE_ID_RE.match(raw)
     if match is None:
