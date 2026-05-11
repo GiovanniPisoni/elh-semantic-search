@@ -8,6 +8,7 @@ embedder, LLM client) so unit tests run offline and deterministic.
 from __future__ import annotations
 
 from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
@@ -145,6 +146,45 @@ class FakeReranker(Reranker):
             )
             for i, c in enumerate(ordered[:top_k])
         ]
+    
+# Fake db executor
+
+class FakeDbExecutor:
+    """Minimal in-memory DBExecutor implementation for tests.
+
+    Stores a list of (sql_pattern, response) mappings and returns the
+    response of the first pattern that appears as a substring in the
+    executed SQL. Matching is loose by design — tests assert on the
+    high-level behaviour of the tool, not on exact SQL strings.
+
+    Records every call into `calls` so tests can assert on the SQL
+    and parameters that were issued.
+    """
+
+    def __init__(self) -> None:
+        self._responses: list[tuple[str, list[dict[str, Any]]]] = []
+        self.calls: list[dict[str, Any]] = []
+
+    def add_response(
+        self, sql_substring: str, response: list[dict[str, Any]]
+    ) -> None:
+        """Register a canned response for any SQL containing sql_substring."""
+        self._responses.append((sql_substring, response))
+
+    def execute(
+        self,
+        sql: str,
+        params: Sequence[Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        self.calls.append({"sql": sql, "params": params})
+        for pattern, response in self._responses:
+            if pattern in sql:
+                return response
+        return []
+
+    def reset(self) -> None:
+        self._responses.clear()
+        self.calls.clear()
 
 
 # Pytest fixtures
@@ -208,3 +248,8 @@ def fake_reranker() -> Reranker:
 def noop_reranker() -> Reranker:
     """A reranker that preserves input order (useful when testing other steps)."""
     return FakeReranker(reverse=False)
+
+@pytest.fixture
+def fake_db() -> FakeDbExecutor:
+    """Empty in-memory DB executor — call add_response() to seed it."""
+    return FakeDbExecutor()
