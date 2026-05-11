@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-import pytest
-
 from elh_rag.tools._reviews_aggregate import (
     ReviewsAggregate,
     ReviewSummary,
@@ -113,12 +111,18 @@ class TestAverages:
             "FROM review",
             [
                 _make_review_row(
-                    overall="5.00", cleaning="4.00", communication="3.00",
-                    location="5.00", price_quality="4.00",
+                    overall="5.00",
+                    cleaning="4.00",
+                    communication="3.00",
+                    location="5.00",
+                    price_quality="4.00",
                 ),
                 _make_review_row(
-                    overall="3.00", cleaning="2.00", communication="5.00",
-                    location="3.00", price_quality="2.00",
+                    overall="3.00",
+                    cleaning="2.00",
+                    communication="5.00",
+                    location="3.00",
+                    price_quality="2.00",
                 ),
             ],
         )
@@ -168,9 +172,7 @@ class TestRecentReviews:
 
     def test_excerpt_truncated_at_200_chars(self, fake_db):
         long_text = "x" * 500
-        fake_db.add_response(
-            "FROM review", [_make_review_row(description=long_text)]
-        )
+        fake_db.add_response("FROM review", [_make_review_row(description=long_text)])
         result = fetch_reviews_aggregate(
             fake_db, house_id="HSE_001", house_dateupdate=_HOUSE_DT, room_id="RM_001"
         )
@@ -180,9 +182,7 @@ class TestRecentReviews:
         assert len(excerpt) == 201  # 200 + "…"
 
     def test_short_description_not_truncated(self, fake_db):
-        fake_db.add_response(
-            "FROM review", [_make_review_row(description="Short.")]
-        )
+        fake_db.add_response("FROM review", [_make_review_row(description="Short.")])
         result = fetch_reviews_aggregate(
             fake_db, house_id="HSE_001", house_dateupdate=_HOUSE_DT, room_id="RM_001"
         )

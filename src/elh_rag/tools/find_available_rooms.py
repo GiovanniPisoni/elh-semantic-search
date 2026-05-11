@@ -162,15 +162,10 @@ def _format_price_label(
             season = "spring"
         else:
             season = "summer"
-        return (
-            f"€{monthly_eur}/month for your {total}-month stay (all {season} rate)"
-        )
+        return f"€{monthly_eur}/month for your {total}-month stay (all {season} rate)"
 
     # Cross-season case: average + composition
-    return (
-        f"€{monthly_eur}/month average over {total} months: "
-        + ", ".join(season_parts)
-    )
+    return f"€{monthly_eur}/month average over {total} months: " + ", ".join(season_parts)
 
 
 def _enrich_with_seasonal_price(
@@ -183,7 +178,7 @@ def _enrich_with_seasonal_price(
     spring_eur = Decimal(str(raw_prices["springprice"]))
     summer_eur = Decimal(str(raw_prices["summerprice"]))
     autumn_eur = Decimal(str(raw_prices["autumnprice"]))
-    is_fixed = (raw_prices["fixedprice"] == "Y")
+    is_fixed = raw_prices["fixedprice"] == "Y"
 
     breakdown = compute_room_monthly_price(
         spring_eur=spring_eur,

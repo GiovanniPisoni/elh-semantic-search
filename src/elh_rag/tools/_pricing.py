@@ -146,9 +146,7 @@ def compute_stay_breakdown(
         )
 
     if not months_list:
-        raise ValueError(
-            f"No calendar months in [{check_in}, {check_out}] — should be unreachable"
-        )
+        raise ValueError(f"No calendar months in [{check_in}, {check_out}] — should be unreachable")
 
     total = sum((mr.rent_eur for mr in months_list), Decimal("0"))
     is_uniform = len({mr.rent_eur for mr in months_list}) == 1

@@ -118,7 +118,7 @@ class TestComputeStayBreakdown:
         assert isinstance(result, StayCostBreakdown)
         assert result.total_months == 3
         assert result.is_uniform_rent is True
-        assert result.total_rent_eur == Decimal("1650.00")  # 3 × 550
+        assert result.total_rent_eur == Decimal("1650.00")  # 3 x 550
         assert all(m.season == "autumn" for m in result.months)
         assert all(m.rent_eur == Decimal("550.00") for m in result.months)
 
@@ -132,7 +132,7 @@ class TestComputeStayBreakdown:
             check_out=date(2025, 8, 31),
         )
         assert result.total_months == 2
-        assert result.total_rent_eur == Decimal("600.00")  # 2 × 300
+        assert result.total_rent_eur == Decimal("600.00")  # 2 x 300
         assert result.is_uniform_rent is True
 
     def test_cross_season_autumn_to_spring(self):
@@ -147,7 +147,7 @@ class TestComputeStayBreakdown:
         )
         assert result.total_months == 4
         assert result.is_uniform_rent is False
-        assert result.total_rent_eur == Decimal("2000.00")  # 2×550 + 2×450
+        assert result.total_rent_eur == Decimal("2000.00")  # 2x550 + 2x450
         # Verify per-month seasons
         seasons = [m.season for m in result.months]
         assert seasons == ["autumn", "autumn", "spring", "spring"]
@@ -176,7 +176,7 @@ class TestComputeStayBreakdown:
             check_out=date(2026, 4, 30),
         )
         assert result.total_months == 8
-        # 6 × 550 + 2 × 450 = 3300 + 900 = 4200
+        # 6 x 550 + 2 x 450 = 3300 + 900 = 4200
         assert result.total_rent_eur == Decimal("4200.00")
 
     def test_fixed_price_ignores_seasons(self):
@@ -207,7 +207,7 @@ class TestComputeStayBreakdown:
                 check_in=date(2026, 1, 1),
                 check_out=date(2026, 3, 31),
             )
-        assert result.total_rent_eur == Decimal("1800.00")  # 3 × 600
+        assert result.total_rent_eur == Decimal("1800.00")  # 3 x 600
         # Warning emitted (one per month — the helper is called per row)
         warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert len(warnings) >= 1
@@ -279,12 +279,12 @@ class TestComputeRoomMonthlyPrice:
             period_start=date(2026, 1, 1),
             period_end=date(2026, 4, 30),
         )
-        # (2×550 + 2×450) / 4 = 2000 / 4 = 500
+        # (2x550 + 2x450) / 4 = 2000 / 4 = 500
         assert result.monthly_eur == Decimal("500.00")
         assert (result.spring_months, result.summer_months, result.autumn_months) == (2, 0, 2)
 
     def test_eight_month_cross_season_average(self):
-        """Sep-Apr stay: 6×550 + 2×450 = 4200, avg = 525."""
+        """Sep-Apr stay: 6x550 + 2x450 = 4200, avg = 525."""
         result = compute_room_monthly_price(
             spring_eur=Decimal("450.00"),
             summer_eur=Decimal("300.00"),
@@ -293,7 +293,7 @@ class TestComputeRoomMonthlyPrice:
             period_start=date(2025, 9, 1),
             period_end=date(2026, 4, 30),
         )
-        # (6×550 + 2×450) / 8 = 4200 / 8 = 525
+        # (6x550 + 2x450) / 8 = 4200 / 8 = 525
         assert result.monthly_eur == Decimal("525.00")
         assert (result.spring_months, result.summer_months, result.autumn_months) == (2, 0, 6)
 
@@ -307,7 +307,7 @@ class TestComputeRoomMonthlyPrice:
             period_start=date(2025, 9, 1),
             period_end=date(2026, 8, 31),
         )
-        # (6×550 + 4×450 + 2×300) / 12 = (3300 + 1800 + 600) / 12 = 5700/12 = 475
+        # (6x550 + 4x450 + 2x300) / 12 = (3300 + 1800 + 600) / 12 = 5700/12 = 475
         assert result.monthly_eur == Decimal("475.00")
         assert (result.spring_months, result.summer_months, result.autumn_months) == (4, 2, 6)
         assert result.total_months == 12
@@ -355,11 +355,11 @@ class TestComputeRoomMonthlyPrice:
     def test_rounding_half_up_on_fractional_average(self):
         """Engineer a 3-month split that yields a fractional average.
 
-        2 × 100 + 1 × 101 = 301, avg = 301/3 = 100.333... → 100.33.
+        2 x 100 + 1 x 101 = 301, avg = 301/3 = 100.333... → 100.33.
         """
         # Use real seasonal boundaries: Jun (spring, 100), Jul (summer, 101)
         # — span 3 months: Jun (spring), Jul + Aug (summer).
-        # 1×100 + 2×101 = 302, avg = 302/3 = 100.666... → 100.67 (HALF_UP)
+        # 1x100 + 2x101 = 302, avg = 302/3 = 100.666... → 100.67 (HALF_UP)
         result = compute_room_monthly_price(
             spring_eur=Decimal("100.00"),
             summer_eur=Decimal("101.00"),

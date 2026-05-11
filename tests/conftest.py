@@ -7,8 +7,8 @@ embedder, LLM client) so unit tests run offline and deterministic.
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Sequence
+from typing import Any
 
 import pytest
 
@@ -146,8 +146,10 @@ class FakeReranker(Reranker):
             )
             for i, c in enumerate(ordered[:top_k])
         ]
-    
+
+
 # Fake db executor
+
 
 class FakeDbExecutor:
     """Minimal in-memory DBExecutor implementation for tests.
@@ -165,9 +167,7 @@ class FakeDbExecutor:
         self._responses: list[tuple[str, list[dict[str, Any]]]] = []
         self.calls: list[dict[str, Any]] = []
 
-    def add_response(
-        self, sql_substring: str, response: list[dict[str, Any]]
-    ) -> None:
+    def add_response(self, sql_substring: str, response: list[dict[str, Any]]) -> None:
         """Register a canned response for any SQL containing sql_substring."""
         self._responses.append((sql_substring, response))
 
@@ -248,6 +248,7 @@ def fake_reranker() -> Reranker:
 def noop_reranker() -> Reranker:
     """A reranker that preserves input order (useful when testing other steps)."""
     return FakeReranker(reverse=False)
+
 
 @pytest.fixture
 def fake_db() -> FakeDbExecutor:

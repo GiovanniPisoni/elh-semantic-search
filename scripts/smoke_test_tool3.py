@@ -37,7 +37,6 @@ from elh_rag.tools.find_available_rooms import (
     find_available_rooms,
 )
 
-
 _SEP = "=" * 78
 
 
@@ -82,9 +81,7 @@ def _pick_room(
         ctx=ctx,
     )
     if not out.rooms:
-        print(
-            f"  [skip] No rooms for {city} on {available_from} -> {available_to}"
-        )
+        print(f"  [skip] No rooms for {city} on {available_from} -> {available_to}")
         return None
     rm = out.rooms[0]
     print(f"  Picked: {rm.house_name} (room_id={rm.room_id})")

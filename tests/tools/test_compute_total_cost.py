@@ -175,9 +175,7 @@ class TestBookingTotal:
         """Both Y -> both amounts contribute to booking total."""
         _seed(
             fake_db,
-            room=_make_room_row(
-                deposit="Y", deposit_value="600.00", lastmonth="Y"
-            ),
+            room=_make_room_row(deposit="Y", deposit_value="600.00", lastmonth="Y"),
         )
         result = compute_total_cost(
             ComputeTotalCostInput(
@@ -224,8 +222,10 @@ class TestBookingTotal:
         _seed(
             fake_db,
             room=_make_room_row(
-                deposit="N", lastmonth="N",
-                extra_allowed="Y", extra_cost="200.00",
+                deposit="N",
+                lastmonth="N",
+                extra_allowed="Y",
+                extra_cost="200.00",
             ),
         )
         result = compute_total_cost(
@@ -245,8 +245,10 @@ class TestBookingTotal:
         _seed(
             fake_db,
             room=_make_room_row(
-                deposit="N", lastmonth="N",
-                extra_allowed="Y", extra_cost="200.00",
+                deposit="N",
+                lastmonth="N",
+                extra_allowed="Y",
+                extra_cost="200.00",
             ),
         )
         result = compute_total_cost(
@@ -266,8 +268,10 @@ class TestBookingTotal:
         _seed(
             fake_db,
             room=_make_room_row(
-                deposit="N", lastmonth="N",
-                extra_allowed="N", extra_cost="200.00",
+                deposit="N",
+                lastmonth="N",
+                extra_allowed="N",
+                extra_cost="200.00",
             ),
         )
         result = compute_total_cost(
@@ -320,17 +324,17 @@ class TestRecurringVsBreakdown:
         rents = [m.rent_eur for m in result.monthly_breakdown]
         assert seasons == ["autumn", "autumn", "spring", "spring"]
         assert rents == [
-            Decimal("550.00"), Decimal("550.00"),
-            Decimal("400.00"), Decimal("400.00"),
+            Decimal("550.00"),
+            Decimal("550.00"),
+            Decimal("400.00"),
+            Decimal("400.00"),
         ]
 
     def test_fixed_price_uniform_even_when_crossing_seasons(self, fake_db):
         """fixedprice=Y -> all months bill at autumn column, regardless of season."""
         _seed(
             fake_db,
-            room=_make_room_row(
-                spring="600.00", summer="600.00", autumn="600.00", fixed="Y"
-            ),
+            room=_make_room_row(spring="600.00", summer="600.00", autumn="600.00", fixed="Y"),
         )
         result = compute_total_cost(
             ComputeTotalCostInput(
@@ -381,9 +385,7 @@ class TestAdminFee:
         """Admin fee MUST NOT appear in payable_at_booking_eur."""
         _seed(
             fake_db,
-            room=_make_room_row(
-                deposit="N", lastmonth="N", admin_tax="120.00"
-            ),
+            room=_make_room_row(deposit="N", lastmonth="N", admin_tax="120.00"),
         )
         result = compute_total_cost(
             ComputeTotalCostInput(
@@ -433,10 +435,7 @@ class TestUtilities:
             ctx=fake_db,
         )
         assert "Gas (up to €25.00/mo)" in result.utilities_included
-        assert (
-            "Internet/WiFi (not included — paid to provider)"
-            in result.utilities_excluded
-        )
+        assert "Internet/WiFi (not included — paid to provider)" in result.utilities_excluded
 
     def test_no_utilities_returns_empty_lists(self, fake_db):
         _seed(fake_db, room=_make_room_row(), expenses=[])
@@ -500,9 +499,7 @@ class TestNotes:
             ),
             ctx=fake_db,
         )
-        assert any(
-            "Security deposit" in n and "refundable" in n for n in result.notes
-        )
+        assert any("Security deposit" in n and "refundable" in n for n in result.notes)
 
     def test_no_deposit_note_when_no_deposit(self, fake_db):
         _seed(fake_db, room=_make_room_row(deposit="N", deposit_value="0"))
@@ -540,8 +537,7 @@ class TestNotes:
         )
         # User must understand that no payment is due for the final month
         assert any(
-            "last month" in n.lower() and "no further payment" in n.lower()
-            for n in result.notes
+            "last month" in n.lower() and "no further payment" in n.lower() for n in result.notes
         )
 
 
@@ -634,9 +630,7 @@ class TestSummary:
     def test_summary_fixed_price_labelled_correctly(self, fake_db):
         _seed(
             fake_db,
-            room=_make_room_row(
-                spring="600.00", summer="600.00", autumn="600.00", fixed="Y"
-            ),
+            room=_make_room_row(spring="600.00", summer="600.00", autumn="600.00", fixed="Y"),
         )
         result = compute_total_cost(
             ComputeTotalCostInput(

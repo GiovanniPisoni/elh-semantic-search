@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -131,12 +130,8 @@ def fetch_reviews_aggregate(
         count=len(rows),
         average_overall_rating=_avg([r.get("overallratings") for r in rows]),
         average_cleaning_rating=_avg([r.get("cleaningratings") for r in rows]),
-        average_communication_rating=_avg(
-            [r.get("communicationratings") for r in rows]
-        ),
+        average_communication_rating=_avg([r.get("communicationratings") for r in rows]),
         average_location_rating=_avg([r.get("locationratings") for r in rows]),
-        average_price_quality_rating=_avg(
-            [r.get("pricequalityratings") for r in rows]
-        ),
+        average_price_quality_rating=_avg([r.get("pricequalityratings") for r in rows]),
         recent_reviews=recent,
     )

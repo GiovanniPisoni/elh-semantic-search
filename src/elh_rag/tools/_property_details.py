@@ -170,9 +170,7 @@ ORDER BY loc_idhouse, idroom, dateupdate DESC
 # Fetchers
 
 
-def fetch_room_latest(
-    db: DBExecutor, house_id: str, room_id: str
-) -> dict[str, Any] | None:
+def fetch_room_latest(db: DBExecutor, house_id: str, room_id: str) -> dict[str, Any] | None:
     """Return the most recent version of the room, or None if not found."""
     rows = db.execute(_ROOM_LATEST_SQL, (house_id, room_id))
     return rows[0] if rows else None
@@ -245,9 +243,7 @@ def _to_datetime(value: Any) -> datetime:
         return value
     if isinstance(value, date):
         return datetime.combine(value, time())
-    raise TypeError(
-        f"Cannot coerce {type(value).__name__} to datetime: {value!r}"
-    )
+    raise TypeError(f"Cannot coerce {type(value).__name__} to datetime: {value!r}")
 
 
 def _housemate_from_row(row: dict[str, Any]) -> HousemateRoom:
@@ -333,9 +329,7 @@ def build_room_details(room_row: dict[str, Any]) -> RoomDetails:
         autumn_price_eur=Decimal(str(room_row.get("autumnprice") or "0")),
         extra_person_allowed=extra_allowed,
         extra_person_cost_eur=(
-            Decimal(str(room_row.get("extrapersoncost") or "0"))
-            if extra_allowed
-            else None
+            Decimal(str(room_row.get("extrapersoncost") or "0")) if extra_allowed else None
         ),
         deposit_required=(room_row.get("deposit") == "Y"),
         deposit_value_eur=Decimal(str(room_row.get("depositvalue") or "0")),

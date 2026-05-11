@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
-from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -101,10 +99,7 @@ def _compose_summary(
 ) -> str:
     """One-line LLM-quotable summary of the lookup result."""
     if room is not None:
-        bits = [
-            f"Room '{room.room_name}' in {house.flat_name} "
-            f"({house.zone}, {house.city})"
-        ]
+        bits = [f"Room '{room.room_name}' in {house.flat_name} ({house.zone}, {house.city})"]
         bits.append(
             f"autumn rate €{room.autumn_price_eur}"
             if not room.is_fixed_price
@@ -258,13 +253,9 @@ def get_property_details(
     encoded = payload.encoded_id.strip()
 
     if is_room_id(encoded):
-        house, room, reviews = _lookup_by_room_id(
-            ctx, encoded, payload.include_reviews
-        )
+        house, room, reviews = _lookup_by_room_id(ctx, encoded, payload.include_reviews)
     elif is_house_id(encoded):
-        house, room, reviews = _lookup_by_house_id(
-            ctx, encoded, payload.include_reviews
-        )
+        house, room, reviews = _lookup_by_house_id(ctx, encoded, payload.include_reviews)
     else:
         raise InvalidRoomIdError(
             encoded,

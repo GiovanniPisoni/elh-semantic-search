@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-import pytest
-
 from elh_rag.tools._property_details import (
     _MAX_HOUSEMATE_ROOMS,
     HouseDetails,
@@ -241,7 +239,9 @@ class TestBuildHouseDetails:
 
     def test_amenities_only_y_columns_alphabetised(self):
         row = _make_house_row(
-            balcony="Y", seaview="Y", parking="Y",
+            balcony="Y",
+            seaview="Y",
+            parking="Y",
             internet="N",  # excluded despite being a default Y
         )
         details = build_house_details(row, [])
@@ -288,18 +288,13 @@ class TestBuildHouseDetails:
         assert details.encoded_house_id.startswith("HSE_00F7359B|")
 
     def test_rooms_total_set_from_housemate_count(self):
-        rooms = [
-            _make_room_row(idroom=f"RM_{i:03d}") for i in range(5)
-        ]
+        rooms = [_make_room_row(idroom=f"RM_{i:03d}") for i in range(5)]
         details = build_house_details(_make_house_row(), rooms)
         assert details.rooms_total == 5
         assert len(details.rooms_summary) == 5
 
     def test_rooms_summary_capped_at_max(self, caplog):
-        rooms = [
-            _make_room_row(idroom=f"RM_{i:03d}")
-            for i in range(_MAX_HOUSEMATE_ROOMS + 5)
-        ]
+        rooms = [_make_room_row(idroom=f"RM_{i:03d}") for i in range(_MAX_HOUSEMATE_ROOMS + 5)]
         with caplog.at_level("WARNING"):
             details = build_house_details(_make_house_row(), rooms)
         # rooms_total reflects the real count, rooms_summary is capped
@@ -375,15 +370,14 @@ class TestBuildRoomDetails:
         assert details.administrative_tax_eur == Decimal("150.00")
 
     def test_fixed_price_room(self):
-        row = _make_room_row(
-            fixed="Y", spring="600.00", summer="600.00", autumn="600.00"
-        )
+        row = _make_room_row(fixed="Y", spring="600.00", summer="600.00", autumn="600.00")
         details = build_room_details(row)
         assert details.is_fixed_price is True
 
     def test_encoded_room_id_round_trippable(self):
         row = _make_room_row(
-            loc_idhouse="HSE_001", idroom="RM_001",
+            loc_idhouse="HSE_001",
+            idroom="RM_001",
             dateupdate=date(2024, 9, 15),
         )
         details = build_room_details(row)
@@ -404,9 +398,7 @@ class TestBuildRoomDetails:
 
 class TestHousemateRoomEmbedding:
     def test_housemate_built_with_full_pricing_set(self):
-        room = _make_room_row(
-            spring="400.00", summer="300.00", autumn="550.00", fixed="N"
-        )
+        room = _make_room_row(spring="400.00", summer="300.00", autumn="550.00", fixed="N")
         house = build_house_details(_make_house_row(), [room])
         assert len(house.rooms_summary) == 1
         h = house.rooms_summary[0]

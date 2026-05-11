@@ -57,16 +57,33 @@ def _make_house_row(
         "malepreferred": "N",
         "genreirrelevant": "Y",
         # All Y/N amenity columns default to N
-        "furnished": "Y", "sharedspace": "N",
-        "balcony": "N", "cityview": "N", "fieldview": "N", "seaview": "N",
-        "cctv": "N", "codeentry": "N", "security24h": "N",
-        "smokedetector": "Y", "armoreddoor": "N",
-        "elevator": "Y", "reducedmobilityaccess": "N", "parking": "N",
-        "centralheating": "Y", "airconditioning": "N",
-        "thermalinsulation": "N", "doubleglazedwindows": "N",
-        "kitchenequipment": "Y", "fridge": "Y", "microwaveoven": "Y",
-        "gaselectricstove": "Y", "dishwasher": "N", "washerdrier": "Y",
-        "internet": "Y", "cabletv": "N", "smarttv": "N",
+        "furnished": "Y",
+        "sharedspace": "N",
+        "balcony": "N",
+        "cityview": "N",
+        "fieldview": "N",
+        "seaview": "N",
+        "cctv": "N",
+        "codeentry": "N",
+        "security24h": "N",
+        "smokedetector": "Y",
+        "armoreddoor": "N",
+        "elevator": "Y",
+        "reducedmobilityaccess": "N",
+        "parking": "N",
+        "centralheating": "Y",
+        "airconditioning": "N",
+        "thermalinsulation": "N",
+        "doubleglazedwindows": "N",
+        "kitchenequipment": "Y",
+        "fridge": "Y",
+        "microwaveoven": "Y",
+        "gaselectricstove": "Y",
+        "dishwasher": "N",
+        "washerdrier": "Y",
+        "internet": "Y",
+        "cabletv": "N",
+        "smarttv": "N",
     }
 
 
@@ -97,11 +114,21 @@ def _make_room_row(
         "lastmonthdeposit": "N",
         "administrativetax": Decimal("0"),
         "status": "Available",
-        "singlebed": "Y", "doublebed": "N", "kingbed": "N",
-        "queenbed": "N", "couchbed": "N", "secondbed": "N",
-        "privatebathroom": "Y", "balcony": "N", "desk": "Y",
-        "closet": "Y", "heating": "Y", "haswindow": "Y",
-        "bedlinen": "Y", "pillows": "Y", "airconditioning": "N",
+        "singlebed": "Y",
+        "doublebed": "N",
+        "kingbed": "N",
+        "queenbed": "N",
+        "couchbed": "N",
+        "secondbed": "N",
+        "privatebathroom": "Y",
+        "balcony": "N",
+        "desk": "Y",
+        "closet": "Y",
+        "heating": "Y",
+        "haswindow": "Y",
+        "bedlinen": "Y",
+        "pillows": "Y",
+        "airconditioning": "N",
     }
 
 
@@ -113,9 +140,7 @@ def _encoded_room(
     return encode_room_id(house, room, dt)
 
 
-def _encoded_house(
-    house: str = "HSE_001", dt: datetime = datetime(2024, 9, 15)
-) -> str:
+def _encoded_house(house: str = "HSE_001", dt: datetime = datetime(2024, 9, 15)) -> str:
     return encode_house_id(house, dt)
 
 
@@ -141,9 +166,7 @@ def _seed_room_lookup(
     # Order of add_response matters: first match wins.
     fake_db.add_response("WHERE loc_idhouse = %s AND idroom = %s", rows_room)
     fake_db.add_response("FROM house", rows_house)
-    fake_db.add_response(
-        "WHERE loc_idhouse = %s AND loc_dateupdate = %s", rows_housemates
-    )
+    fake_db.add_response("WHERE loc_idhouse = %s AND loc_dateupdate = %s", rows_housemates)
     fake_db.add_response("FROM review", rows_review)
 
 
@@ -158,9 +181,7 @@ def _seed_house_lookup(
     rows_housemates = housemate_rows if housemate_rows is not None else []
     rows_review = reviews if reviews is not None else []
     fake_db.add_response("FROM house", rows_house)
-    fake_db.add_response(
-        "WHERE loc_idhouse = %s AND loc_dateupdate = %s", rows_housemates
-    )
+    fake_db.add_response("WHERE loc_idhouse = %s AND loc_dateupdate = %s", rows_housemates)
     fake_db.add_response("FROM review", rows_review)
 
 
@@ -208,9 +229,7 @@ class TestRoomIdBranch:
             ],
         )
         result = get_property_details(
-            GetPropertyDetailsInput(
-                encoded_id=_encoded_room(), include_reviews=True
-            ),
+            GetPropertyDetailsInput(encoded_id=_encoded_room(), include_reviews=True),
             ctx=fake_db,
         )
         assert result.reviews is not None
@@ -225,9 +244,7 @@ class TestRoomIdBranch:
             housemate_rows=[_make_room_row()],
         )
         result = get_property_details(
-            GetPropertyDetailsInput(
-                encoded_id=_encoded_room(), include_reviews=False
-            ),
+            GetPropertyDetailsInput(encoded_id=_encoded_room(), include_reviews=False),
             ctx=fake_db,
         )
         assert result.reviews is None
@@ -407,9 +424,7 @@ class TestSummaryComposition:
         _seed_house_lookup(
             fake_db,
             house_row=_make_house_row(flatname="Casa do Sol"),
-            housemate_rows=[
-                _make_room_row(idroom=f"RM_{i:03d}") for i in range(4)
-            ],
+            housemate_rows=[_make_room_row(idroom=f"RM_{i:03d}") for i in range(4)],
             reviews=[],
         )
         result = get_property_details(
@@ -454,9 +469,7 @@ class TestSummaryComposition:
             housemate_rows=[_make_room_row()],
         )
         result = get_property_details(
-            GetPropertyDetailsInput(
-                encoded_id=_encoded_room(), include_reviews=False
-            ),
+            GetPropertyDetailsInput(encoded_id=_encoded_room(), include_reviews=False),
             ctx=fake_db,
         )
         assert "review" not in result.summary.lower()
