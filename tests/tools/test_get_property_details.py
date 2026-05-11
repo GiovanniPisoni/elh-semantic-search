@@ -224,7 +224,7 @@ class TestRoomIdBranch:
                     "communicationratings": Decimal("5.00"),
                     "locationratings": Decimal("4.00"),
                     "pricequalityratings": Decimal("4.50"),
-                    "status": "Approved",
+                    "status": "approved",
                 }
             ],
         )
@@ -450,7 +450,7 @@ class TestSummaryComposition:
                     "communicationratings": Decimal("4.00"),
                     "locationratings": Decimal("4.00"),
                     "pricequalityratings": Decimal("4.00"),
-                    "status": "Approved",
+                    "status": "approved",
                 }
             ],
         )

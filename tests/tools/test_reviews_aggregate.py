@@ -22,7 +22,7 @@ def _make_review_row(
     communication: str = "4.50",
     location: str = "4.00",
     price_quality: str = "4.50",
-    status: str = "Approved",
+    status: str = "approved",
 ) -> dict:
     return {
         "datereview": datereview,
@@ -215,7 +215,7 @@ class TestScope:
         )
         call = fake_db.calls[0]
         assert "idroom = %s" in call["sql"]
-        assert call["params"] == ("HSE_001", _HOUSE_DT, "RM_001", "Approved")
+        assert call["params"] == ("HSE_001", _HOUSE_DT, "RM_001", "approved")
 
     def test_house_scope_drops_idroom_filter(self, fake_db):
         fake_db.add_response("FROM review", [])
@@ -227,7 +227,7 @@ class TestScope:
         )
         call = fake_db.calls[0]
         assert "idroom = %s" not in call["sql"]
-        assert call["params"] == ("HSE_001", _HOUSE_DT, "Approved")
+        assert call["params"] == ("HSE_001", _HOUSE_DT, "approved")
 
     def test_only_approved_reviews_queried(self, fake_db):
         fake_db.add_response("FROM review", [])
@@ -240,7 +240,7 @@ class TestScope:
         sql = fake_db.calls[0]["sql"]
         params = fake_db.calls[0]["params"]
         assert "status = %s" in sql
-        assert "Approved" in params
+        assert "approved" in params
 
     def test_padded_title_stripped(self, fake_db):
         """character(100) title columns return right-padded values."""

@@ -374,7 +374,7 @@ class TestComputeAvgOverallRating:
             group_by=[],
         )
         sql = fake_db.calls[0]["sql"]
-        assert "rv.status = 'Approved'" in sql
+        assert "rv.status = 'approved'" in sql
 
     def test_groups_by_zone(self, fake_db):
         fake_db.add_response(

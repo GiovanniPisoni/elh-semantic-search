@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from ._db import DBExecutor
 
-_REVIEW_STATUS_APPROVED = "Approved"
+_REVIEW_STATUS_APPROVED = "approved"
 _EXCERPT_LENGTH = 200
 _MAX_RECENT_REVIEWS = 3
 

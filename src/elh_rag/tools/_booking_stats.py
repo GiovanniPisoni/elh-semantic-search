@@ -410,7 +410,7 @@ def _compute_avg_overall_rating(
     select_dim_sql = [expr + " AS " + alias for expr, alias in select_dims]
     dim_aliases = [alias for _, alias in select_dims]
 
-    where: list[str] = ["rv.status = 'Approved'"]
+    where: list[str] = ["rv.status = 'approved'"]
     params: list[Any] = []
     _city_filter_clause(where, params, city)
     _zone_filter_clause(where, params, zone)
