@@ -17,7 +17,6 @@ from elh_rag.tools import (
     ToolValidationError,
     execute_tool,
 )
-from elh_rag.tools._db import FakeDbExecutor
 from elh_rag.tools.find_rooms import (
     FindRoomsInput,
     FindRoomsOutput,
@@ -25,6 +24,7 @@ from elh_rag.tools.find_rooms import (
     _build_sql,
     _select_price_column,
 )
+from tests.conftest import FakeDbExecutor
 
 # Fixtures
 

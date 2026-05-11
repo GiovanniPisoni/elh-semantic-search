@@ -12,22 +12,14 @@ two pieces of logic on top of Tool 1's structural filtering:
        requested window are removed from the result. Implemented in
        :mod:`elh_rag.tools._reservation`.
 
-    2. **Season-aware weighted pricing** — instead of a single seasonal
-       column, the monthly price is computed by
-       :func:`elh_rag.tools._pricing.compute_room_monthly_price`.
-       Rooms with ``fixedprice = 'Y'`` keep their flat price and are
-       flagged via ``RoomMatch.is_fixed_price``.
-
-DB roundtrips: this tool issues **up to 3 queries** in sequence:
-
-    1. Tool 1's structural filter   (always, unless 0 rows)
-    2. Reservation overlap          (skipped if step 1 returned 0)
-    3. Seasonal price lookup        (skipped if step 2 emptied result)
-
-The Pydantic input model is intentionally a subclass of
-:class:`FindRoomsInput`, so the same payload can be forwarded straight
-to Tool 1's raw function (skipping its registry dispatcher to avoid
-double-validation).
+    2. **Season-aware monthly pricing** — the displayed monthly price
+       is the arithmetic mean of the per-month Model B rents over the
+       stay (every calendar month touched is rated at its seasonal
+       tariff). Rooms with ``fixedprice = 'Y'`` keep their flat price
+       and are flagged via ``RoomMatch.is_fixed_price``. The
+       ``price_label`` field carries a contextualised string the LLM
+       can quote verbatim, so the user always sees the date window
+       behind the number.
 """
 
 from __future__ import annotations
@@ -40,7 +32,7 @@ from typing import Any
 from pydantic import Field, model_validator
 
 from ._db import DBExecutor
-from ._pricing import compute_room_monthly_price
+from ._pricing import MonthlyPriceBreakdown, compute_room_monthly_price
 from ._reservation import _find_occupied_room_ids
 from ._room_id import decode_room_id, normalize_id
 from .base import register_tool
@@ -129,24 +121,91 @@ def _room_match_keys(rm: RoomMatch) -> tuple[str, str]:
     return (parts.house_id, parts.room_id)
 
 
+def _format_price_label(
+    monthly_eur: Decimal,
+    breakdown: MonthlyPriceBreakdown,
+    spring_eur: Decimal,
+    summer_eur: Decimal,
+    autumn_eur: Decimal,
+) -> str:
+    """Build a context-rich price label the LLM can quote verbatim."""
+    if breakdown.is_fixed_price:
+        return f"€{monthly_eur}/month (fixed rate, no seasonal variation)"
+
+    season_parts: list[str] = []
+    if breakdown.autumn_months > 0:
+        season_parts.append(
+            f"{breakdown.autumn_months} "
+            f"month{'s' if breakdown.autumn_months != 1 else ''} "
+            f"at autumn rate €{autumn_eur}"
+        )
+    if breakdown.spring_months > 0:
+        season_parts.append(
+            f"{breakdown.spring_months} "
+            f"month{'s' if breakdown.spring_months != 1 else ''} "
+            f"at spring rate €{spring_eur}"
+        )
+    if breakdown.summer_months > 0:
+        season_parts.append(
+            f"{breakdown.summer_months} "
+            f"month{'s' if breakdown.summer_months != 1 else ''} "
+            f"at summer rate €{summer_eur}"
+        )
+
+    total = breakdown.total_months
+
+    # Same-season case: single label, no breakdown needed
+    if len(season_parts) == 1:
+        if breakdown.autumn_months > 0:
+            season = "autumn"
+        elif breakdown.spring_months > 0:
+            season = "spring"
+        else:
+            season = "summer"
+        return (
+            f"€{monthly_eur}/month for your {total}-month stay (all {season} rate)"
+        )
+
+    # Cross-season case: average + composition
+    return (
+        f"€{monthly_eur}/month average over {total} months: "
+        + ", ".join(season_parts)
+    )
+
+
 def _enrich_with_seasonal_price(
     rm: RoomMatch,
     raw_prices: dict[str, Any],
     period_start: date,
     period_end: date,
 ) -> RoomMatch:
-    """Return a copy of ``rm`` with weighted/fixed monthly price applied."""
+    """Return a copy of ``rm`` with average monthly price + contextual label."""
+    spring_eur = Decimal(str(raw_prices["springprice"]))
+    summer_eur = Decimal(str(raw_prices["summerprice"]))
+    autumn_eur = Decimal(str(raw_prices["autumnprice"]))
+    is_fixed = (raw_prices["fixedprice"] == "Y")
+
     breakdown = compute_room_monthly_price(
-        spring_eur=Decimal(str(raw_prices["springprice"])),
-        summer_eur=Decimal(str(raw_prices["summerprice"])),
-        autumn_eur=Decimal(str(raw_prices["autumnprice"])),
-        is_fixed=(raw_prices["fixedprice"] == "Y"),
+        spring_eur=spring_eur,
+        summer_eur=summer_eur,
+        autumn_eur=autumn_eur,
+        is_fixed=is_fixed,
         period_start=period_start,
         period_end=period_end,
     )
+
+    label = _format_price_label(
+        monthly_eur=breakdown.monthly_eur,
+        breakdown=breakdown,
+        spring_eur=spring_eur,
+        summer_eur=summer_eur,
+        autumn_eur=autumn_eur,
+    )
+
     return replace(
         rm,
         price_per_month_eur=float(breakdown.monthly_eur),
+        price_label=label,
         is_fixed_price=breakdown.is_fixed_price,
         available_from=period_start,
     )
@@ -163,9 +222,15 @@ def _enrich_with_seasonal_price(
         "amenities, occupancy, ...) but with available_from and "
         "available_to as REQUIRED hard constraints. "
         "Excludes rooms with overlapping reservations and computes a "
-        "season-aware weighted monthly price over the requested period "
-        "(rooms with fixedprice='Y' return a flat price flagged via "
-        "is_fixed_price). "
+        "season-aware monthly price for the stay: every calendar month "
+        "touched is rated at its seasonal tariff (autumn Sep-Feb, "
+        "spring Mar-Jun, summer Jul-Aug), and price_per_month_eur is "
+        "the average across those months. The price_label field carries "
+        "a human-readable explanation of the calculation that you "
+        "should quote verbatim to the user, so the user always sees "
+        "the basis of the number (e.g. 'X/month average over 8 months: "
+        "6 months at autumn rate Y, 2 months at spring rate Z'). "
+        "Rooms with fixedprice='Y' return a flat price and is_fixed_price=True. "
         "Use this tool for queries like 'rooms free from Aug 20 till Dec 31' "
         "or '3 bedrooms available next semester'. For queries without "
         "explicit date ranges, use find_rooms instead."
@@ -200,7 +265,7 @@ def find_available_rooms(
         return _empty_output(payload, structural.query_summary)
 
     # Fetch raw seasonal prices for the survivors and recompute the
-    # monthly price.
+    # monthly price + contextual label.
     keys = [_room_match_keys(rm) for rm in available]
     raw_by_key = _fetch_seasonal_prices(ctx, keys)
 

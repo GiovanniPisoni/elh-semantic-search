@@ -14,8 +14,8 @@ from typing import Any
 class RoomMatch:
     """Single room result. Reused by Tool 1, Tool 2, Tool 4."""
 
-    room_id: str  # encoded "{idhouse}|{idroom}|{ISO8601}"
-    house_id: str  # encoded "{idhouse}|{ISO8601}"
+    room_id: str
+    house_id: str
     house_name: str
     city: str
     zone: str
@@ -30,6 +30,7 @@ class RoomMatch:
     excerpt: str = ""
     match_score: float = 0.0
     is_fixed_price: bool = False
+    price_label: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -40,6 +41,7 @@ class RoomMatch:
             "zone": self.zone,
             "neighborhood": self.neighborhood,
             "price_per_month_eur": self.price_per_month_eur,
+            "price_label": self.price_label,
             "private_bathroom": self.private_bathroom,
             "distance_to_transport_m": self.distance_to_transport_m,
             "nearest_metro_line": self.nearest_metro_line,

@@ -1,13 +1,4 @@
-"""Tests for the season-aware monthly price helpers.
-
-Two layers of testing:
-
-    1. Pure-logic unit tests on ``_split_days_by_season`` (no Decimal,
-       just calendar arithmetic).
-    2. ``compute_room_monthly_price`` end-to-end with both fixed-price
-       and variable-price paths, including the warning emitted when
-       ``fixedprice='Y'`` but the three columns differ.
-"""
+"""Tests for the season-aware monthly price helpers."""
 
 from __future__ import annotations
 
@@ -22,11 +13,15 @@ from elh_rag.tools._pricing import (
     SPRING_MONTHS,
     SUMMER_MONTHS,
     MonthlyPriceBreakdown,
-    _split_days_by_season,
+    MonthRent,
+    StayCostBreakdown,
     compute_room_monthly_price,
+    compute_stay_breakdown,
+    iter_calendar_months,
+    season_for_month,
 )
 
-# Season constants are mutually exclusive and cover all 12 months
+# Season constants
 
 
 class TestSeasonConstants:
@@ -46,274 +41,400 @@ class TestSeasonConstants:
         assert {9, 10, 11, 12, 1, 2} == AUTUMN_MONTHS
 
 
-# _split_days_by_season — calendar arithmetic
+# season_for_month
 
 
-class TestSplitDaysBySeason:
-    def test_single_pair_of_days_all_autumn(self):
-        # 1 -> 2 Sept inclusive = 2 days, both in autumn
-        assert _split_days_by_season(date(2026, 9, 1), date(2026, 9, 2)) == (0, 0, 2)
+class TestSeasonForMonth:
+    @pytest.mark.parametrize("month", [3, 4, 5, 6])
+    def test_spring_months(self, month: int):
+        assert season_for_month(month) == "spring"
 
-    def test_full_spring(self):
-        # 1 Mar -> 30 Jun inclusive: all spring
-        result = _split_days_by_season(date(2026, 3, 1), date(2026, 6, 30))
-        assert result == (122, 0, 0)  # 31 + 30 + 31 + 30
-        assert sum(result) == (date(2026, 6, 30) - date(2026, 3, 1)).days + 1
+    @pytest.mark.parametrize("month", [7, 8])
+    def test_summer_months(self, month: int):
+        assert season_for_month(month) == "summer"
 
-    def test_full_summer(self):
-        # 1 Jul -> 31 Aug inclusive
-        result = _split_days_by_season(date(2026, 7, 1), date(2026, 8, 31))
-        assert result == (0, 62, 0)  # 31 + 31
+    @pytest.mark.parametrize("month", [9, 10, 11, 12, 1, 2])
+    def test_autumn_months(self, month: int):
+        assert season_for_month(month) == "autumn"
 
-    def test_full_autumn_cross_year(self):
-        # Phase 3 design example: 1 Sept 2026 -> 31 Jan 2027 inclusive
-        result = _split_days_by_season(date(2026, 9, 1), date(2027, 1, 31))
-        assert result == (0, 0, 153)  # 30 + 31 + 30 + 31 + 31
+    @pytest.mark.parametrize("bad", [0, -1, 13, 100])
+    def test_invalid_month_raises(self, bad: int):
+        with pytest.raises(ValueError, match="Invalid month"):
+            season_for_month(bad)
 
-    def test_phase3_design_doc_example(self):
-        """Phase 3 doc: '15 May -> 31 Aug 2026 -> 47 spring + 62 summer'."""
-        spring, summer, autumn = _split_days_by_season(date(2026, 5, 15), date(2026, 8, 31))
-        assert (spring, summer, autumn) == (47, 62, 0)
 
-    def test_cross_summer_autumn(self):
-        # 1 Aug -> 30 Sept = 31 summer + 30 autumn
-        assert _split_days_by_season(date(2026, 8, 1), date(2026, 9, 30)) == (0, 31, 30)
+# iter_calendar_months
 
-    def test_cross_autumn_spring(self):
-        # 1 Jan -> 31 Mar 2026 = (Jan 31 + Feb 28) autumn + (Mar 31) spring
-        assert _split_days_by_season(date(2026, 1, 1), date(2026, 3, 31)) == (31, 0, 59)
 
-    def test_cross_spring_summer(self):
-        # 1 Jun -> 31 Jul = 30 spring + 31 summer
-        assert _split_days_by_season(date(2026, 6, 1), date(2026, 7, 31)) == (30, 31, 0)
+class TestIterCalendarMonths:
+    def test_same_month_yields_one_pair(self):
+        result = list(iter_calendar_months(date(2025, 9, 5), date(2025, 9, 28)))
+        assert result == [(2025, 9)]
 
-    def test_year_boundary_autumn(self):
-        # 30 Dec 2025 -> 2 Jan 2026 inclusive = 4 days, all autumn
-        assert _split_days_by_season(date(2025, 12, 30), date(2026, 1, 2)) == (0, 0, 4)
+    def test_check_in_and_out_on_same_day(self):
+        """Edge case: 1-day stay still touches exactly one month."""
+        result = list(iter_calendar_months(date(2025, 9, 15), date(2025, 9, 15)))
+        assert result == [(2025, 9)]
 
-    def test_leap_year_february(self):
-        """Feb 2024 has 29 days; the split must respect that."""
-        assert _split_days_by_season(date(2024, 2, 1), date(2024, 2, 29)) == (0, 0, 29)
+    def test_two_adjacent_months(self):
+        result = list(iter_calendar_months(date(2025, 9, 28), date(2025, 10, 3)))
+        assert result == [(2025, 9), (2025, 10)]
 
-    def test_non_leap_year_february(self):
-        assert _split_days_by_season(date(2025, 2, 1), date(2025, 2, 28)) == (0, 0, 28)
+    def test_crossing_year_boundary(self):
+        result = list(iter_calendar_months(date(2025, 11, 15), date(2026, 2, 14)))
+        assert result == [(2025, 11), (2025, 12), (2026, 1), (2026, 2)]
 
-    def test_full_year_starting_september(self):
-        """A full Erasmus academic year, Sept -> Aug."""
-        spring, summer, autumn = _split_days_by_season(date(2026, 9, 1), date(2027, 8, 31))
-        # autumn = Sept(30) + Oct(31) + Nov(30) + Dec(31) + Jan(31) + Feb(28) = 181
-        # spring = Mar(31) + Apr(30) + May(31) + Jun(30) = 122
-        # summer = Jul(31) + Aug(31) = 62
-        assert (spring, summer, autumn) == (122, 62, 181)
-        assert spring + summer + autumn == 365
-
-    def test_sum_invariant(self):
-        """For any valid range, sum == (end - start).days + 1."""
-        cases = [
-            (date(2026, 1, 1), date(2026, 12, 31)),
-            (date(2026, 2, 1), date(2026, 2, 1)),  # single-day
-            (date(2025, 6, 15), date(2027, 3, 1)),
-            (date(2024, 2, 28), date(2024, 3, 2)),  # leap-year boundary
-        ]
-        for start, end in cases:
-            split = _split_days_by_season(start, end)
-            expected_total = (end - start).days + 1
-            assert sum(split) == expected_total, f"failed for {start} -> {end}"
-
-    def test_single_day_period(self):
-        """When start == end, a single day is counted (inclusive end)."""
-        assert _split_days_by_season(date(2026, 7, 15), date(2026, 7, 15)) == (0, 1, 0)
-        assert _split_days_by_season(date(2026, 4, 15), date(2026, 4, 15)) == (1, 0, 0)
-        assert _split_days_by_season(date(2026, 11, 15), date(2026, 11, 15)) == (0, 0, 1)
+    def test_full_academic_year(self):
+        """Sept 2025 → Aug 2026 = 12 calendar months."""
+        result = list(iter_calendar_months(date(2025, 9, 1), date(2026, 8, 31)))
+        assert len(result) == 12
+        assert result[0] == (2025, 9)
+        assert result[-1] == (2026, 8)
 
     def test_inverted_range_raises(self):
         with pytest.raises(ValueError, match="empty period"):
-            _split_days_by_season(date(2026, 12, 1), date(2026, 11, 1))
+            list(iter_calendar_months(date(2025, 12, 1), date(2025, 11, 1)))
+
+    def test_cross_season_autumn_to_spring(self):
+        """Phase 3 stress case: Jan → April (autumn → spring boundary)."""
+        result = list(iter_calendar_months(date(2026, 1, 5), date(2026, 4, 20)))
+        assert result == [(2026, 1), (2026, 2), (2026, 3), (2026, 4)]
 
 
-# compute_room_monthly_price — variable price
+# compute_stay_breakdown (Tool 3)
 
 
-class TestVariablePrice:
-    def test_all_autumn_returns_autumn_price(self):
+class TestComputeStayBreakdown:
+    def test_all_autumn_three_months(self):
+        """3-month autumn stay: all rates equal autumnprice."""
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("400.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            check_in=date(2025, 9, 1),
+            check_out=date(2025, 11, 30),
+        )
+        assert isinstance(result, StayCostBreakdown)
+        assert result.total_months == 3
+        assert result.is_uniform_rent is True
+        assert result.total_rent_eur == Decimal("1650.00")  # 3 × 550
+        assert all(m.season == "autumn" for m in result.months)
+        assert all(m.rent_eur == Decimal("550.00") for m in result.months)
+
+    def test_all_summer_two_months(self):
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("400.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            check_in=date(2025, 7, 1),
+            check_out=date(2025, 8, 31),
+        )
+        assert result.total_months == 2
+        assert result.total_rent_eur == Decimal("600.00")  # 2 × 300
+        assert result.is_uniform_rent is True
+
+    def test_cross_season_autumn_to_spring(self):
+        """4 months Jan-Apr: 2 autumn (Jan,Feb) + 2 spring (Mar,Apr)."""
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("450.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            check_in=date(2026, 1, 1),
+            check_out=date(2026, 4, 30),
+        )
+        assert result.total_months == 4
+        assert result.is_uniform_rent is False
+        assert result.total_rent_eur == Decimal("2000.00")  # 2×550 + 2×450
+        # Verify per-month seasons
+        seasons = [m.season for m in result.months]
+        assert seasons == ["autumn", "autumn", "spring", "spring"]
+
+    def test_mid_month_check_in_billed_as_full_month(self):
+        """Check-in on the 28th still bills the full month (Model B)."""
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("400.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            check_in=date(2025, 9, 28),  # late in the month
+            check_out=date(2025, 11, 2),  # early in the month
+        )
+        assert result.total_months == 3  # Sep, Oct, Nov — all full
+        assert result.total_rent_eur == Decimal("1650.00")
+
+    def test_eight_month_cross_season_sep_to_apr(self):
+        """Classic Erasmus academic stay Sep-Apr: 6 autumn + 2 spring."""
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("450.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            check_in=date(2025, 9, 1),
+            check_out=date(2026, 4, 30),
+        )
+        assert result.total_months == 8
+        # 6 × 550 + 2 × 450 = 3300 + 900 = 4200
+        assert result.total_rent_eur == Decimal("4200.00")
+
+    def test_fixed_price_ignores_seasons(self):
+        """Fixed-price room: every month bills at the autumn-column value."""
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("600.00"),
+            summer_eur=Decimal("600.00"),
+            autumn_eur=Decimal("600.00"),
+            is_fixed=True,
+            check_in=date(2026, 1, 1),
+            check_out=date(2026, 4, 30),
+        )
+        assert result.total_months == 4
+        assert result.is_uniform_rent is True
+        assert result.total_rent_eur == Decimal("2400.00")
+        # Even though Jan/Feb are autumn and Mar/Apr are spring, all
+        # are billed at the same rate
+        assert all(m.rent_eur == Decimal("600.00") for m in result.months)
+
+    def test_fixed_price_with_divergent_columns_falls_back_to_autumn(self, caplog):
+        """If fixedprice='Y' but cols differ, autumn wins (with warning)."""
+        with caplog.at_level(logging.WARNING):
+            result = compute_stay_breakdown(
+                spring_eur=Decimal("500.00"),
+                summer_eur=Decimal("400.00"),
+                autumn_eur=Decimal("600.00"),
+                is_fixed=True,
+                check_in=date(2026, 1, 1),
+                check_out=date(2026, 3, 31),
+            )
+        assert result.total_rent_eur == Decimal("1800.00")  # 3 × 600
+        # Warning emitted (one per month — the helper is called per row)
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) >= 1
+        assert "fixedprice" in warnings[0].message
+
+    def test_inverted_dates_raises(self):
+        with pytest.raises(ValueError, match="empty stay"):
+            compute_stay_breakdown(
+                spring_eur=Decimal("400.00"),
+                summer_eur=Decimal("300.00"),
+                autumn_eur=Decimal("550.00"),
+                is_fixed=False,
+                check_in=date(2026, 4, 1),
+                check_out=date(2026, 1, 1),
+            )
+
+    def test_single_day_stay_bills_one_month(self):
+        """1-day stay: 1 calendar month, full rate."""
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("400.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            check_in=date(2025, 9, 15),
+            check_out=date(2025, 9, 15),
+        )
+        assert result.total_months == 1
+        assert result.total_rent_eur == Decimal("550.00")
+
+    def test_decimal_precision_preserved(self):
+        """Non-round prices preserve full Decimal precision."""
+        result = compute_stay_breakdown(
+            spring_eur=Decimal("449.99"),
+            summer_eur=Decimal("299.99"),
+            autumn_eur=Decimal("549.99"),
+            is_fixed=False,
+            check_in=date(2025, 9, 1),
+            check_out=date(2025, 11, 30),
+        )
+        assert result.total_rent_eur == Decimal("1649.97")
+
+
+# compute_room_monthly_price (Tool 2 display)
+
+
+class TestComputeRoomMonthlyPrice:
+    def test_same_season_returns_seasonal_column(self):
+        """3-month autumn stay → display average == autumnprice."""
         result = compute_room_monthly_price(
             spring_eur=Decimal("400.00"),
             summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            period_start=date(2025, 9, 1),
+            period_end=date(2025, 11, 30),
+        )
+        assert result.monthly_eur == Decimal("550.00")
+        assert result.is_fixed_price is False
+        assert (result.spring_months, result.summer_months, result.autumn_months) == (0, 0, 3)
+        assert result.total_months == 3
+
+    def test_cross_season_returns_arithmetic_average(self):
+        """Jan-Apr stay: 2 autumn (550) + 2 spring (450) → avg 500."""
+        result = compute_room_monthly_price(
+            spring_eur=Decimal("450.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            period_start=date(2026, 1, 1),
+            period_end=date(2026, 4, 30),
+        )
+        # (2×550 + 2×450) / 4 = 2000 / 4 = 500
+        assert result.monthly_eur == Decimal("500.00")
+        assert (result.spring_months, result.summer_months, result.autumn_months) == (2, 0, 2)
+
+    def test_eight_month_cross_season_average(self):
+        """Sep-Apr stay: 6×550 + 2×450 = 4200, avg = 525."""
+        result = compute_room_monthly_price(
+            spring_eur=Decimal("450.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            period_start=date(2025, 9, 1),
+            period_end=date(2026, 4, 30),
+        )
+        # (6×550 + 2×450) / 8 = 4200 / 8 = 525
+        assert result.monthly_eur == Decimal("525.00")
+        assert (result.spring_months, result.summer_months, result.autumn_months) == (2, 0, 6)
+
+    def test_three_season_full_year_average(self):
+        """Full Sep-Aug year: 6 autumn + 4 spring + 2 summer."""
+        result = compute_room_monthly_price(
+            spring_eur=Decimal("450.00"),
+            summer_eur=Decimal("300.00"),
+            autumn_eur=Decimal("550.00"),
+            is_fixed=False,
+            period_start=date(2025, 9, 1),
+            period_end=date(2026, 8, 31),
+        )
+        # (6×550 + 4×450 + 2×300) / 12 = (3300 + 1800 + 600) / 12 = 5700/12 = 475
+        assert result.monthly_eur == Decimal("475.00")
+        assert (result.spring_months, result.summer_months, result.autumn_months) == (4, 2, 6)
+        assert result.total_months == 12
+
+    def test_fixed_price_returns_autumn_column(self):
+        result = compute_room_monthly_price(
+            spring_eur=Decimal("600.00"),
+            summer_eur=Decimal("600.00"),
+            autumn_eur=Decimal("600.00"),
+            is_fixed=True,
+            period_start=date(2026, 1, 1),
+            period_end=date(2026, 4, 30),
+        )
+        assert result.monthly_eur == Decimal("600.00")
+        assert result.is_fixed_price is True
+
+    def test_fixed_price_with_divergent_columns_warns(self, caplog):
+        with caplog.at_level(logging.WARNING):
+            result = compute_room_monthly_price(
+                spring_eur=Decimal("500.00"),
+                summer_eur=Decimal("400.00"),
+                autumn_eur=Decimal("600.00"),
+                is_fixed=True,
+                period_start=date(2026, 1, 1),
+                period_end=date(2026, 3, 31),
+            )
+        assert result.monthly_eur == Decimal("600.00")
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) >= 1
+        assert "fixedprice" in warnings[0].message
+
+    def test_variable_with_identical_columns_keeps_input_flag(self):
+        """is_fixed_price reflects the input flag, not the data shape."""
+        result = compute_room_monthly_price(
+            spring_eur=Decimal("500.00"),
+            summer_eur=Decimal("500.00"),
             autumn_eur=Decimal("500.00"),
             is_fixed=False,
-            period_start=date(2026, 9, 1),
-            period_end=date(2027, 1, 31),
+            period_start=date(2026, 5, 15),
+            period_end=date(2026, 8, 31),
         )
         assert result.monthly_eur == Decimal("500.00")
         assert result.is_fixed_price is False
-        assert (result.spring_days, result.summer_days, result.autumn_days) == (0, 0, 153)
 
-    def test_all_summer_returns_summer_price(self):
-        result = compute_room_monthly_price(
-            spring_eur=Decimal("400.00"),
-            summer_eur=Decimal("300.00"),
-            autumn_eur=Decimal("500.00"),
-            is_fixed=False,
-            period_start=date(2026, 7, 1),
-            period_end=date(2026, 8, 31),
-        )
-        assert result.monthly_eur == Decimal("300.00")
+    def test_rounding_half_up_on_fractional_average(self):
+        """Engineer a 3-month split that yields a fractional average.
 
-    def test_phase3_example_cross_season_weighted(self):
-        """Phase 3 doc: 15 May -> 31 Aug -> 47 spring + 62 summer days.
-
-        With spring=400, summer=300:
-        weighted = (400*47 + 300*62) / 109 = (18800 + 18600) / 109
-                 = 37400 / 109 = 343.119266...
-        rounded ROUND_HALF_UP to 343.12.
+        2 × 100 + 1 × 101 = 301, avg = 301/3 = 100.333... → 100.33.
         """
-        result = compute_room_monthly_price(
-            spring_eur=Decimal("400.00"),
-            summer_eur=Decimal("300.00"),
-            autumn_eur=Decimal("500.00"),
-            is_fixed=False,
-            period_start=date(2026, 5, 15),
-            period_end=date(2026, 8, 31),
-        )
-        assert result.monthly_eur == Decimal("343.12")
-        assert (result.spring_days, result.summer_days, result.autumn_days) == (47, 62, 0)
-
-    def test_three_seasons_weighted(self):
-        """Sept 1 -> Aug 31 (full academic year): 122 spring + 62 summer + 181 autumn.
-
-        With prices (400, 300, 500):
-        weighted = (400*122 + 300*62 + 500*181) / 365
-                 = (48800 + 18600 + 90500) / 365
-                 = 157900 / 365 = 432.6027...
-        rounded to 432.60.
-        """
-        result = compute_room_monthly_price(
-            spring_eur=Decimal("400.00"),
-            summer_eur=Decimal("300.00"),
-            autumn_eur=Decimal("500.00"),
-            is_fixed=False,
-            period_start=date(2026, 9, 1),
-            period_end=date(2027, 8, 31),
-        )
-        assert result.monthly_eur == Decimal("432.60")
-
-    def test_decimal_input_preserves_precision(self):
-        """Inputs with full DB precision (numeric(10,2)) round-trip cleanly."""
-        result = compute_room_monthly_price(
-            spring_eur=Decimal("349.99"),
-            summer_eur=Decimal("249.99"),
-            autumn_eur=Decimal("449.99"),
-            is_fixed=False,
-            period_start=date(2026, 9, 1),
-            period_end=date(2027, 1, 31),
-        )
-        # All-autumn => exactly autumn_eur, quantized
-        assert result.monthly_eur == Decimal("449.99")
-
-    def test_fractional_cent_rounded_half_up(self):
-        """Engineer a range giving a fractional-cent weighted average.
-
-        30 Jun (1 spring day) + 1-2 Jul (2 summer days), prices 100 and 101:
-        (100*1 + 101*2) / 3 = 302/3 = 100.666... -> 100.67 (HALF_UP).
-        """
+        # Use real seasonal boundaries: Jun (spring, 100), Jul (summer, 101)
+        # — span 3 months: Jun (spring), Jul + Aug (summer).
+        # 1×100 + 2×101 = 302, avg = 302/3 = 100.666... → 100.67 (HALF_UP)
         result = compute_room_monthly_price(
             spring_eur=Decimal("100.00"),
             summer_eur=Decimal("101.00"),
-            autumn_eur=Decimal("999.00"),  # unused, sentinel value
+            autumn_eur=Decimal("999.00"),  # unused
             is_fixed=False,
-            period_start=date(2026, 6, 30),
-            period_end=date(2026, 7, 2),
+            period_start=date(2026, 6, 1),
+            period_end=date(2026, 8, 31),
         )
-        assert (result.spring_days, result.summer_days, result.autumn_days) == (1, 2, 0)
+        assert (result.spring_months, result.summer_months, result.autumn_months) == (1, 2, 0)
         assert result.monthly_eur == Decimal("100.67")
 
 
-# compute_room_monthly_price — fixed-price path
+# Dataclasses — frozen + computed properties
 
 
-class TestFixedPrice:
-    def test_fixed_price_returns_autumn_value(self):
-        result = compute_room_monthly_price(
-            spring_eur=Decimal("400.00"),
-            summer_eur=Decimal("400.00"),
-            autumn_eur=Decimal("400.00"),
-            is_fixed=True,
-            period_start=date(2026, 5, 15),  # cross-season window
-            period_end=date(2026, 8, 31),
-        )
-        assert result.monthly_eur == Decimal("400.00")
-        assert result.is_fixed_price is True
-        # Day split is still computed (Tool 3 will need it)
-        assert (result.spring_days, result.summer_days, result.autumn_days) == (47, 62, 0)
-
-    def test_fixed_price_no_warning_when_columns_agree(self, caplog):
-        with caplog.at_level(logging.WARNING):
-            compute_room_monthly_price(
-                spring_eur=Decimal("400.00"),
-                summer_eur=Decimal("400.00"),
-                autumn_eur=Decimal("400.00"),
-                is_fixed=True,
-                period_start=date(2026, 5, 15),
-                period_end=date(2026, 8, 31),
-            )
-        assert not caplog.records  # no warning emitted
-
-    def test_fixed_price_warns_when_columns_differ(self, caplog):
-        """Decision (C): log a warning, fall back to autumn value."""
-        with caplog.at_level(logging.WARNING):
-            result = compute_room_monthly_price(
-                spring_eur=Decimal("350.00"),
-                summer_eur=Decimal("300.00"),
-                autumn_eur=Decimal("400.00"),
-                is_fixed=True,
-                period_start=date(2026, 5, 15),
-                period_end=date(2026, 8, 31),
-            )
-        assert result.monthly_eur == Decimal("400.00")  # autumn fallback
-        assert result.is_fixed_price is True
-        # Exactly one warning, mentioning the divergence
-        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
-        assert len(warnings) == 1
-        assert "fixedprice" in warnings[0].message
-        assert "differ" in warnings[0].message
-
-    def test_variable_with_identical_columns_does_not_set_fixed_flag(self):
-        """is_fixed_price reflects the input flag, not the data shape."""
-        result = compute_room_monthly_price(
-            spring_eur=Decimal("400.00"),
-            summer_eur=Decimal("400.00"),
-            autumn_eur=Decimal("400.00"),
-            is_fixed=False,  # caller said variable
-            period_start=date(2026, 5, 15),
-            period_end=date(2026, 8, 31),
-        )
-        assert result.monthly_eur == Decimal("400.00")
-        assert result.is_fixed_price is False  # echoes input
-
-
-# MonthlyPriceBreakdown
-
-
-class TestBreakdown:
-    def test_total_days_property(self):
+class TestMonthlyPriceBreakdown:
+    def test_total_months_property(self):
         bd = MonthlyPriceBreakdown(
-            monthly_eur=Decimal("400.00"),
+            monthly_eur=Decimal("500.00"),
             is_fixed_price=False,
-            spring_days=47,
-            summer_days=62,
-            autumn_days=0,
+            spring_months=2,
+            summer_months=0,
+            autumn_months=6,
         )
-        assert bd.total_days == 109
+        assert bd.total_months == 8
 
     def test_breakdown_is_frozen(self):
         import dataclasses
 
         bd = MonthlyPriceBreakdown(
-            monthly_eur=Decimal("400.00"),
+            monthly_eur=Decimal("500.00"),
             is_fixed_price=False,
-            spring_days=10,
-            summer_days=10,
-            autumn_days=10,
+            spring_months=1,
+            summer_months=1,
+            autumn_months=1,
         )
         with pytest.raises(dataclasses.FrozenInstanceError):
-            bd.monthly_eur = Decimal("500.00")  # type: ignore[misc]
+            bd.monthly_eur = Decimal("999.00")  # type: ignore[misc]
+
+
+class TestStayCostBreakdown:
+    def test_total_months_property(self):
+        bd = StayCostBreakdown(
+            months=[
+                MonthRent(2025, 9, "autumn", Decimal("550.00")),
+                MonthRent(2025, 10, "autumn", Decimal("550.00")),
+            ],
+            total_rent_eur=Decimal("1100.00"),
+            is_uniform_rent=True,
+        )
+        assert bd.total_months == 2
+
+    def test_breakdown_is_frozen(self):
+        import dataclasses
+
+        bd = StayCostBreakdown(
+            months=[MonthRent(2025, 9, "autumn", Decimal("550.00"))],
+            total_rent_eur=Decimal("550.00"),
+            is_uniform_rent=True,
+        )
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            bd.total_rent_eur = Decimal("999.00")  # type: ignore[misc]
+
+
+class TestMonthRent:
+    def test_is_frozen(self):
+        import dataclasses
+
+        m = MonthRent(2025, 9, "autumn", Decimal("550.00"))
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            m.rent_eur = Decimal("999.00")  # type: ignore[misc]
+
+    def test_holds_year_month_season_rent(self):
+        m = MonthRent(year=2026, month=3, season="spring", rent_eur=Decimal("450.00"))
+        assert m.year == 2026
+        assert m.month == 3
+        assert m.season == "spring"
+        assert m.rent_eur == Decimal("450.00")

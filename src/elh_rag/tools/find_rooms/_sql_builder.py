@@ -227,6 +227,7 @@ def _row_to_match(
     # downweighted slightly if no metro line is associated.
     # Future: real scoring with Pinecone semantic similarity.
     score = 1.0 if nearest_line else 0.85
+    price_eur = float(row["price_eur"])
 
     return RoomMatch(
         room_id=room_id,
@@ -236,6 +237,10 @@ def _row_to_match(
         zone=row["zone"],
         neighborhood=row.get("neighborhood") or row["zone"],
         price_per_month_eur=float(row["price_eur"]),
+        price_label=(
+            f"€{price_eur:.2f}/month (autumn rate — provide check-in/check-out "
+            "dates for an accurate quote)"
+        ),
         private_bathroom=(row.get("privatebathroom") == "Y"),
         distance_to_transport_m=row.get("distancepublictransport"),
         nearest_metro_line=nearest_line,

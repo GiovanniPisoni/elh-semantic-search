@@ -22,7 +22,6 @@ import pytest
 from pydantic import ValidationError
 
 from elh_rag.tools import TOOLS_REGISTRY, execute_tool
-from elh_rag.tools._db import FakeDbExecutor
 from elh_rag.tools._room_id import encode_house_id, encode_room_id
 from elh_rag.tools.find_available_rooms import (
     _MAX_PERIOD_DAYS,
@@ -31,6 +30,7 @@ from elh_rag.tools.find_available_rooms import (
     find_available_rooms,
 )
 from elh_rag.tools.find_rooms import FindRoomsInput
+from tests.conftest import FakeDbExecutor
 
 # Step 1 tests — input validation
 
@@ -367,8 +367,13 @@ class TestOrchestration:
         room_ids = {_decoded_idroom(rm.room_id) for rm in result.rooms}
         assert room_ids == {"3", "5"}
 
-    def test_weighted_price_cross_season(self):
-        """15 May → 31 Aug → 47 spring + 62 summer days, weighted."""
+    def test_average_price_cross_season(self):
+        """15 May → 31 Aug = 4 calendar months (May, Jun spring + Jul, Aug summer).
+
+        Model B: each calendar month bills at its seasonal rate, the display
+        price is the arithmetic mean of those rents.
+            (2 x 400 + 2 x 300) / 4 = 1400 / 4 = 350.00
+        """
         db = FakeDbExecutor()
         db.add_response("JOIN house h", [_make_room_row(idroom=3)])
         db.add_response("FROM reservation", [])
@@ -385,10 +390,14 @@ class TestOrchestration:
             ctx=db,
         )
 
-        # Phase 3 doc example: (400*47 + 300*62) / 109 = 343.119... → 343.12
         assert len(result.rooms) == 1
-        assert result.rooms[0].price_per_month_eur == 343.12
-        assert result.rooms[0].is_fixed_price is False
+        # Model B billing: May+Jun at spring rate, Jul+Aug at summer rate
+        assert result.rooms[0].price_per_month_eur == 350.00
+        # Sanity: the contextual label exposes the seasonal composition
+        label = result.rooms[0].price_label
+        assert "spring rate €400.00" in label
+        assert "summer rate €300.00" in label
+        assert "average over 4 months" in label
 
     def test_fixed_price_room_flagged(self):
         db = FakeDbExecutor()
