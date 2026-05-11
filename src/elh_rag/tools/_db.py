@@ -1,11 +1,12 @@
-"""
-Database executor protocol for SQL-backed tools.
-"""
+"""Database executor protocol and concrete psycopg2 implementation."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Any, Protocol
+
+import psycopg2
+import psycopg2.extras
 
 
 class DBExecutor(Protocol):
@@ -24,40 +25,40 @@ class DBExecutor(Protocol):
         ...
 
 
-class FakeDbExecutor:
-    """Minimal in-memory ``DbExecutor`` for tests.
+class Psycopg2Executor:
+    """Concrete DBExecutor backed by a long-lived psycopg2 connection."""
 
-    Stores a list of ``(sql_pattern, response)`` mappings and returns
-    the response of the first pattern that appears as a substring in
-    the executed SQL. Matching is intentionally loose — tests assert
-    on the high-level behaviour of the tool, not on exact SQL strings.
+    def __init__(self, dsn: str) -> None:
+        self._dsn = dsn
+        self._conn: Any = None  # psycopg2 connection, lazily initialized
 
-    Records every call into ``calls`` so tests can assert on the SQL
-    and parameters that were issued.
-    """
-
-    def __init__(self) -> None:
-        self._responses: list[tuple[str, list[dict[str, Any]]]] = []
-        self.calls: list[dict[str, Any]] = []
-
-    def add_response(self, sql_substring: str, response: list[dict[str, Any]]) -> None:
-        """Register a canned response for any SQL containing ``sql_substring``."""
-        self._responses.append((sql_substring, response))
+    def _ensure_conn(self) -> Any:
+        if self._conn is None or self._conn.closed:
+            self._conn = psycopg2.connect(self._dsn)
+            self._conn.autocommit = True
+        return self._conn
 
     def execute(
         self,
         sql: str,
         params: Sequence[Any] | None = None,
     ) -> list[dict[str, Any]]:
-        self.calls.append({"sql": sql, "params": params})
-        for pattern, response in self._responses:
-            if pattern in sql:
-                return response
-        # No match -> empty result. Tests that didn't register a pattern
-        # exercise the "no rows" code path naturally.
-        return []
+        conn = self._ensure_conn()
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, tuple(params) if params is not None else None)
+            if cur.description is None:
+                # Non-SELECT statement returned no result set.
+                return []
+            return [dict(row) for row in cur.fetchall()]
 
-    def reset(self) -> None:
-        """Clear recorded calls and responses (for fixture cleanup)."""
-        self._responses.clear()
-        self.calls.clear()
+    def close(self) -> None:
+        """Close the underlying connection if open. Idempotent."""
+        if self._conn is not None and not self._conn.closed:
+            self._conn.close()
+            self._conn = None
+
+    def __enter__(self) -> Psycopg2Executor:
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.close()

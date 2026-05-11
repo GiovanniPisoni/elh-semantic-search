@@ -74,6 +74,17 @@ class Settings(BaseSettings):
     )
     reranker_batch_size: int = Field(default=16, gt=0)
 
+    # Tool 3 — total cost computation
+    reservation_fee_pct: float = Field(
+        default=0.09,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Reservation fee as a fraction of total rent (default 0.09 = 9%). "
+            "Confirmed with ELH business 2026-05-11."
+        ),
+    )
+
     # Intent routing
     enable_intent_routing: bool = Field(
         default=True,
