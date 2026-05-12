@@ -5,10 +5,13 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from elh_rag.tools._kb import IndexedEntry, KBContext, KBEntry, KBStore
 from elh_rag.tools.answer_policy_question import (
     AnswerPolicyQuestionInput,
     AnswerPolicyQuestionOutput,
+    IndexedEntry,
+    KBContext,
+    KBEntry,
+    KBStore,
     answer_policy_question,
 )
 

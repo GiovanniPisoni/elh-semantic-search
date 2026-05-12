@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from elh_rag.tools._kb import (
+from elh_rag.tools.answer_policy_question import (
     IndexedEntry,
     KBEntry,
     KBStore,

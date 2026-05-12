@@ -7,8 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ._kb import KBContext
-from .base import register_tool
+from ..base import register_tool
+from ._context import KBContext
 
 logger = logging.getLogger(__name__)
 

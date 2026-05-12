@@ -19,10 +19,10 @@ from __future__ import annotations
 import sys
 
 from elh_rag.indexing.embeddings import Embedder
-from elh_rag.tools._kb import KBContext
 from elh_rag.tools.answer_policy_question import (
     AnswerPolicyQuestionInput,
     AnswerPolicyQuestionOutput,
+    KBContext,
     answer_policy_question,
 )
 
