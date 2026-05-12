@@ -6,7 +6,6 @@ import logging
 
 from pydantic import BaseModel, Field
 
-from ._db import DBExecutor
 from ._property_details import (
     HouseDetails,
     RoomDetails,
@@ -17,7 +16,8 @@ from ._property_details import (
     fetch_room_latest,
 )
 from ._reviews_aggregate import ReviewsAggregate, fetch_reviews_aggregate
-from ._room_id import (
+from ._shared.db import DBExecutor
+from ._shared.room_id import (
     InvalidRoomIdError,
     decode_house_id,
     decode_room_id,

@@ -26,8 +26,8 @@ from ._booking_stats import (
     _compute_seasonal_demand,
     _compute_top_zones_by_bookings,
 )
-from ._db import DBExecutor
 from ._kanon import K_THRESHOLD, filter_by_k_anonymity
+from ._shared.db import DBExecutor
 from .base import register_tool
 
 logger = logging.getLogger(__name__)

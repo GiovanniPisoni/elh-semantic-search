@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from elh_rag.tools._pricing import (
+from elh_rag.tools._shared.pricing import (
     AUTUMN_MONTHS,
     SPRING_MONTHS,
     SUMMER_MONTHS,

@@ -6,7 +6,7 @@ shared registry decorator. The actual ``ctx.execute`` happens here.
 
 from __future__ import annotations
 
-from .._db import DBExecutor
+from .._shared.db import DBExecutor
 from ..base import register_tool
 from ._inputs import FindRoomsInput
 from ._schemas import FindRoomsOutput

@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from elh_rag.tools._room_id import (
+from elh_rag.tools._shared.room_id import (
     InvalidRoomIdError,
     encode_house_id,
     encode_room_id,

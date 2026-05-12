@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from elh_rag.tools import TOOLS_REGISTRY, execute_tool
-from elh_rag.tools._room_id import encode_house_id, encode_room_id
+from elh_rag.tools._shared.room_id import encode_house_id, encode_room_id
 from elh_rag.tools.find_available_rooms import (
     _MAX_PERIOD_DAYS,
     FindAvailableRoomsInput,
@@ -546,7 +546,7 @@ class TestFetchSeasonalPrices:
 
 def _decoded_idroom(encoded_id: str) -> str:
     """Quick helper to extract the room number from an encoded room_id."""
-    from elh_rag.tools._room_id import decode_room_id
+    from elh_rag.tools._shared.room_id import decode_room_id
 
     return decode_room_id(encoded_id).room_id
 

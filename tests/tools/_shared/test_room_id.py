@@ -1,21 +1,12 @@
-"""Tests for room/house ID encoder-decoder.
-
-The encoded format is opaque ``str``:
-    * room: ``"{idhouse}|{idroom}|{ISO8601}"``
-    * house: ``"{idhouse}|{ISO8601}"``
-
-Encoders accept either ``int`` (test fakes) or ``str`` (production raw
-``character()`` columns, possibly padded with whitespace). Decoders
-always return ``str`` IDs.
-"""
+"""Tests for room/house ID encoder-decoder."""
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
-from elh_rag.tools._room_id import (
+from elh_rag.tools._shared.room_id import (
     HouseIdParts,
     InvalidRoomIdError,
     RoomIdParts,
@@ -119,6 +110,26 @@ class TestEncodeRoomId:
         with pytest.raises(ValueError, match="separator"):
             encode_room_id("HSE_001", "RM|001", datetime(2024, 1, 1))
 
+    def test_date_input_widened_to_midnight(self):
+        """Postgres ``date`` columns return ``datetime.date``; widen to
+        ``datetime`` at midnight so the ISO output stays well-formed.
+        """
+        result = encode_room_id(42, 3, date(2024, 9, 15))
+        assert result == "42|3|2024-09-15T00:00:00"
+
+    def test_date_round_trip_yields_datetime(self):
+        """Encoding from ``date`` then decoding yields a ``datetime``,
+        not a ``date`` — the format is uniformly datetime-like.
+        """
+        encoded = encode_room_id(42, 3, date(2024, 9, 15))
+        parts = decode_room_id(encoded)
+        assert parts.dateupdate == datetime(2024, 9, 15, 0, 0, 0)
+
+    def test_unsupported_type_raises_typeerror(self):
+        """Strings, ints, etc. for dateupdate must fail explicitly."""
+        with pytest.raises(TypeError, match="date or datetime"):
+            encode_room_id(42, 3, "2024-09-15")  # type: ignore[arg-type]
+
 
 # Room ID — decoding
 
@@ -188,6 +199,10 @@ class TestEncodeHouseId:
     def test_pipe_in_id_raises(self):
         with pytest.raises(ValueError, match="separator"):
             encode_house_id("HSE|001", datetime(2024, 1, 1))
+
+    def test_date_input_widened_to_midnight(self):
+        result = encode_house_id(42, date(2024, 9, 15))
+        assert result == "42|2024-09-15T00:00:00"
 
 
 # House ID — decoding

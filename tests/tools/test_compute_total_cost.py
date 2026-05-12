@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from elh_rag.tools._room_id import InvalidRoomIdError, encode_room_id
+from elh_rag.tools._shared.room_id import InvalidRoomIdError, encode_room_id
 from elh_rag.tools.compute_total_cost import (
     ComputeTotalCostInput,
     compute_total_cost,

@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from ._db import DBExecutor
+from ._shared.db import DBExecutor
 
 logger = logging.getLogger(__name__)
 

@@ -31,10 +31,10 @@ from typing import Any
 
 from pydantic import Field, model_validator
 
-from ._db import DBExecutor
-from ._pricing import MonthlyPriceBreakdown, compute_room_monthly_price
 from ._reservation import _find_occupied_room_ids
-from ._room_id import decode_room_id, normalize_id
+from ._shared.db import DBExecutor
+from ._shared.pricing import MonthlyPriceBreakdown, compute_room_monthly_price
+from ._shared.room_id import decode_room_id, normalize_id
 from .base import register_tool
 from .find_rooms import FindRoomsInput, FindRoomsOutput, RoomMatch, find_rooms
 

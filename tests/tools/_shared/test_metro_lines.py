@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from elh_rag.tools._metro_lines import (
+from elh_rag.tools._shared.metro_lines import (
     ALL_METRO_LINE_INPUTS,
     ALL_METRO_LINES,
     LISBON_ZONE_TO_LINES,

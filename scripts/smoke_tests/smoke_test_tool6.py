@@ -26,7 +26,6 @@ from elh_rag.tools.answer_policy_question import (
     answer_policy_question,
 )
 
-
 _SEP = "=" * 78
 
 

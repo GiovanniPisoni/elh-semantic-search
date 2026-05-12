@@ -12,8 +12,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from .._metro_lines import lines_for_zone, normalize_line, zones_on_line
-from .._room_id import encode_house_id, encode_room_id
+from .._shared.metro_lines import lines_for_zone, normalize_line, zones_on_line
+from .._shared.room_id import encode_house_id, encode_room_id
 from ._amenity_columns import (
     _EXPLICIT_AMENITY_COLUMN_MAP,
     _OTHER_AMENITY_COLUMN_MAP,

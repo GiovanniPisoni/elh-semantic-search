@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from ._db import DBExecutor
+from ._shared.db import DBExecutor
 
 _REVIEW_STATUS_APPROVED = "approved"
 _EXCERPT_LENGTH = 200
