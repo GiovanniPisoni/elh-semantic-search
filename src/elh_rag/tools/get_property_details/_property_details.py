@@ -9,9 +9,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from ._shared.db import DBExecutor
-from ._shared.metro_lines import lines_for_zone
-from ._shared.room_id import encode_house_id, encode_room_id
+from .._shared.db import DBExecutor
+from .._shared.metro_lines import lines_for_zone
+from .._shared.room_id import encode_house_id, encode_room_id
 
 logger = logging.getLogger(__name__)
 

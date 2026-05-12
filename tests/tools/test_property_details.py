@@ -1,11 +1,11 @@
-"""Tests for ``elh_rag.tools._property_details``."""
+"""Tests for ``elh_rag.tools.get_property_details`` domain helpers."""
 
 from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
 
-from elh_rag.tools._property_details import (
+from elh_rag.tools.get_property_details import (
     _MAX_HOUSEMATE_ROOMS,
     HouseDetails,
     HousemateRoom,

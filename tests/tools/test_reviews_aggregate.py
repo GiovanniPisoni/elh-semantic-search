@@ -1,11 +1,11 @@
-"""Tests for ``elh_rag.tools._reviews_aggregate``."""
+"""Tests for ``elh_rag.tools.get_property_details`` review aggregator."""
 
 from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
 
-from elh_rag.tools._reviews_aggregate import (
+from elh_rag.tools.get_property_details import (
     ReviewsAggregate,
     ReviewSummary,
     fetch_reviews_aggregate,
