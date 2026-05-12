@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from elh_rag.tools._expenses import (
+from elh_rag.tools.compute_total_cost import (
     UtilityCategorization,
     fetch_utility_categorization,
 )

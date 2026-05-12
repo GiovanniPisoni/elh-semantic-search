@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from ._shared.db import DBExecutor
+from .._shared.db import DBExecutor
 
 _EXPENSES_SQL = """\
 SELECT description, maximumvalue

@@ -25,11 +25,11 @@ from pydantic import BaseModel, Field, model_validator
 
 from elh_rag.config import settings
 
+from .._shared.db import DBExecutor
+from .._shared.pricing import MonthRent, StayCostBreakdown, compute_stay_breakdown
+from .._shared.room_id import decode_room_id, normalize_id
+from ..base import register_tool
 from ._expenses import UtilityCategorization, fetch_utility_categorization
-from ._shared.db import DBExecutor
-from ._shared.pricing import MonthRent, StayCostBreakdown, compute_stay_breakdown
-from ._shared.room_id import decode_room_id, normalize_id
-from .base import register_tool
 
 _PRICE_QUANTUM = Decimal("0.01")
 _MAX_STAY_DAYS = 3 * 366
