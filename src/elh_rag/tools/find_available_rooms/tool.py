@@ -1,26 +1,4 @@
-"""Tool 2: ``find_available_rooms``.
-
-Specialisation of :func:`find_rooms` with **dates as a hard constraint**.
-
-The base tool (Tool 1) treats ``available_from`` / ``available_to`` as
-soft hints: if absent it falls back to autumn pricing and ignores
-reservation overlap. Tool 2 promotes both fields to required and adds
-two pieces of logic on top of Tool 1's structural filtering:
-
-    1. **Reservation overlap exclusion** — rooms whose
-       ``[blockeddatestart, blockeddataend]`` interval overlaps the
-       requested window are removed from the result. Implemented in
-       :mod:`elh_rag.tools._reservation`.
-
-    2. **Season-aware monthly pricing** — the displayed monthly price
-       is the arithmetic mean of the per-month Model B rents over the
-       stay (every calendar month touched is rated at its seasonal
-       tariff). Rooms with ``fixedprice = 'Y'`` keep their flat price
-       and are flagged via ``RoomMatch.is_fixed_price``. The
-       ``price_label`` field carries a contextualised string the LLM
-       can quote verbatim, so the user always sees the date window
-       behind the number.
-"""
+"""Tool 2: ``find_available_rooms``."""
 
 from __future__ import annotations
 
@@ -31,12 +9,12 @@ from typing import Any
 
 from pydantic import Field, model_validator
 
+from .._shared.db import DBExecutor
+from .._shared.pricing import MonthlyPriceBreakdown, compute_room_monthly_price
+from .._shared.room_id import decode_room_id, normalize_id
+from ..base import register_tool
+from ..find_rooms import FindRoomsInput, FindRoomsOutput, RoomMatch, find_rooms
 from ._reservation import _find_occupied_room_ids
-from ._shared.db import DBExecutor
-from ._shared.pricing import MonthlyPriceBreakdown, compute_room_monthly_price
-from ._shared.room_id import decode_room_id, normalize_id
-from .base import register_tool
-from .find_rooms import FindRoomsInput, FindRoomsOutput, RoomMatch, find_rooms
 
 # Input model
 

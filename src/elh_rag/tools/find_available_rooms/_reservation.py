@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from ._shared.db import DBExecutor
-from ._shared.room_id import normalize_id
+from .._shared.db import DBExecutor
+from .._shared.room_id import normalize_id
 
 # Standard closed-interval overlap test
 _OVERLAP_SQL = """\
