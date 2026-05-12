@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from elh_rag.tools._booking_stats import (
+from elh_rag.tools.get_booking_stats import (
     StatPoint,
     _compute_avg_booking_duration_months,
     _compute_avg_lead_time_days,

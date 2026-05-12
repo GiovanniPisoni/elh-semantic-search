@@ -1,109 +1,33 @@
-"""Internal booking-stats computation helpers for Tool 5."""
+"""The seven aggregate-stats compute functions.
+
+The seven metrics:
+
+    1. ``_compute_occupancy_rate``           — booked_rooms / active_rooms
+    2. ``_compute_top_zones_by_bookings``    — top-N zones by booking count
+    3. ``_compute_avg_booking_duration_months`` — mean stay length
+    4. ``_compute_avg_lead_time_days``       — mean booking-to-check-in days
+    5. ``_compute_seasonal_demand``          — booking count by season
+    6. ``_compute_avg_overall_rating``       — mean review.overallratings
+    7. ``_compute_room_inventory_count``     — active room count
+"""
 
 from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import Any, Literal
+from typing import Any
 
-from pydantic import BaseModel
-
-from ._shared.db import DBExecutor
+from .._shared.db import DBExecutor
+from ._models import StatPoint
+from ._sql_builders import (
+    _LATEST_ACTIVE_ROOM_CTE,
+    _build_label,
+    _city_filter_clause,
+    _group_by_select_clauses,
+    _zone_filter_clause,
+)
 
 logger = logging.getLogger(__name__)
-
-
-GroupByDim = Literal["city", "zone", "season", "year", "month"]
-
-# Output type (shared between helpers and entry point).
-
-
-class StatPoint(BaseModel):
-    """One row of an aggregate statistic.
-
-    ``label`` is a dict so it can hold an arbitrary number of dimension
-    columns (e.g. ``{"city": "Lisbon", "year": "2024"}``). All values
-    are strings for uniform LLM consumption, even when the underlying
-    column was numeric (year).
-    """
-
-    label: dict[str, str]
-    value: float
-    sample_size: int
-
-
-# Time-dimension SQL fragments
-
-
-# Season expression — must match elh_rag.tools._pricing constants.
-def _season_expr(date_col: str) -> str:
-    return (
-        f"CASE "
-        f"WHEN EXTRACT(MONTH FROM {date_col}) BETWEEN 3 AND 6 THEN 'spring' "
-        f"WHEN EXTRACT(MONTH FROM {date_col}) BETWEEN 7 AND 8 THEN 'summer' "
-        f"ELSE 'autumn' END"
-    )
-
-
-def _year_expr(date_col: str) -> str:
-    return f"EXTRACT(YEAR FROM {date_col})::int"
-
-
-def _month_expr(date_col: str) -> str:
-    return f"TO_CHAR({date_col}, 'YYYY-MM')"
-
-
-def _group_by_select_clauses(dims: list[str], date_col: str) -> list[tuple[str, str]]:
-    """Return ``(sql_expression, alias)`` pairs for each requested dim."""
-    out: list[tuple[str, str]] = []
-    for dim in dims:
-        if dim == "city":
-            out.append(("h.city", "city"))
-        elif dim == "zone":
-            out.append(("h.zone", "zone"))
-        elif dim == "season":
-            out.append((_season_expr(date_col), "season"))
-        elif dim == "year":
-            out.append((_year_expr(date_col), "year"))
-        elif dim == "month":
-            out.append((_month_expr(date_col), "month"))
-        else:
-            raise ValueError(f"Unsupported group_by dimension: {dim!r}")
-    return out
-
-
-def _build_label(row: dict[str, Any], dim_aliases: list[str]) -> dict[str, str]:
-    """Extract dimension columns into the stat label, stringified + stripped."""
-    label: dict[str, str] = {}
-    for alias in dim_aliases:
-        v = row.get(alias)
-        label[alias] = "" if v is None else str(v).strip()
-    return label
-
-
-def _city_filter_clause(where_parts: list[str], params: list[Any], city: str | None) -> None:
-    if city is not None:
-        where_parts.append("h.city = %s")
-        params.append(city)
-
-
-def _zone_filter_clause(where_parts: list[str], params: list[Any], zone: str | None) -> None:
-    if zone is not None:
-        where_parts.append("h.zone = %s")
-        params.append(zone)
-
-
-# Latest active-room CTE
-
-
-_LATEST_ACTIVE_ROOM_CTE = """\
-WITH latest_room AS (
-    SELECT DISTINCT ON (loc_idhouse, idroom)
-        loc_idhouse, loc_dateupdate, idroom, status
-    FROM room
-    ORDER BY loc_idhouse, idroom, dateupdate DESC
-)
-"""
 
 
 # Metric 1 — occupancy_rate
@@ -284,6 +208,9 @@ def _compute_avg_lead_time_days(
         group_by=group_by,
         round_decimals=1,
     )
+
+
+# Shared helper for AVG-style reservation metrics
 
 
 def _avg_reservation_metric(

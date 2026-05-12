@@ -15,9 +15,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ._booking_stats import (
-    GroupByDim,
-    StatPoint,
+from .._shared.db import DBExecutor
+from ..base import register_tool
+from ._kanon import K_THRESHOLD, filter_by_k_anonymity
+from ._metrics import (
     _compute_avg_booking_duration_months,
     _compute_avg_lead_time_days,
     _compute_avg_overall_rating,
@@ -26,9 +27,8 @@ from ._booking_stats import (
     _compute_seasonal_demand,
     _compute_top_zones_by_bookings,
 )
-from ._kanon import K_THRESHOLD, filter_by_k_anonymity
-from ._shared.db import DBExecutor
-from .base import register_tool
+from ._models import StatPoint
+from ._sql_builders import GroupByDim
 
 logger = logging.getLogger(__name__)
 

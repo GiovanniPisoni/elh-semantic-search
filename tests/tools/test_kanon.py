@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from elh_rag.tools._kanon import K_THRESHOLD, filter_by_k_anonymity
+from elh_rag.tools.get_booking_stats import K_THRESHOLD, filter_by_k_anonymity
 
 
 @dataclass
