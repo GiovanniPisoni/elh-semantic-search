@@ -28,7 +28,6 @@ from ._sql_builders import (
     _build_top_zones_sql,
 )
 
-
 # Metric 1: occupancy_rate
 
 

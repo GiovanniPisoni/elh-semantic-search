@@ -1,7 +1,7 @@
-﻿"""Integration tests for the find_rooms tool.
+"""Integration tests for the find_rooms tool.
 
-Tests the full flow: input validation â†’ SQL build â†’ dispatch via the
-registry â†’ row mapping â†’ output dataclass. Uses FakeDbExecutor so no
+Tests the full flow: input validation -> SQL build -> dispatch via the
+registry -> row mapping -> output dataclass. Uses FakeDbExecutor so no
 real Postgres is needed.
 """
 
@@ -11,6 +11,7 @@ from datetime import date, datetime
 
 import pytest
 from pydantic import ValidationError
+from tests.conftest import FakeDbExecutor
 
 from elh_rag.tools import (
     ToolExecutionError,
@@ -24,7 +25,6 @@ from elh_rag.tools.find_rooms import (
     _build_sql,
     _select_price_column,
 )
-from tests.conftest import FakeDbExecutor
 
 # Fixtures
 
@@ -64,7 +64,7 @@ def fake_db(fake_row):
 
 class TestFindRoomsInput:
     def test_empty_input_is_valid(self):
-        """All parameters optional â€” empty input is a valid 'find anything'."""
+        """All parameters optional” empty input is a valid 'find anything'."""
         p = FindRoomsInput()
         assert p.city is None
         assert p.max_results == 10
@@ -141,7 +141,7 @@ class TestFindRoomsInput:
 
 class TestSelectPriceColumn:
     def test_default_is_autumn(self):
-        """No date â†’ autumn (high Erasmus season)."""
+        """No date -> autumn (high Erasmus season)."""
         p = FindRoomsInput()
         assert _select_price_column(p) == "r.autumnprice"
 
@@ -199,7 +199,7 @@ class TestBuildSql:
         assert "r.autumnprice" not in sql
 
     def test_metro_line_lisbon_green(self):
-        """green line â†’ IN clause with Lisbon green-line zones."""
+        """green line -> IN clause with Lisbon green-line zones."""
         sql, params = _build_sql(FindRoomsInput(metro_line="green"))
         assert "h.zone IN" in sql
         assert "h.neighboorhood IN" in sql
@@ -207,9 +207,9 @@ class TestBuildSql:
         assert "Chiado" in params or "Alvalade" in params
 
     def test_metro_line_porto_letter_normalised(self):
-        """Porto letter B â†’ red colour â†’ red-line Porto zones."""
+        """Porto letter B -> red colour -> red-line Porto zones."""
         _sql, params = _build_sql(FindRoomsInput(city="Porto", metro_line="B"))
-        # B = red on Porto â†’ Boavista, Bonfim, etc. should appear
+        # B = red on Porto -> Boavista, Bonfim, etc. should appear
         assert "Boavista" in params or "Bonfim" in params
 
     def test_metro_line_with_no_zones_returns_empty(self):
@@ -251,7 +251,7 @@ class TestBuildSql:
         assert "haswindow = 'Y'" in sql
 
     def test_must_have_window_false(self):
-        """Internal room: must_have_window=False â†’ haswindow = 'N'"""
+        """Internal room: must_have_window=False -> haswindow = 'N'"""
         sql, _ = _build_sql(FindRoomsInput(must_have_window=False))
         assert "haswindow = 'N'" in sql
 
@@ -441,11 +441,11 @@ class TestFindRoomsDispatch:
     def test_nearest_metro_line_for_chiado(self, fake_db):
         """Chiado is on blue and green; nearest_line is the first sorted."""
         result = execute_tool("find_rooms", {"city": "Lisbon"}, ctx=fake_db)
-        # Chiado serves blue+green â†’ sorted = [blue, green] â†’ first = blue
+        # Chiado serves blue+green -> sorted = [blue, green] -> first = blue
         assert result.rooms[0].nearest_metro_line == "blue"
 
     def test_no_results_returns_empty(self):
-        empty_db = FakeDbExecutor()  # No responses configured â†’ []
+        empty_db = FakeDbExecutor()  # No responses configured -> []
         result = execute_tool("find_rooms", {"city": "Lisbon"}, ctx=empty_db)
         assert result.total_matches == 0
         assert result.rooms == []
@@ -541,4 +541,3 @@ class TestOutputSerialisation:
         out = FindRoomsOutput(rooms=[], total_matches=0, query_summary="test")
         d = out.to_dict()
         assert d == {"rooms": [], "total_matches": 0, "query_summary": "test"}
-

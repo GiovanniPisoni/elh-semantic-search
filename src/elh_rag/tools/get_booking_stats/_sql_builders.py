@@ -139,9 +139,7 @@ def _build_occupancy_numerator_sql(
     select_dim_prefix = ", ".join(select_dim_sql) + ", " if select_dim_sql else ""
     group_clause = ""
     if dim_aliases:
-        group_clause = "GROUP BY " + ", ".join(
-            str(i + 1) for i in range(len(dim_aliases))
-        )
+        group_clause = "GROUP BY " + ", ".join(str(i + 1) for i in range(len(dim_aliases)))
 
     where: list[str] = [
         "r.blockeddatestart <= %s",
@@ -186,9 +184,7 @@ def _build_occupancy_denominator_sql(
     select_dim_prefix = ", ".join(select_dim_sql) + ", " if select_dim_sql else ""
     group_clause = ""
     if dim_aliases:
-        group_clause = "GROUP BY " + ", ".join(
-            str(i + 1) for i in range(len(dim_aliases))
-        )
+        group_clause = "GROUP BY " + ", ".join(str(i + 1) for i in range(len(dim_aliases)))
 
     where: list[str] = ["lr.status = 'Available'"]
     params: list[Any] = []
@@ -285,9 +281,7 @@ def _build_avg_reservation_sql(
     select_dim_prefix = ", ".join(select_dim_sql) + ", " if select_dim_sql else ""
     group_clause = ""
     if dim_aliases:
-        group_clause = "GROUP BY " + ", ".join(
-            str(i + 1) for i in range(len(dim_aliases))
-        )
+        group_clause = "GROUP BY " + ", ".join(str(i + 1) for i in range(len(dim_aliases)))
 
     sql = (
         f"SELECT {select_dim_prefix}"
@@ -319,9 +313,7 @@ def _build_seasonal_demand_sql(
     """
     effective_group_by = ["season"] + [d for d in group_by if d != "season"]
 
-    select_dims = _group_by_select_clauses(
-        effective_group_by, date_col="r.blockeddatestart"
-    )
+    select_dims = _group_by_select_clauses(effective_group_by, date_col="r.blockeddatestart")
     select_dim_sql = [expr + " AS " + alias for expr, alias in select_dims]
     dim_aliases = [alias for _, alias in select_dims]
 
@@ -336,9 +328,7 @@ def _build_seasonal_demand_sql(
         params.append(period_end)
     where_sql = "WHERE " + " AND ".join(where) if where else ""
 
-    group_clause = "GROUP BY " + ", ".join(
-        str(i + 1) for i in range(len(dim_aliases))
-    )
+    group_clause = "GROUP BY " + ", ".join(str(i + 1) for i in range(len(dim_aliases)))
 
     sql = (
         f"SELECT {', '.join(select_dim_sql)}, "
@@ -385,9 +375,7 @@ def _build_avg_overall_rating_sql(
     select_dim_prefix = ", ".join(select_dim_sql) + ", " if select_dim_sql else ""
     group_clause = ""
     if dim_aliases:
-        group_clause = "GROUP BY " + ", ".join(
-            str(i + 1) for i in range(len(dim_aliases))
-        )
+        group_clause = "GROUP BY " + ", ".join(str(i + 1) for i in range(len(dim_aliases)))
 
     sql = (
         f"SELECT {select_dim_prefix}"
@@ -438,9 +426,7 @@ def _build_room_inventory_sql(
     select_dim_prefix = ", ".join(select_dim_sql) + ", " if select_dim_sql else ""
     group_clause = ""
     if dim_aliases:
-        group_clause = "GROUP BY " + ", ".join(
-            str(i + 1) for i in range(len(dim_aliases))
-        )
+        group_clause = "GROUP BY " + ", ".join(str(i + 1) for i in range(len(dim_aliases)))
 
     sql = (
         _LATEST_ACTIVE_ROOM_CTE + f"SELECT {select_dim_prefix}"

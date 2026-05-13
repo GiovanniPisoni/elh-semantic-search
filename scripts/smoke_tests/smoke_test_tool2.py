@@ -134,8 +134,7 @@ def main() -> int:
 
         # 5. Combo amenities + dates
         if _run(
-            "EN \u2014 combo amenities + dates "
-            "(Lisbon green-line + private bath, Sep -> Dec 2026)",
+            "EN \u2014 combo amenities + dates (Lisbon green-line + private bath, Sep -> Dec 2026)",
             ctx,
             FindAvailableRoomsInput(
                 city="Lisbon",

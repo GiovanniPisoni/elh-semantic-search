@@ -1,4 +1,4 @@
-﻿"""End-to-end smoke test for Tool 5 (``get_booking_stats``)."""
+"""End-to-end smoke test for Tool 5 (``get_booking_stats``)."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def main() -> int:
     with Psycopg2Executor(settings.db_uri) as ctx:
         # 1. occupancy_rate (Lisbon, 2024)
         if _run(
-            "occupancy_rate â€” Lisbon 2024 full year",
+            "occupancy_rate - Lisbon 2024 full year",
             ctx,
             GetBookingStatsInput(
                 metric="occupancy_rate",
@@ -71,7 +71,7 @@ def main() -> int:
 
         # 2. top_zones_by_bookings (top 5)
         if _run(
-            "top_zones_by_bookings â€” top 5",
+            "top_zones_by_bookings - top 5",
             ctx,
             GetBookingStatsInput(metric="top_zones_by_bookings", top_n=5),
         ):
@@ -79,7 +79,7 @@ def main() -> int:
 
         # 3. avg_booking_duration_months (by city)
         if _run(
-            "avg_booking_duration_months â€” by city",
+            "avg_booking_duration_months - by city",
             ctx,
             GetBookingStatsInput(
                 metric="avg_booking_duration_months",
@@ -90,7 +90,7 @@ def main() -> int:
 
         # 4. avg_lead_time_days (by season)
         if _run(
-            "avg_lead_time_days â€” by season",
+            "avg_lead_time_days - by season",
             ctx,
             GetBookingStatsInput(
                 metric="avg_lead_time_days",
@@ -101,7 +101,7 @@ def main() -> int:
 
         # 5. seasonal_demand (by season, all cities)
         if _run(
-            "seasonal_demand â€” by season",
+            "seasonal_demand - by season",
             ctx,
             GetBookingStatsInput(metric="seasonal_demand"),
         ):
@@ -109,7 +109,7 @@ def main() -> int:
 
         # 6. avg_overall_rating (by zone in Lisbon)
         if _run(
-            "avg_overall_rating â€” Lisbon zones",
+            "avg_overall_rating - Lisbon zones",
             ctx,
             GetBookingStatsInput(
                 metric="avg_overall_rating",
@@ -121,7 +121,7 @@ def main() -> int:
 
         # 7. room_inventory_count (by city)
         if _run(
-            "room_inventory_count â€” by city",
+            "room_inventory_count - by city",
             ctx,
             GetBookingStatsInput(
                 metric="room_inventory_count",
@@ -138,4 +138,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

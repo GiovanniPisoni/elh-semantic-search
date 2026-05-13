@@ -15,7 +15,6 @@ from elh_rag.tools.get_booking_stats._safety import (
     pii_safe_sql,
 )
 
- 
 # Exception type hierarchy
 
 

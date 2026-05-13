@@ -10,8 +10,8 @@ import pytest
 
 from elh_rag.logging_setup import JSONFormatter, setup_logging
 
-
 # JSONFormatter
+
 
 def _make_record(
     msg: str = "hello",
@@ -108,6 +108,7 @@ def test_formatter_serialises_non_json_values_as_strings() -> None:
 
 
 # setup_logging
+
 
 def test_setup_logging_is_idempotent() -> None:
     """Calling setup_logging twice must not duplicate handlers."""

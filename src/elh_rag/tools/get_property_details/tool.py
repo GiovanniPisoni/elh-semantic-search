@@ -252,6 +252,10 @@ def get_property_details(
 
     encoded = payload.encoded_id.strip()
 
+    house: HouseDetails
+    room: RoomDetails | None
+    reviews: ReviewsAggregate | None
+
     if is_room_id(encoded):
         house, room, reviews = _lookup_by_room_id(ctx, encoded, payload.include_reviews)
     elif is_house_id(encoded):

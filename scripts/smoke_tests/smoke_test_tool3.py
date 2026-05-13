@@ -1,4 +1,4 @@
-﻿"""End-to-end smoke test for Tool 3 (compute_total_cost) against live DB.
+"""End-to-end smoke test for Tool 3 (compute_total_cost) against live DB.
 
 Chains Tool 2 -> Tool 3:
     1. find_available_rooms with a target date window -> picks a real
@@ -12,12 +12,6 @@ Three scenarios cover the main branches:
     * Cross-season 4 months (Jan-Apr) -> ``monthly_breakdown`` populated.
     * Autumn 6 months + ``extra_person=True`` -> verifies that
       extra-person cost is added when ``extrapersonallowed='Y'``.
-
-Run::
-
-    python scripts/smoke_test_tool3.py
-
-Requires a configured DB_URI in ``.env``.
 """
 
 from __future__ import annotations
@@ -45,16 +39,16 @@ def _print_result(label: str, result: ComputeTotalCostOutput) -> None:
     print(f"SCENARIO: {label}")
     print(_SEP)
     print(f"Summary               : {result.summary}")
-    print(f"Payable at booking    : â‚¬{result.payable_at_booking_eur}")
+    print(f"Payable at booking    : €{result.payable_at_booking_eur}")
     if result.monthly_recurring_eur is not None:
-        print(f"Monthly recurring     : â‚¬{result.monthly_recurring_eur}")
+        print(f"Monthly recurring     : €{result.monthly_recurring_eur}")
     else:
         assert result.monthly_breakdown is not None  # narrow for mypy
         print(f"Monthly breakdown ({len(result.monthly_breakdown)} months):")
         for m in result.monthly_breakdown:
-            print(f"  {m.year}-{m.month:02d} ({m.season:>6}): â‚¬{m.rent_eur}")
+            print(f"  {m.year}-{m.month:02d} ({m.season:>6}): €{m.rent_eur}")
     if result.one_time_at_checkin_eur is not None:
-        print(f"One-time at check-in  : â‚¬{result.one_time_at_checkin_eur}")
+        print(f"One-time at check-in  : €{result.one_time_at_checkin_eur}")
     print(f"Total stay months     : {result.total_stay_months}")
     print(f"Fixed price           : {result.is_fixed_price}")
     print(f"Utilities included    : {result.utilities_included or '(none)'}")
@@ -119,7 +113,7 @@ def main() -> int:
     print(f"DB: {settings.db_uri.split('@')[-1] if '@' in settings.db_uri else '(local)'}")
     completed = 0
     with Psycopg2Executor(settings.db_uri) as ctx:
-        # Scenario 1 â€” same-season autumn 3 months
+        # Scenario 1: same-season autumn 3 months
         if _run_scenario(
             ctx,
             label="Same-season autumn (Sep-Nov 2026)",
@@ -128,7 +122,7 @@ def main() -> int:
         ):
             completed += 1
 
-        # Scenario 2 â€” cross-season Jan-Apr
+        # Scenario 2: cross-season Jan-Apr
         if _run_scenario(
             ctx,
             label="Cross-season Jan-Apr 2027 (2 autumn + 2 spring)",
@@ -137,7 +131,7 @@ def main() -> int:
         ):
             completed += 1
 
-        # Scenario 3 â€” autumn 6 months + extra_person
+        # Scenario 3: autumn 6 months + extra_person
         if _run_scenario(
             ctx,
             label="Autumn 6 months + extra_person=True",
@@ -155,4 +149,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

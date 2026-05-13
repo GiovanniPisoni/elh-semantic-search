@@ -46,9 +46,7 @@ def _collect_docstring_node_ids(tree: ast.AST) -> set[int]:
     """Identify the ast.Constant nodes that are docstrings."""
     ids: set[int] = set()
     for node in ast.walk(tree):
-        if isinstance(
-            node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-        ):
+        if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             body = getattr(node, "body", [])
             if (
                 body
@@ -95,18 +93,14 @@ def _scan_file(py_file: Path) -> list[tuple[str, int, str]]:
 
 def test_no_pii_table_references_in_get_booking_stats() -> None:
     """No forbidden PII table may appear in get_booking_stats source code."""
-    py_files = sorted(
-        f for f in PACKAGE_DIR.rglob("*.py") if f.name not in _EXCLUDED_FILES
-    )
+    py_files = sorted(f for f in PACKAGE_DIR.rglob("*.py") if f.name not in _EXCLUDED_FILES)
     assert py_files, f"No Python files found under {PACKAGE_DIR}"
 
     all_violations: list[str] = []
     for py_file in py_files:
         for table, lineno, snippet in _scan_file(py_file):
             rel = py_file.relative_to(PROJECT_ROOT)
-            all_violations.append(
-                f"  {rel}:{lineno}  table='{table}'  literal={snippet!r}"
-            )
+            all_violations.append(f"  {rel}:{lineno}  table='{table}'  literal={snippet!r}")
 
     if all_violations:
         message = [
@@ -155,17 +149,14 @@ def test_pii_guard_respects_word_boundaries(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     violations = _scan_file(ok_file)
-    assert violations == [], (
-        f"compound identifiers should not match \\busers\\b, got {violations}"
-    )
+    assert violations == [], f"compound identifiers should not match \\busers\\b, got {violations}"
 
 
 def test_pii_guard_catches_fstring_literal_parts(tmp_path: Path) -> None:
     """Meta-test: f-string literal segments must be scanned too."""
     bad_file = tmp_path / "bad_module.py"
     bad_file.write_text(
-        'col = "x"\n'
-        'SQL = f"SELECT {col} FROM payment p JOIN reservation r ON r.id = p.r_id"\n',
+        'col = "x"\nSQL = f"SELECT {col} FROM payment p JOIN reservation r ON r.id = p.r_id"\n',
         encoding="utf-8",
     )
     violations = _scan_file(bad_file)

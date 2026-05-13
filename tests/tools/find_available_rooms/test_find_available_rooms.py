@@ -20,6 +20,7 @@ from typing import Any
 
 import pytest
 from pydantic import ValidationError
+from tests.conftest import FakeDbExecutor
 
 from elh_rag.tools import TOOLS_REGISTRY, execute_tool
 from elh_rag.tools._shared.room_id import encode_house_id, encode_room_id
@@ -30,7 +31,6 @@ from elh_rag.tools.find_available_rooms import (
     find_available_rooms,
 )
 from elh_rag.tools.find_rooms import FindRoomsInput
-from tests.conftest import FakeDbExecutor
 
 # Step 1 tests — input validation
 

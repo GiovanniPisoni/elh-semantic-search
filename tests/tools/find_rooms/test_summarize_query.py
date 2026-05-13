@@ -5,7 +5,6 @@ from __future__ import annotations
 from elh_rag.tools.find_rooms._inputs import FindRoomsInput
 from elh_rag.tools.find_rooms._sql_builder import _summarize_query
 
-
 # Baseline: empty input, simple filters
 
 
@@ -99,6 +98,7 @@ def test_must_have_label_for_each_explicit_amenity() -> None:
             "must_have_window",
         ],
         expected_labels,
+        strict=True,
     ):
         payload = FindRoomsInput(**{field: True})
         summary = _summarize_query(payload)
@@ -106,6 +106,7 @@ def test_must_have_label_for_each_explicit_amenity() -> None:
 
 
 # Silent-skipped filters omitted
+
 
 def test_accepts_couples_silent_skip_omitted_from_summary() -> None:
     """accepts_couples is silently skipped at SQL build time

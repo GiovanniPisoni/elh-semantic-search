@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import functools
 import re
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 from elh_rag.tools.errors import ToolExecutionError
 
@@ -41,7 +42,7 @@ class PIISafetyError(ToolExecutionError):
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def pii_safe_sql(func: F) -> F:
+def pii_safe_sql[F: Callable[..., Any]](func: F) -> F:
     """Validate that a SQL builder does not reference forbidden PII tables.
 
     The decorated function must return either:

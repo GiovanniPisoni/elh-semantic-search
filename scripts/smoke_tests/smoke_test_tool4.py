@@ -1,4 +1,4 @@
-﻿"""End-to-end smoke test for Tool 4 (``get_property_details``)."""
+"""End-to-end smoke test for Tool 4 (``get_property_details``)."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def _print_result(label: str, result: GetPropertyDetailsOutput) -> None:
     print(f"House               : {h.flat_name}")
     print(f"  encoded_house_id  : {h.encoded_house_id}")
     print(f"  city / zone       : {h.city} / {h.zone} ({h.neighborhood})")
-    print(f"  area / bathrooms  : {h.area_sqm} mÂ² / {h.bathroom_count} bathroom(s)")
+    print(f"  area / bathrooms  : {h.area_sqm} mq / {h.bathroom_count} bathroom(s)")
     print(f"  metro lines       : {h.nearest_metro_lines or '(none)'}")
     print(f"  distance transp.  : {h.distance_to_transport_m} m")
     print(f"  internet speed    : {h.internet_speed_mbps} Mbps")
@@ -46,7 +46,7 @@ def _print_result(label: str, result: GetPropertyDetailsOutput) -> None:
     for hr in h.rooms_summary[:5]:
         print(
             f"     - {hr.room_name} ({hr.status}): "
-            f"â‚¬{hr.spring_price_eur}/â‚¬{hr.summer_price_eur}/â‚¬{hr.autumn_price_eur} "
+            f"€{hr.spring_price_eur}/€{hr.summer_price_eur}/€{hr.autumn_price_eur} "
             f"(spring/summer/autumn)" + (", fixed" if hr.is_fixed_price else "")
         )
 
@@ -54,24 +54,24 @@ def _print_result(label: str, result: GetPropertyDetailsOutput) -> None:
         r = result.room
         print()
         print(f"Room                : {r.room_name}")
-        print(f"  area              : {r.area_sqm} mÂ²")
+        print(f"  area              : {r.area_sqm} mq")
         print(f"  beds              : {', '.join(r.bed_types) or '(none)'}")
         print(f"  amenities         : {', '.join(r.amenities) or '(none)'}")
         print(
             f"  pricing (s/s/a)   : "
-            f"â‚¬{r.spring_price_eur} / â‚¬{r.summer_price_eur} / "
-            f"â‚¬{r.autumn_price_eur}" + (" [fixed]" if r.is_fixed_price else "")
+            f"€{r.spring_price_eur} / €{r.summer_price_eur} / "
+            f"€{r.autumn_price_eur}" + (" [fixed]" if r.is_fixed_price else "")
         )
         print(
             f"  deposit           : "
-            f"required={r.deposit_required}, value=â‚¬{r.deposit_value_eur}, "
+            f"required={r.deposit_required}, value=€{r.deposit_value_eur}, "
             f"last_month={r.last_month_deposit}"
         )
-        print(f"  admin tax         : â‚¬{r.administrative_tax_eur}")
+        print(f"  admin tax         : €{r.administrative_tax_eur}")
         print(
             f"  extra person      : "
             f"allowed={r.extra_person_allowed}"
-            + (f", cost=â‚¬{r.extra_person_cost_eur}" if r.extra_person_cost_eur is not None else "")
+            + (f", cost=€{r.extra_person_cost_eur}" if r.extra_person_cost_eur is not None else "")
         )
 
     if result.reviews is not None:
@@ -88,11 +88,11 @@ def _print_result(label: str, result: GetPropertyDetailsOutput) -> None:
             )
             print("  most recent       :")
             for s in rv.recent_reviews:
-                print(f"     [{s.date_review} â˜…{s.overall_rating}] {s.title}")
+                print(f"     [{s.date_review} {s.overall_rating}] {s.title}")
                 print(f'        "{s.excerpt[:120]}{"..." if len(s.excerpt) > 120 else ""}"')
     else:
         print()
-        print("Reviews             : (skipped â€” include_reviews=False)")
+        print("Reviews             : (skipped, include_reviews=False)")
 
 
 def _pick_room(ctx: Psycopg2Executor) -> tuple[str, str] | None:
@@ -107,7 +107,7 @@ def _pick_room(ctx: Psycopg2Executor) -> tuple[str, str] | None:
         ctx=ctx,
     )
     if not out.rooms:
-        print("No rooms found â€” cannot run smoke. Aborting.")
+        print("No rooms found” cannot run smoke. Aborting.")
         return None
     rm = out.rooms[0]
     print(f"Picked: {rm.house_name}")
@@ -125,7 +125,7 @@ def main() -> int:
             return 1
         room_id, house_id = picked
 
-        # Scenario 1 â€” room lookup with reviews
+        # Scenario 1: room lookup with reviews
         try:
             result = get_property_details(
                 GetPropertyDetailsInput(encoded_id=room_id, include_reviews=True),
@@ -136,18 +136,18 @@ def main() -> int:
         except Exception as e:
             print(f"\n[FAIL] Scenario 1: {e}")
 
-        # Scenario 2 â€” room lookup without reviews
+        # Scenario 2: room lookup without reviews
         try:
             result = get_property_details(
                 GetPropertyDetailsInput(encoded_id=room_id, include_reviews=False),
                 ctx=ctx,
             )
-            _print_result("Room lookup â€” reviews disabled", result)
+            _print_result("Room lookup” reviews disabled", result)
             completed += 1
         except Exception as e:
             print(f"\n[FAIL] Scenario 2: {e}")
 
-        # Scenario 3 â€” house lookup
+        # Scenario 3: house lookup
         try:
             result = get_property_details(
                 GetPropertyDetailsInput(encoded_id=house_id, include_reviews=True),
@@ -166,4 +166,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
