@@ -1,10 +1,7 @@
 """SQL building and row → ``RoomMatch`` mapping for ``find_rooms``.
 
 Pure logic against the validated input model and the amenity column
-maps. No DB roundtrip happens here — ``_build_sql`` returns a
-``(sql, params)`` tuple and ``_row_to_match`` maps a single result
-row to the dataclass. The actual ``ctx.execute`` call lives in
-``tool.py``.
+maps. No DB roundtrip happens here.
 """
 
 from __future__ import annotations
@@ -268,10 +265,18 @@ def _summarize_query(payload: FindRoomsInput) -> str:
         bits.append(f"≤€{payload.max_price_eur:.0f}")
     if payload.gender_preference and payload.gender_preference != "any":
         bits.append(payload.gender_preference)
-    if payload.accepts_couples:
-        bits.append("couples-friendly")
     if payload.accepts_pets:
         bits.append("pets-friendly")
+
+    for field_name in _EXPLICIT_AMENITY_COLUMN_MAP:
+        value = getattr(payload, field_name)
+        if value is True:
+            label = field_name.removeprefix("must_have_").replace("_", " ")
+            bits.append(label)
+        elif value is False:
+            label = field_name.removeprefix("must_have_").replace("_", " ")
+            bits.append(f"no {label}")
+
     if payload.num_rooms_needed > 1:
         bits.append(f"{payload.num_rooms_needed} rooms")
 
