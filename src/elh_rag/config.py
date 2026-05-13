@@ -138,6 +138,25 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: str = Field(default="INFO")
+    log_file_path: Path | None = Field(
+        default=None,
+        description=(
+            "Optional path to a JSON Lines log file. When set, structured "
+            "events are persisted in addition to stdout. Leave unset for "
+            "development; set in benchmark/production environments to "
+            "enable post-hoc analysis (e.g. logs/elh_rag.jsonl)."
+        ),
+    )
+    log_file_max_bytes: int = Field(
+        default=10_485_760,  # 10 MB
+        gt=0,
+        description="Maximum size of a single rotated log file, in bytes.",
+    )
+    log_file_backup_count: int = Field(
+        default=5,
+        ge=0,
+        description="Number of rotated log file backups to keep.",
+    )
 
 
 @lru_cache(maxsize=1)
