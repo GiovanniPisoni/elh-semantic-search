@@ -7,11 +7,11 @@ that validates each tool against the live ELH database.
 
 | Field | Value |
 |---|---|
-| **Status** | All six tools implemented, 31/31 live-DB smoke scenarios green |
-| **Last revision** | May 12, 2026 |
-| **Branch** | `feature/phase3-tools` (HEAD `ec2d867`) |
-| **Test baseline** | 723 unit tests green post-refactor |
-| **Deadline** | May 30, 2026 (18 days remaining) |
+| **Status** | All six tools implemented, 31/31 live-DB smoke scenarios green, D6 safety decisions closed |
+| **Last revision** | May 14, 2026 |
+| **Branch** | `feature/phase3-tools` |
+| **Test baseline** | 767 unit tests green |
+| **Deadline** | May 30, 2026 (16 days remaining) |
 
 ---
 
@@ -25,7 +25,7 @@ that validates each tool against the live ELH database.
 6. [Decisions that emerged during implementation](#6-decisions-that-emerged-during-implementation)
 7. [Smoke certification — 31/31 scenarios on production DB](#7-smoke-certification--3131-scenarios-on-production-db)
 8. [Validation figures for the thesis](#8-validation-figures-for-the-thesis)
-9. [Cosmetic TODOs deferred post-merge](#9-cosmetic-todos-deferred-post-merge)
+9. [Cosmetic fixes closed pre-merge](#9-cosmetic-fixes-closed-pre-merge)
 
 ---
 
@@ -766,11 +766,17 @@ They are recorded here to keep `phase3.md` immutable as a design artefact.
 | **R12** | VAT presentation | Explicit per line vs included | **Always included**; one explicit note in the output |
 | **R13** | Extra-person fee | One-off or recurring | **One-off, per stay, opt-in** (boss meeting) |
 | **R14** | Cancellation tiers | Design left ambiguous | **60+ d full refund, 30–59 d 50 %, <30 d no refund** — canonical YAML entry (boss meeting) |
+| **R15** | Rate limiting | Open D6.3: protect against runaway costs | **Deferred to deployment layer**. No public API surface today; the agent runs behind ELH-internal authentication. Application-level rate limit would require tuning thresholds against traffic data not yet available. Budget runaway is covered by Anthropic platform billing alerts. Reconsider when the agent is exposed to unauthenticated public traffic. |
+| **R16** | PII safety enforcement pattern | Open D6.2: prevent regression of Tool 5 GDPR boundary | **Two-tier defense** — (a) AST-time test that scans every Python file in the package for forbidden table names as whole-word string literals, (b) runtime `@pii_safe_sql` decorator on each of seven extracted SQL builder functions, raising `PIISafetyError` (subclass of `ToolExecutionError`) on detection. The refactor extracting builders from `_compute_*` functions also unlocked Phase 4 opportunities for query caching and telemetry as additional decorators. |
+| **R17** | `query_summary` invariant: reflect only applied filters | Open D6.5: bugs 1+2 in `find_rooms/_summarize_query` | **Summary must mirror the SQL.** `must_have_*` filters added to the summary via field-name derivation (`must_have_air_conditioning` → `'air conditioning'`). Silent-skipped filters (`accepts_couples`, `max_house_occupancy` — columns absent from the ELH schema) omitted from the summary to avoid misleading the LLM consumer. Invariant documented in the function docstring for future regressions. |
 
-The list of decisions records the cumulative effect of two meetings and
-the implementation work itself. The earlier ELH meeting (2026-05-05)
-seeded R5 and R12 indirectly through the GDPR rules; the boss meeting
-(2026-05-11) closed R2, R9, R10, R11, R13, R14.
+The list of decisions records the cumulative effect of two meetings,
+the implementation work itself, and the D6 safety review post-implementation.
+The earlier ELH meeting (2026-05-05) seeded R5 and R12 indirectly
+through the GDPR rules; the boss meeting (2026-05-11) closed R2, R9,
+R10, R11, R13, R14; the D6 safety review closed R15 (rate limiting
+deferred), R16 (PII guard two-tier with builder pattern refactor),
+and R17 (summary invariant).
 
 ---
 
@@ -915,45 +921,66 @@ Alfama is the clear underperformer; Santos and Chiado lead the city.
 
 ---
 
-## 9. Cosmetic TODOs deferred post-merge
+## 9. Cosmetic fixes closed pre-merge
 
-Two known issues do not affect functional correctness or the smoke
-certification, and are deferred to a follow-up commit after the
-Phase 3 branch merges to `main`.
+Both cosmetic issues identified during the Tool 1 smoke runs were
+fixed before the merge to `develop`. Decision D6.5 of the Phase 3
+agent design. The fixes are local to
+`find_rooms/_sql_builder.py::_summarize_query` and are covered by a
+dedicated test module (`tests/tools/find_rooms/test_summarize_query.py`,
+15 tests).
 
-### 9.1 `query_summary` omits `must_have_*` filters
+### 9.1 `query_summary` now includes `must_have_*` filters ✓
 
-`find_rooms/_sql_builder.py::_summarize_query` produces the
-human-readable `query_summary` string but currently lists only the
-location, price, gender, couples, and pets filters. The 11
-`must_have_*` amenity flags are correctly applied at the SQL layer
-but not reflected in the summary.
+The summary iterates the `_EXPLICIT_AMENITY_COLUMN_MAP` keys and, for
+each `must_have_*` field set to `True` or `False`, appends a label
+derived from the field name (prefix `must_have_` stripped, underscores
+replaced with spaces). `must_have_air_conditioning=True` yields
+`'air conditioning'`; `must_have_window=False` yields `'no window'`;
+`None` is silently skipped.
 
-Example, smoke scenario 3 of Tool 1:
+Smoke scenario 3 of Tool 1, after fix:
 
 ```
-Input  : city=Lisbon, must_have_private_bathroom=True,
-         must_have_balcony=True, max_price_eur=600
-Actual : "Filters: city=Lisbon, ≤€600"
-Wanted : "Filters: city=Lisbon, ≤€600, private bathroom, balcony"
+Input    : city=Lisbon, must_have_private_bathroom=True,
+           must_have_balcony=True, max_price_eur=600
+Summary  : "Filters: city=Lisbon, ≤€600, private bathroom, balcony"
 ```
 
-Fix is local to `_summarize_query` (extend the formatter to iterate
-`must_have_*` Pydantic fields by introspection on the input model).
-Tracked for post-merge.
+### 9.2 `accepts_couples` removed from summary on silent-skip ✓
 
-### 9.2 `accepts_couples` shown in summary despite silent-skip
+The summary no longer emits `couples-friendly` when
+`accepts_couples=True` is passed, because the SQL builder silently
+skips that filter (the column does not exist in the ELH schema). The
+same omission applies to `max_house_occupancy`. The invariant is
+recorded in the function docstring:
 
-When `accepts_couples=True` is passed, `_sql_builder.py` correctly
-skips the filter (column not present) and logs the warning. The
-`query_summary`, however, still contains the `couples-friendly`
-substring. This is consistent with the input but inconsistent with
-the actual SQL — and the LLM consuming the summary may draw the
-wrong conclusion about what was actually filtered.
+> *"The summary reflects only the filters that are actually applied
+> to the SQL. Filters silently skipped at SQL build time — namely
+> `accepts_couples` and `max_house_occupancy`, whose columns are
+> absent from the ELH schema (D6 silent-skip pattern) — are
+> deliberately omitted, so the LLM consumer is not misled into
+> believing those constraints were honoured."*
 
-Two acceptable fixes:
+The `logger.warning` audit trail at SQL build time is preserved
+unchanged.
 
-* (a) Suppress the term from the summary whenever the underlying
-  filter is silent-skipped (preferred: more honest output).
-* (b) Include the warning in the rendered summary itself (e.g.,
-  `"Filters: city=Lisbon, couples-friendly [ignored, not supported]"`).
+Smoke scenario 6 of Tool 1, after fix:
+
+```
+Input    : city=Lisbon, metro_line=green, accepts_couples=True,
+           gender_preference=female_only, max_price_eur=500
+Summary  : "Filters: city=Lisbon, metro=green, ≤€500, female_only"
+```
+
+### 9.3 Out-of-scope summary improvements (Phase 4 candidates)
+
+While reviewing `_summarize_query` for D6.5 it became apparent that
+several other filters are also missing from the human-readable
+summary: `min_price_eur`, `min_contract_months`,
+`max_distance_to_transport_m`, and `required_other_amenities`. These
+are applied to the SQL but not surfaced in the summary. They were
+deliberately left out of the D6.5 fix because (a) they were not the
+documented bugs and (b) scope discipline matters more than
+opportunistic improvements at this point in the timeline. Tracked as
+Phase 4 polish.
