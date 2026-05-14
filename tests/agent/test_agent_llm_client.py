@@ -9,17 +9,12 @@ import pytest
 
 from elh_rag.agent.agent_llm_client import AgentLLMClient, StreamChunk
 
-# ---------------------------------------------------------------------------
 # Fixtures
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(autouse=True)
 def no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
     """Patch time.sleep so tenacity's exponential backoff is instant in tests.
-
-    Without this, ``test_call_gives_up_after_max_retries`` would wait
-    ~1+2+4 = 7 seconds between attempts.
     """
     monkeypatch.setattr("time.sleep", lambda *a, **kw: None)
 
@@ -35,9 +30,7 @@ def mock_message() -> MagicMock:
     return response
 
 
-# ---------------------------------------------------------------------------
 # Helpers for constructing real SDK exception instances
-# ---------------------------------------------------------------------------
 
 
 def _rate_limit_error() -> anthropic.RateLimitError:
@@ -72,9 +65,7 @@ def _auth_error() -> anthropic.AuthenticationError:
     )
 
 
-# ---------------------------------------------------------------------------
 # 1. Initialization
-# ---------------------------------------------------------------------------
 
 
 class TestInitialization:
@@ -112,9 +103,7 @@ class TestInitialization:
         assert c._temperature == 0.0
 
 
-# ---------------------------------------------------------------------------
 # 2. call() — retry policy
-# ---------------------------------------------------------------------------
 
 
 class TestCallRetry:
@@ -212,9 +201,7 @@ class TestCallRetry:
         assert mock_anthropic.messages.create.call_count == 3
 
 
-# ---------------------------------------------------------------------------
 # 3. call() — argument propagation
-# ---------------------------------------------------------------------------
 
 
 class TestCallArgs:
@@ -245,9 +232,7 @@ class TestCallArgs:
         )
 
 
-# ---------------------------------------------------------------------------
 # 4. stream() — end-to-end + retry
-# ---------------------------------------------------------------------------
 
 
 class TestStream:
@@ -309,9 +294,7 @@ class TestStream:
         assert chunks[0].final_message is final_message
 
 
-# ---------------------------------------------------------------------------
 # 5. StreamChunk dataclass
-# ---------------------------------------------------------------------------
 
 
 class TestStreamChunkDataclass:

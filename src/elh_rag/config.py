@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     )
     reranker_batch_size: int = Field(default=16, gt=0)
 
-    # Tool 3 — total cost computation
+    # Tool 3: total cost computation
     reservation_fee_pct: float = Field(
         default=0.09,
         ge=0.0,
@@ -136,7 +136,7 @@ class Settings(BaseSettings):
     indexing_upsert_batch: int = Field(default=100, gt=0)
     min_text_length: int = Field(default=30, ge=0)
 
-    # Agent layer (Phase 3 D4)
+    # Agent layer
     agent_llm_model: str = Field(
         default="claude-sonnet-4-5",
         description="LLM model used by the Phase 3 agent loop (D4.1).",
