@@ -35,7 +35,7 @@ def patched_dependencies(
 
     monkeypatch.setattr("elh_rag.agent.context.Embedder", lambda: mock_embedder)
     monkeypatch.setattr("elh_rag.agent.context.Psycopg2Executor", lambda **_: mock_db)
-    
+
     # Two calls to PineconeVectorStore inside build(), keep them
     # distinguishable so we can verify the order and the correct index_name kwarg.
     def _pinecone_factory(**kw: object) -> MagicMock:

@@ -238,6 +238,7 @@ def _lookup_by_house_id(
         "RAG fallback (do not call this tool with broad questions)."
     ),
     input_model=GetPropertyDetailsInput,
+    ctx_attr="db",
 )
 def get_property_details(
     payload: GetPropertyDetailsInput,

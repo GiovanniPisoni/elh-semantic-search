@@ -385,6 +385,7 @@ def _compose_summary(
         "or find_available_rooms first to obtain the encoded_room_id."
     ),
     input_model=ComputeTotalCostInput,
+    ctx_attr="db",
 )
 def compute_total_cost(
     payload: ComputeTotalCostInput,

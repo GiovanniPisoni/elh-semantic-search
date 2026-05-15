@@ -146,6 +146,7 @@ def _compose_summary(question: str, matches: list[PolicyMatch]) -> str:
         "fallback_message pointing to ELH support."
     ),
     input_model=AnswerPolicyQuestionInput,
+    ctx_attr="kb",
 )
 def answer_policy_question(
     payload: AnswerPolicyQuestionInput,
