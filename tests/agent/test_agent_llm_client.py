@@ -14,8 +14,7 @@ from elh_rag.agent.agent_llm_client import AgentLLMClient, StreamChunk
 
 @pytest.fixture(autouse=True)
 def no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Patch time.sleep so tenacity's exponential backoff is instant in tests.
-    """
+    """Patch time.sleep so tenacity's exponential backoff is instant in tests."""
     monkeypatch.setattr("time.sleep", lambda *a, **kw: None)
 
 
