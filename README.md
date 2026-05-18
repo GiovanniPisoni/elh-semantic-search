@@ -1,246 +1,201 @@
-# ELH Semantic Search — RAG-Based System for Erasmus Life Housing
+# ELH Semantic Search
 
-> Master's Thesis Project · Università degli Studi di Milano-Bicocca · 2025
+> Master's Thesis · Alma Mater Studiorum Università di Bologna
+> Supervisor: Prof. Enrico Gallinucci
 
-A **Retrieval-Augmented Generation (RAG)** system that enables semantic search over Erasmus Life Housing's unstructured textual data — reviews, property descriptions, and listing details — using state-of-the-art NLP techniques.
-
----
-
-## Overview
-
-ELH's platform contains a wealth of structured data (prices, availability, amenities) already accessible through standard filters. However, a large category of data remains untapped: the **free-form text** written by students and landlords — reviews, property descriptions, and listing narratives.
-
-This project builds a conversational AI system that makes this data queryable in natural language, answering questions that no SQL filter or dashboard can address:
-
-- *"Find rooms where students mention a comfortable bed"*
-- *"Which landlords are described as responsive to problems?"*
-- *"Properties in a quiet area suitable for studying"*
-- *"Apartments with complaints about noise or maintenance"*
-
-The system retrieves semantically relevant text from the real database and synthesises accurate, grounded answers — never fabricating information.
+An **Agentic RAG** system that lets students query Erasmus Life Housing's
+data (operational database, property descriptions, and student reviews)
+in natural language. An LLM-driven agent autonomously selects among
+eight registered tools — six structured DB tools, one curated knowledge
+base, and two semantic-search wrappers — and chains them across multiple
+hops to deliver grounded answers in any of six languages.
 
 ---
+
+## Context
+
+**Erasmus Life Housing (ELH)** operates a student accommodation platform
+in Lisbon and Porto. Their database has two complementary worlds: a
+structured catalogue (rooms, prices, amenities, availability) and a
+body of unstructured text (student reviews, property descriptions).
+
+Standard SQL filters serve the structured side well but cannot capture
+concepts like *"quiet area"* or *"responsive landlord"* that exist only
+in free text. Conversely, factual questions about prices or availability
+cannot be answered from text alone. Real-world questions typically need
+both: subjective signals from past tenants *and* hard facts from the
+catalogue.
+
+This system bridges the two: an LLM agent chooses between deterministic
+SQL tools (for facts) and semantic retrieval (for opinions), and synthesises
+a single grounded answer.
+
+## What you can ask
+
+```
+"Find the cheapest single rooms in Lisbon"                  → structural
+"What is the cancellation policy if I cancel 45 days early?" → policy
+"Total cost for a 6-month stay starting September 2026"      → multi-hop
+"Is the Alfama neighborhood quiet at night?"                 → semantic
+"Quartos com varanda em Lisboa para setembro de 2026"        → multilingual (PT)
+```
+
+The system supports English, Italian, Portuguese, Spanish, German, and
+French. The agent detects the user's language and answers in the same
+language. Tool inputs remain in canonical form (city names like "Lisbon",
+ISO dates like `2026-09-01`).
 
 ## Architecture
 
 ```
-Student query (natural language)
-        │
-        ▼
-┌───────────────────┐
-│   Query Rewriting  │  ← LLM rephrases query for better retrieval
-└────────┬──────────┘
-         │
-         ▼
-┌───────────────────┐
-│  Vector Retrieval  │  ← Semantic search over ChromaDB
-│  (ChromaDB)        │     embeddings: paraphrase-multilingual-mpnet-base-v2
-└────────┬──────────┘
-         │
-         ▼
-┌───────────────────┐
-│    Re-ranking      │  ← Cross-encoder reranks top-k results
-└────────┬──────────┘
-         │
-         ▼
-┌───────────────────┐
-│  Answer Generation │  ← Claude API synthesises grounded response
-│  (Claude API)      │     citing real reviews as sources
-└───────────────────┘
+              Student question
+                     │
+                     ▼
+            ┌────────────────────┐
+            │  Input validation  │  ≤ 4 000 chars (hard cap)
+            └─────────┬──────────┘
+                      ▼
+            ┌────────────────────────────────────────────┐
+            │           run_agent_turn  (loop)           │
+            │                                            │
+            │   hop 0:  Claude Sonnet 4.5  (routing)     │
+            │   hop ≥1: Claude Haiku 4.5  (synthesis +   │
+            │                              follow-up)    │
+            │                                            │
+            │   max_hops = 5     prompt caching enabled  │
+            │                                            │
+            │            ┌────────────────────┐          │
+            │            │   TOOLS_REGISTRY   │          │
+            │            │      8 tools       │          │
+            │            └─────────┬──────────┘          │
+            └──────────────────────┼─────────────────────┘
+                                   │
+                ┌──────────────────┼──────────────────┐
+                ▼                  ▼                  ▼
+        ┌────────────┐    ┌────────────┐    ┌──────────────┐
+        │ PostgreSQL │    │  KBContext │    │   Pinecone   │
+        │  (rooms,   │    │ (26 policy │    │ (descriptions │
+        │ houses, …) │    │  entries)  │    │  + reviews)  │
+        └────────────┘    └────────────┘    └──────────────┘
 ```
 
-**Data sources indexed:**
-| Table | Field | Content |
-|---|---|---|
-| `review` | `description`, `title` | Student reviews post-stay |
-| `house` | `description`, `otherameneties` | Landlord property descriptions |
-| `room` | `description` | Landlord room descriptions |
+**The eight tools** are: `find_rooms`, `find_available_rooms`,
+`compute_total_cost`, `get_property_details`, `get_booking_stats`
+(structured DB), `answer_policy_question` (knowledge base),
+`search_descriptions`, `search_reviews` (semantic RAG over Pinecone).
 
----
+Each tool is a Python function with a Pydantic input schema. The LLM
+only sees the JSON schema and decides which tool to invoke — it never
+writes SQL.
 
-## Tech Stack
+## Key design choices
 
-| Component | Technology | Reason |
-|---|---|---|
-| LLM | Claude (Anthropic API) | Best-in-class instruction following |
-| Orchestration | LangChain | Modular RAG pipeline primitives |
-| Embeddings | `paraphrase-multilingual-mpnet-base-v2` | Native EN + PT support |
-| Vector Store | ChromaDB | Lightweight, runs fully local |
-| Database | PostgreSQL (Supabase) | ELH operational database |
-| Evaluation | RAGAS | Faithfulness & answer relevance metrics |
-| Interface | Streamlit | Rapid prototyping of chat UI |
-| Language | Python 3.12 | Stable ML ecosystem support |
+**Agentic, not pipelined.** Earlier phases used a fixed pipeline
+(intent router → semantic retrieval → generator). Phase 3 replaces this
+with an LLM-driven loop that decides each hop autonomously based on
+prior tool results. This enables multi-hop reasoning — e.g.
+*"find the cheapest room in Lisbon AND compute its 6-month cost"*
+naturally produces two chained tool calls.
 
----
+**Declarative `ctx_attr`.** Each tool declares which sub-context it
+needs via `@register_tool(..., ctx_attr="db" | "kb" | None)`. The loop
+reads this metadata and passes the right resource. Adding a new tool
+means adding one keyword in its decorator; the loop never changes.
 
-## Project Structure
+**Dual-model dispatch for latency.** Sonnet 4.5 handles hop 0 where
+routing quality matters; Haiku 4.5 (~5× faster) handles synthesis and
+follow-up hops. Combined with Anthropic prompt caching on the 9 700-token
+system prompt, the median per-query latency dropped from 50 s to 9 s
+without any drop in tool routing coverage.
 
-```
-elh-rag-thesis/
-│
-├── src/
-│   ├── extract.py        # Data extraction from Supabase
-│   ├── indexer.py        # Embedding generation & ChromaDB indexing
-│   ├── pipeline.py       # RAG pipeline (Naive → Advanced)
-│   └── app.py            # Streamlit chat interface
-│
-├── evaluation/
-│   ├── golden_dataset.xlsx   # 50 hand-crafted Q&A pairs for evaluation
-│   └── evaluate.py           # RAGAS metrics runner
-│
-├── tests/
-│   └── test_utils.py     # Unit tests for pure functions
-│
-├── data/                 # Local data cache (git-ignored)
-│   └── chroma_db/        # Persisted vector store (git-ignored)
-│
-├── .env.template         # Environment variable template
-├── requirements.txt      # Python dependencies
-├── verify_setup.py       # Setup verification script
-└── README.md
-```
+**Graceful degradation.** Tool errors are surfaced to the LLM as
+`tool_result` blocks with `is_error=True`; the model decides whether to
+retry with different parameters, fall back to a different tool, or
+explain the failure to the user. The loop never crashes a turn.
 
----
+## Performance
 
-## Getting Started
+Measured on a 20-query benchmark spanning five categories (structural,
+policy, multi-hop cost, semantic, multilingual) and five languages:
 
-### Prerequisites
+| Metric | Value |
+|---|---|
+| Success rate | 100% (20/20) |
+| Tool routing coverage | 100% |
+| Latency average | 9.5 s |
+| Latency p95 | 14.0 s |
+| Latency worst case | 14.5 s |
+| Cost per full benchmark | $0.37 USD |
 
-- Python 3.12
-- Access to ELH Supabase database
-- Anthropic API key ([console.anthropic.com](https://console.anthropic.com))
+Full methodology, before/after comparison vs the pre-optimisation
+baseline, and per-category breakdown are documented in
+[`docs/phase3_outcomes.md`](docs/phase3_outcomes.md). Raw run data is
+preserved as JSONL under `benchmarks/runs/`.
 
-### Installation
+## Tech stack
+
+| Component | Choice |
+|---|---|
+| Language | Python 3.12 |
+| Primary LLM (routing) | Anthropic Claude Sonnet 4.5 |
+| Synthesis LLM (hop ≥ 1) | Anthropic Claude Haiku 4.5 |
+| Embeddings | `paraphrase-multilingual-mpnet-base-v2` (768-dim) |
+| Reranker | `BAAI/bge-reranker-v2-m3` (100+ languages) |
+| Vector store | Pinecone (serverless, two indices) |
+| Database | PostgreSQL (Supabase) |
+| Validation | Pydantic v2 (settings + tool input schemas) |
+| Retry / resilience | tenacity (exponential backoff on transient errors) |
+| Tests | pytest, 852 tests, offline, < 5 s |
+| Reporting | openpyxl (human eval Excel templates) |
+
+## Setup
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/elh-rag-thesis.git
-cd elh-rag-thesis
+git clone <repo-url>
+cd elh-semantic-search
+python -m venv .venv && source .venv/bin/activate
+make install
 
-# 2. Create and activate virtual environment
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS / Linux
+cp .env.example .env       # fill DB_URI, PINECONE_API_KEY, ANTHROPIC_API_KEY
 
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Configure environment variables
-cp .env.template .env
-# Edit .env and fill in your credentials
+python -m scripts.run_indexer --source all   # builds both Pinecone indices
+make app                                     # opens Streamlit at :8501
 ```
 
-### Environment Variables
+Pinecone indices must be created beforehand on the dashboard with
+**dimension 768** and **cosine** similarity (`elh-reviews` and
+`elh-descriptions`).
 
-Create a `.env` file based on `.env.template`:
-
-```env
-DB_URI=postgresql://...           # Supabase connection string
-ANTHROPIC_API_KEY=sk-ant-...      # Anthropic API key
-EMBEDDING_MODEL=paraphrase-multilingual-mpnet-base-v2
-CHROMA_PATH=./data/chroma_db
-LLM_MODEL=claude-sonnet-4-20250514
-LLM_TEMPERATURE=0.1
-RETRIEVAL_TOP_K=5
-```
-
-### Verify Setup
+## Development
 
 ```bash
-python verify_setup.py
+make test         # full suite, no network, no API keys needed
+make test-cov     # with coverage
+make lint         # ruff
+make format       # ruff + autofix
 ```
 
-All checks should pass before proceeding.
-
----
-
-## Usage
+## Benchmark and human evaluation
 
 ```bash
-# Step 1 — Extract and index data from Supabase
-python src/extract.py
-python src/indexer.py
+# Run the 20-query benchmark against live services (~$0.40)
+python -m scripts.benchmarks.run_agent_benchmark
 
-# Step 2 — Run the chat interface
-streamlit run src/app.py
+# Generate the markdown report
+python -m scripts.benchmarks.analyze_agent_benchmark
 
-# Step 3 — Run evaluation against golden dataset
-python evaluation/evaluate.py
+# Generate the Excel template for domain-expert evaluation
+python -m scripts.benchmarks.generate_human_eval_excel
 ```
 
----
-
-## Evaluation Methodology
-
-The system is evaluated on a **golden dataset** of 50 hand-crafted question–answer pairs, covering all six KPI categories identified in the ELH project documentation:
-
-| Category | # Questions | Example |
-|---|---|---|
-| Comfort & bed | 8 | *"Rooms with comfortable beds"* |
-| Cleanliness | 8 | *"Properties praised for cleanliness"* |
-| WiFi & internet | 7 | *"Fast and reliable WiFi"* |
-| Location | 8 | *"Quiet area, good transport links"* |
-| Landlord | 10 | *"Responsive and helpful landlords"* |
-| Price & value | 9 | *"Good value for money"* |
-
-**Metrics measured:**
-
-| Metric | Description | Tool |
-|---|---|---|
-| Faithfulness | Is the answer grounded in the retrieved reviews? | RAGAS |
-| Answer Relevance | Does the answer actually address the question? | RAGAS |
-| Recall@k | Were the relevant reviews retrieved? | Custom |
-| Precision@k | Are retrieved reviews actually relevant? | Custom |
-| Latency | End-to-end response time | `time` |
-
-Results are compared across **Naive RAG** (baseline) and **Advanced RAG** (query rewriting + re-ranking).
+Use `--dry-run` on `run_agent_benchmark` for a 3-query smoke (~$0.05)
+before committing to a full run. Outputs land under `benchmarks/runs/`,
+`benchmarks/reports/`, and `benchmarks/human_eval/` respectively, all
+timestamped for reproducibility.
 
 ---
 
-## Thesis Context
+**Author:** Giovanni Pisoni — *Alma Mater Studiorum Università di Bologna*
+**Supervisor:** Prof. Enrico Gallinucci
 
-This project constitutes the **AI layer** of a broader Master's thesis divided into two complementary parts:
-
-- **Part 1 (colleague):** Data engineering — design and implementation of a Data Warehouse (DW) from the ELH operational database, following a data-driven, bottom-up methodology with DFM schema design.
-- **Part 2 (this repo):** Applied AI — RAG system operating directly on the operational database, targeting unstructured textual data that cannot be queried through conventional means.
-
-The two parts are designed to be complementary: the DW provides structured analytical intelligence for management, while this system provides semantic intelligence for end users and operational queries.
-
----
-
-## Limitations
-
-- **Synthetic data:** The database used for development contains synthetically generated reviews and descriptions. System performance on real ELH data may differ.
-- **Multilingual corpus:** Reviews are primarily in English (~70%) and Portuguese (~30%). The embedding model handles both, but mixed-language queries may affect retrieval precision.
-- **Review volume:** ELH's actual review rate is approximately 3% of bookings, which limits corpus coverage per property.
-- **No real-time updates:** The vector index is built offline and requires periodic re-indexing as new reviews are added.
-
----
-
-## Roadmap
-
-- [x] Project setup & environment configuration
-- [x] Database population with coherent synthetic data
-- [ ] Data extraction pipeline (`extract.py`)
-- [ ] Embedding & indexing pipeline (`indexer.py`)
-- [ ] Naive RAG baseline (`pipeline.py`)
-- [ ] Advanced RAG with query rewriting & re-ranking
-- [ ] Streamlit chat interface (`app.py`)
-- [ ] Golden dataset construction
-- [ ] RAGAS evaluation
-- [ ] Thesis writing
-
----
-
-## Author
-
-**Giovanni Pisoni**
-Master's student · Università degli Studi di Milano-Bicocca
-Thesis supervisor: Prof. Enrico Gallinucci
-
----
-
-## License
-
-This project is developed for academic purposes as part of a Master's thesis.
-The codebase is private and not intended for public distribution.
+*Developed for academic purposes. Private repository, not for distribution.*
