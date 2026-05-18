@@ -300,6 +300,7 @@ def _compose_summary(
         "those are out of scope by design."
     ),
     input_model=GetBookingStatsInput,
+    ctx_attr="db",
 )
 def get_booking_stats(
     payload: GetBookingStatsInput,

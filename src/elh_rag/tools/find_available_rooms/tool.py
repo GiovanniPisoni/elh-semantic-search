@@ -209,6 +209,7 @@ def _enrich_with_seasonal_price(
         "explicit date ranges, use find_rooms instead."
     ),
     input_model=FindAvailableRoomsInput,
+    ctx_attr="db",
 )
 def find_available_rooms(
     payload: FindAvailableRoomsInput,

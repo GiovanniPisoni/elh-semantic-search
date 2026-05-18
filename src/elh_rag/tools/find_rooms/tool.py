@@ -35,6 +35,7 @@ from ._sql_builder import _build_sql, _row_to_match, _summarize_query
         "for date-filtered availability use find_available_rooms instead."
     ),
     input_model=FindRoomsInput,
+    ctx_attr="db",
 )
 def find_rooms(payload: FindRoomsInput, ctx: DBExecutor | None) -> FindRoomsOutput:
     """Execute a find_rooms search against the DB."""

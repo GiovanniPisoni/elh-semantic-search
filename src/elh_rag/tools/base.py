@@ -3,10 +3,13 @@
 This module is the backbone of the tool-augmented RAG architecture.
 It exposes three things:
 
-    * ``@register_tool(name, description, input_model)`` — decorator
-      factory that registers a function as a callable tool, with an
-      input schema (Pydantic) and a human-readable description used
-      by the orchestrator's prompt.
+    * ``@register_tool(name, description, input_model, *, ctx_attr=None)``
+      — decorator factory that registers a function as a callable
+      tool, with an input schema (Pydantic), a human-readable
+      description used by the orchestrator's prompt, and an optional
+      ``ctx_attr`` declaring which sub-context the tool expects when
+      dispatched by the Phase 3 agent (e.g. ``"db"`` for the
+      ``DBExecutor``, ``"kb"`` for the ``KBContext``).
 
     * ``TOOLS_REGISTRY`` — module-level dict, single source of truth
       mapping tool names to their callable + metadata.
@@ -17,6 +20,13 @@ It exposes three things:
       it), and returns its raw output. Errors are normalised to
       ``ToolValidationError`` / ``ToolExecutionError`` /
       ``ToolNotFoundError``.
+
+``ctx_attr`` is an agent-layer-only concept: it is metadata stored
+in :class:`ToolSpec` for the Phase 3 agent loop to consult before
+dispatching a tool. The dispatcher itself (:func:`execute_tool`)
+ignores ``ctx_attr`` and forwards whatever ``ctx`` it receives,
+keeping the Phase 2 test harness and Phase 3 unit-test patterns
+working unchanged.
 """
 
 from __future__ import annotations
@@ -46,6 +56,18 @@ class ToolSpec:
     input_model: type[BaseModel]
     func: Callable[..., Any]
     accepts_ctx: bool
+    ctx_attr: str | None = None
+    """If set, the Phase 3 agent passes ``getattr(agent_context, ctx_attr)``
+    as the tool's ``ctx`` argument instead of the full AgentContext.
+
+    Conventions used in this project:
+        "db"   - tool expects a DBExecutor   (Tools 1-5)
+        "kb"   - tool expects a KBContext    (Tool 6)
+        None   - tool expects the full AgentContext (RAG corpora)
+
+    Backwards-compatible default: ``None`` means the dispatcher
+    forwards ``ctx`` unchanged (Phase 2/3 unit-test pattern).
+    """
 
 
 # Single source of truth. Populated at import time by ``@register_tool``.
@@ -58,8 +80,29 @@ def register_tool(
     name: str,
     description: str,
     input_model: type[BaseModel],
+    *,
+    ctx_attr: str | None = None,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    """Register a callable as a tool, attaching schema and metadata."""
+    """Register a callable as a tool, attaching schema and metadata.
+
+    Parameters
+    ----------
+    name
+        Unique tool name used in the registry and exposed to the LLM.
+    description
+        Human-readable description shown to the LLM in the tool
+        schema.
+    input_model
+        Pydantic model that validates the tool's input payload.
+    ctx_attr, optional
+        Name of an attribute on the Phase 3 ``AgentContext`` from
+        which the loop should extract the sub-context to pass as
+        ``ctx`` when dispatching this tool. Use ``"db"`` for tools
+        that take a ``DBExecutor``, ``"kb"`` for tools that take a
+        ``KBContext``. Leave as ``None`` (default) to receive the
+        full ``AgentContext`` (or whatever ``ctx`` the direct
+        dispatcher caller supplies, in test scenarios).
+    """
     if not name or not name.strip():
         raise ValueError("Tool name must be a non-empty string.")
     if not isinstance(input_model, type) or not issubclass(input_model, BaseModel):
@@ -91,6 +134,7 @@ def register_tool(
             input_model=input_model,
             func=func,
             accepts_ctx=accepts_ctx,
+            ctx_attr=ctx_attr,
         )
         return func
 
@@ -105,7 +149,14 @@ def execute_tool(
     payload: Mapping[str, Any],
     ctx: Any | None = None,
 ) -> Any:
-    """Validate a raw payload and run the registered tool."""
+    """Validate a raw payload and run the registered tool.
+
+    Note: this dispatcher ignores ``ctx_attr`` — it forwards whatever
+    ``ctx`` was supplied. The Phase 3 agent loop is responsible for
+    resolving ``ctx_attr`` against the AgentContext before calling
+    this function. Unit tests that exercise tools directly continue
+    to pass any ``ctx`` shape they want.
+    """
     spec = TOOLS_REGISTRY.get(name)
     if spec is None:
         raise ToolNotFoundError(name, available=list(TOOLS_REGISTRY))
