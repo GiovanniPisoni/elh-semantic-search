@@ -141,6 +141,20 @@ class Settings(BaseSettings):
         default="claude-sonnet-4-5",
         description="LLM model used by the Phase 3 agent loop (D4.1).",
     )
+    agent_synthesis_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description=(
+            "Faster, cheaper model used for hop 1+ of the agent loop "
+            "(synthesis and follow-up tool calls)."
+        ),
+    )
+    agent_use_haiku_synthesis: bool = Field(
+        default=True,
+        description=(
+            "If True, hop_index >= 1 uses the synthesis model; if False, "
+            "the primary model handles all hops."
+        ),
+    )
     agent_llm_max_tokens: int = Field(default=4096, gt=0)
     agent_llm_temperature: float = Field(
         default=0.0,

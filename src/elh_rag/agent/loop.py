@@ -5,8 +5,7 @@ Top-level controller for a single agent turn, mirroring the
 :class:`elh_rag.orchestration.orchestrator.Orchestrator` pattern but
 LLM-driven (the model picks tools) rather than rule-driven.
 
-Algorithm
----------
+Algorithm:
 1. Validate query length (D6.4: hard cap at ``settings.agent_max_query_chars``).
 2. Build the initial messages list: ``[{"role": "user", "content": query}]``.
 3. Loop up to ``settings.agent_max_hops`` iterations:
@@ -26,28 +25,6 @@ Algorithm
           - Continue.
 4. If MAX_HOPS exhausted without end_turn, assemble AgentResponse
    with stop_reason="max_hops_reached".
-
-Tool ctx resolution
--------------------
-Different tools expect different ``ctx`` shapes:
-    Tools 1-5 (find_rooms, ...)     - DBExecutor
-    Tool 6 (answer_policy_question) - KBContext
-    RAG corpora wrappers            - full AgentContext
-
-Each tool declares its preferred ctx via ``ctx_attr`` on its
-:func:`register_tool` decorator. The loop reads this attribute and
-passes the corresponding sub-context (via ``getattr(agent_ctx,
-ctx_attr)``) to :func:`execute_tool`. When ``ctx_attr`` is ``None``
-the full AgentContext is forwarded.
-
-Streaming (D4.9)
-----------------
-Streaming is engaged on EVERY hop when ``on_text`` is provided.
-
-Input length check (D6.4)
--------------------------
-Queries longer than ``settings.agent_max_query_chars`` are rejected
-with :class:`InputValidationError` BEFORE the first LLM call.
 """
 
 from __future__ import annotations
@@ -97,42 +74,27 @@ def run_agent_turn(
     on_text: OnTextCallback | None = None,
     on_tool_call: OnToolCallCallback | None = None,
     llm: AgentLLMClient | None = None,
+    synthesis_llm: AgentLLMClient | None = None,
 ) -> AgentResponse:
-    """Execute one agent turn end-to-end.
-
-    Parameters
-    ----------
-    query
-        Natural-language question from the user. Must be non-empty
-        and <= ``settings.agent_max_query_chars`` characters.
-    ctx
-        Shared per-turn state: DB, KB, embedder, vector stores.
-    on_text, optional
-        Callback invoked with each text delta the model streams. When
-        provided, the loop engages streaming on every LLM call.
-    on_tool_call, optional
-        Callback invoked once per dispatched tool with the completed
-        ToolCall record (including output or error).
-    llm, optional
-        Override the default :class:`AgentLLMClient`. Used by tests.
-
-    Returns
-    -------
-    AgentResponse
-        Final answer + full tool trace + aggregate metrics.
-
-    Raises
-    ------
-    InputValidationError
-        If the query is empty or exceeds the configured length limit.
-    """
-    # 1. Input validation (D6.4)
+    """Execute one agent turn end-to-end."""
+    # 1. Input validation
     _validate_query(query)
 
     # 2. Setup
     started_at = datetime.now(UTC)
     start_perf = time.perf_counter()
-    llm = llm or AgentLLMClient()
+
+    primary_llm = llm or AgentLLMClient(model=settings.agent_llm_model)
+
+    # Synthesis client: explicit override > settings > None.
+    effective_synthesis: AgentLLMClient | None
+    if synthesis_llm is not None:
+        effective_synthesis = synthesis_llm
+    elif llm is None and settings.agent_use_haiku_synthesis:
+        effective_synthesis = AgentLLMClient(model=settings.agent_synthesis_model)
+    else:
+        effective_synthesis = None
+
     tools = build_tool_schemas()
     streaming = on_text is not None
 
@@ -148,8 +110,19 @@ def run_agent_turn(
     for hop_index in range(settings.agent_max_hops):
         logger.debug("agent.loop hop=%d, streaming=%s", hop_index, streaming)
 
+        active_client = (
+            effective_synthesis
+            if hop_index >= 1 and effective_synthesis is not None
+            else primary_llm
+        )
+        logger.info(
+            "agent.loop: hop=%d using model=%s",
+            hop_index,
+            active_client._model,
+        )
+
         response = _call_llm(
-            llm=llm,
+            llm=active_client,
             messages=messages,
             tools=tools,
             streaming=streaming,

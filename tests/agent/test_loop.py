@@ -425,3 +425,77 @@ class TestCtxResolution:
         run_agent_turn("q", agent_ctx, llm=mock_llm)  # type: ignore[arg-type]
 
         assert captured_ctx["ctx"] is agent_ctx
+
+
+# Model split (Sonnet hop 0, Haiku hop 1+)
+
+
+class TestModelSplit:
+    """Verify hop 0 uses primary, hop >= 1 uses synthesis (when enabled)."""
+
+    def test_hop_0_uses_primary_client(self, mock_ctx: Any) -> None:
+        """Hop 0 dispatches to the primary client even when synthesis is provided."""
+        primary = MagicMock(name="primary")
+        synthesis = MagicMock(name="synthesis")
+        primary._model = "sonnet-test"
+        synthesis._model = "haiku-test"
+        # Primary returns end_turn at hop 0; synthesis should never be called.
+        primary.call.return_value = _end_turn_message("Hello!")
+
+        response = run_agent_turn("Hi", mock_ctx, llm=primary, synthesis_llm=synthesis)
+
+        primary.call.assert_called_once()
+        synthesis.call.assert_not_called()
+        assert response.hop_count == 1
+        assert response.final_message == "Hello!"
+
+    def test_hop_1_uses_synthesis_client(
+        self,
+        mock_ctx: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Hop 0 routes a tool, hop 1 uses synthesis client to write the final text."""
+        primary = MagicMock(name="primary")
+        synthesis = MagicMock(name="synthesis")
+        primary._model = "sonnet-test"
+        synthesis._model = "haiku-test"
+
+        primary.call.side_effect = [
+            _tool_use_message([("t1", "find_rooms", {"city": "Lisbon"})]),
+        ]
+        synthesis.call.side_effect = [
+            _end_turn_message("Here are 3 rooms in Lisbon."),
+        ]
+
+        mock_output = MagicMock(model_dump_json=lambda: "{}")
+        monkeypatch.setattr("elh_rag.agent.loop.execute_tool", lambda *a, **kw: mock_output)
+
+        response = run_agent_turn(
+            "Find rooms in Lisbon", mock_ctx, llm=primary, synthesis_llm=synthesis
+        )
+
+        primary.call.assert_called_once()  # hop 0 only
+        synthesis.call.assert_called_once()  # hop 1 only
+        assert response.hop_count == 2
+        assert response.final_message == "Here are 3 rooms in Lisbon."
+
+    def test_synthesis_none_falls_back_to_primary(
+        self,
+        mock_ctx: Any,
+        mock_llm: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """When synthesis_llm is None and llm is explicitly given, primary handles all hops."""
+        mock_output = MagicMock(model_dump_json=lambda: "{}")
+        monkeypatch.setattr("elh_rag.agent.loop.execute_tool", lambda *a, **kw: mock_output)
+
+        mock_llm.call.side_effect = [
+            _tool_use_message([("t1", "find_rooms", {})]),
+            _end_turn_message("done"),
+        ]
+
+        # synthesis_llm not provided -> primary used for all hops
+        response = run_agent_turn("q", mock_ctx, llm=mock_llm)
+
+        assert mock_llm.call.call_count == 2  # both hops used the same mock
+        assert response.hop_count == 2
