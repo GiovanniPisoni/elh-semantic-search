@@ -225,7 +225,13 @@ class TestCallArgs:
             model="test-model",
             max_tokens=100,
             temperature=0.5,
-            system="custom-system",
+            system=[
+                {
+                    "type": "text",
+                    "text": "custom-system",
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             messages=messages,
             tools=tools,
         )
@@ -314,3 +320,64 @@ class TestStreamChunkDataclass:
         chunk = StreamChunk(text_delta="hello")
         with pytest.raises((AttributeError, TypeError)):
             chunk.text_delta = "world"  # type: ignore[misc]
+
+
+# 6. Prompt caching
+
+
+class TestPromptCaching:
+    """Verify the system prompt is sent with ephemeral cache_control."""
+
+    def test_call_wraps_system_in_cached_block(self, mock_message: MagicMock) -> None:
+        """call() must hand the SDK a list-of-block system with cache_control."""
+        c = AgentLLMClient(max_retries=1)
+        mock_anthropic = MagicMock()
+        mock_anthropic.messages.create.return_value = mock_message
+        c._client = mock_anthropic
+
+        c.call(
+            messages=[{"role": "user", "content": "hi"}],
+            tools=[],
+            system="my system prompt",
+        )
+
+        call_kwargs = mock_anthropic.messages.create.call_args.kwargs
+        assert call_kwargs["system"] == [
+            {
+                "type": "text",
+                "text": "my system prompt",
+                "cache_control": {"type": "ephemeral"},
+            }
+        ]
+
+    def test_stream_wraps_system_in_cached_block(self) -> None:
+        """stream() must hand the SDK a list-of-block system with cache_control."""
+        final_message = MagicMock(stop_reason="end_turn")
+
+        mock_stream = MagicMock()
+        mock_stream.__enter__.return_value = mock_stream
+        mock_stream.__exit__.return_value = False
+        mock_stream.text_stream = iter([])
+        mock_stream.get_final_message.return_value = final_message
+
+        c = AgentLLMClient(max_retries=1)
+        mock_anthropic = MagicMock()
+        mock_anthropic.messages.stream.return_value = mock_stream
+        c._client = mock_anthropic
+
+        list(
+            c.stream(
+                messages=[{"role": "user", "content": "hi"}],
+                tools=[],
+                system="my system prompt",
+            )
+        )
+
+        stream_kwargs = mock_anthropic.messages.stream.call_args.kwargs
+        assert stream_kwargs["system"] == [
+            {
+                "type": "text",
+                "text": "my system prompt",
+                "cache_control": {"type": "ephemeral"},
+            }
+        ]

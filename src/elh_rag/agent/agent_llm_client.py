@@ -81,6 +81,41 @@ class AgentLLMClient:
             reraise=True,
         )
 
+    # System-prompt cache wrapping
+
+    @staticmethod
+    def _build_system_param(system: str) -> list[dict[str, Any]]:
+        """Wrap the system prompt in a single cacheable content block.
+
+        Anthropic prompt caching requires the ``system`` parameter to be
+        a list of content blocks; attaching ``cache_control`` to that
+        block tells the API to reuse the cached prefix on subsequent
+        calls (90% input-token discount on cache reads). The TTL is the
+        default ``ephemeral`` (~5 minutes), which is sufficient for both
+        the benchmark workload and a typical interactive session.
+        """
+        return [
+            {
+                "type": "text",
+                "text": system,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ]
+
+    @staticmethod
+    def _log_cache_usage(usage: Any) -> None:
+        """Emit an INFO line with cache-creation / cache-read token counts."""
+        cache_create = getattr(usage, "cache_creation_input_tokens", 0) or 0
+        cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+        if cache_create or cache_read:
+            logger.info(
+                "agent.llm: cache_creation=%d, cache_read=%d, input=%d, output=%d",
+                cache_create,
+                cache_read,
+                getattr(usage, "input_tokens", 0) or 0,
+                getattr(usage, "output_tokens", 0) or 0,
+            )
+
     # Non-streaming call
 
     def call(
@@ -99,18 +134,24 @@ class AgentLLMClient:
             len(tools),
         )
 
+        system_param = self._build_system_param(system)
+
         @self._retry_decorator()
         def _do_call() -> Any:
             return self.client.messages.create(
                 model=self._model,
                 max_tokens=self._max_tokens,
                 temperature=self._temperature,
-                system=system,
+                system=system_param,
                 messages=messages,
                 tools=tools,
             )
 
-        return _do_call()
+        response = _do_call()
+        usage = getattr(response, "usage", None)
+        if usage is not None:
+            self._log_cache_usage(usage)
+        return response
 
     # Streaming call
 
@@ -132,13 +173,15 @@ class AgentLLMClient:
             len(tools),
         )
 
+        system_param = self._build_system_param(system)
+
         @self._retry_decorator()
         def _open_stream() -> Any:
             return self.client.messages.stream(
                 model=self._model,
                 max_tokens=self._max_tokens,
                 temperature=self._temperature,
-                system=system,
+                system=system_param,
                 messages=messages,
                 tools=tools,
             )
@@ -152,4 +195,7 @@ class AgentLLMClient:
 
             # 2. emit the final assembled message
             final = anthropic_stream.get_final_message()
+            usage = getattr(final, "usage", None)
+            if usage is not None:
+                self._log_cache_usage(usage)
             yield StreamChunk(final_message=final)
