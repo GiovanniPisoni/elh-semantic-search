@@ -1,431 +1,299 @@
-# Fase 3 — Specifiche Tool API
+# Phase 3 — Agentic RAG
 
-**Documento di design.** Architettura: Hybrid Tool-augmented RAG (no Text-to-SQL).
-**Stato:** Decisione 1, 2, 3 chiuse. Decisioni 4-6 aperte.
-**Data:** 6 maggio 2026
-**Branch:** `feature/phase3-tools`
+**Status:** Complete (closed 18 May 2026).
+**Branch (now merged):** `feature/phase3-agent` → `develop`.
+**Architecture:** Agentic RAG with LLM-driven multi-hop tool selection.
 
----
-
-## Indice
-
-1. [Architettura generale](#1-architettura-generale)
-2. [Convenzioni trasversali](#2-convenzioni-trasversali)
-3. [Tool 1 — `find_rooms`](#3-tool-1--find_rooms)
-4. [Tool 2 — `find_available_rooms`](#4-tool-2--find_available_rooms)
-5. [Tool 3 — `compute_total_cost`](#5-tool-3--compute_total_cost)
-6. [Tool 4 — `get_property_details`](#6-tool-4--get_property_details)
-7. [Tool 5 — `get_booking_stats`](#7-tool-5--get_booking_stats)
-8. [Tool 6 — `answer_policy_question` (TBD)](#8-tool-6--answer_policy_question-tbd)
-9. [Fallback Phase 2 RAG](#9-fallback-phase-2-rag)
-10. [Riepilogo decisionale](#10-riepilogo-decisionale)
+This document describes Phase 3 of the ELH thesis project: the
+introduction of an autonomous agent loop that, on each iteration,
+chooses among eight registered tools to answer the user's question.
+It supersedes the Phase 2 design (intent router + dual semantic
+paths), which is preserved in [`phase2_design.md`](phase2_design.md)
+and [`phase2_observations.md`](phase2_observations.md). The
+quantitative outcomes of the latency-optimisation step (Step 3.7)
+are documented in [`phase3_outcomes.md`](phase3_outcomes.md).
 
 ---
 
-## 1. Architettura generale
+## Table of contents
+
+1. [Architectural definition](#1-architectural-definition)
+2. [Agent loop](#2-agent-loop)
+3. [The eight registered tools](#3-the-eight-registered-tools)
+4. [Declarative `ctx_attr` — per-tool context resolution](#4-declarative-ctx_attr--per-tool-context-resolution)
+5. [Multilingual support](#5-multilingual-support)
+6. [Step-by-step progress](#6-step-by-step-progress)
+7. [Final results](#7-final-results)
+
+---
+
+## 1. Architectural definition
+
+The Phase 3 system is an **Agentic RAG**, not a Hybrid Tool-augmented
+RAG and not a classical RAG pipeline. The distinction is operational:
+
+| | Classical RAG | Hybrid Tool-augmented | **Agentic RAG (Phase 3)** |
+|---|---|---|---|
+| Number of LLM calls per query | 1 | 1 | **2–5** |
+| Tool selection | none | pipeline-determined | **LLM-driven, per hop** |
+| Multi-step reasoning | no | rare | **first-class** |
+| Error recovery | external | external | **LLM-internal** |
+
+In the Phase 3 system the model (Claude Sonnet 4.5 on the first hop;
+Claude Haiku 4.5 on subsequent hops) receives the user query plus
+the schemas of eight available tools, autonomously decides which
+tool(s) to invoke, examines the JSON results, and either calls more
+tools (multi-hop) or writes the final answer. Tools are deterministic
+Python functions that wrap structured database queries or curated
+knowledge base lookups; the LLM never produces raw SQL (a hard
+constraint motivated by ELH's GDPR posture).
 
 ```
-                          ┌─────────────────────┐
-       user query ────►   │   Orchestrator      │   ◄── Phase 2 RAG
-                          │   (LLM-driven)      │       (semantic search,
-                          └──────────┬──────────┘        intent router,
-                                     │                   reranker, generator)
-                          tool_calls │
-                                     ▼
-                          ┌─────────────────────┐
-                          │  TOOLS_REGISTRY     │
-                          │  ┌───────────────┐  │
-                          │  │ Tool 1: find  │  │
-                          │  │ Tool 2: avail │  │
-                          │  │ Tool 3: cost  │  │
-                          │  │ Tool 4: prop  │  │
-                          │  │ Tool 5: stats │  │
-                          │  │ Tool 6: policy│  │
-                          │  └───────────────┘  │
-                          └──────────┬──────────┘
-                                     │
-                                     ▼
-                            ┌────────────────┐
-                            │  PostgreSQL    │  (DB ELH: house, room,
-                            │  + Pinecone    │   reservation, review, ...)
-                            └────────────────┘
+              Student question
+                     │
+                     ▼
+            ┌────────────────────┐
+            │  Input validation  │  ≤ settings.agent_max_query_chars
+            └─────────┬──────────┘
+                      ▼
+            ┌────────────────────────────────────────────┐
+            │           run_agent_turn  (loop)           │
+            │                                            │
+            │   hop 0:  Claude Sonnet 4.5  (routing)     │
+            │   hop ≥1: Claude Haiku 4.5  (synthesis +   │
+            │                              follow-up)    │
+            │                                            │
+            │   max_hops = 5     prompt caching enabled  │
+            │                                            │
+            │            ┌────────────────────┐          │
+            │            │   TOOLS_REGISTRY   │          │
+            │            │      8 tools       │          │
+            │            └────────────────────┘          │
+            └─────────┬──────────────────────────────────┘
+                      ▼
+            ┌────────────────────┐
+            │  AgentResponse     │  final_message,
+            │  (Pydantic frozen) │  tool_trace,
+            └────────────────────┘  tokens, duration, ...
 ```
-
-**Decisione architetturale chiave (chiusa):** *NO Text-to-SQL libero*. L'LLM
-non genera mai SQL grezzo; sceglie solo tra tool predefiniti con schema
-Pydantic. Motivazione GDPR + reliability: il team ELH ha richiesto esattamente
-*"yes I prefer to change [response]"* su query ambigue (preferiscono cambiare
-risposta piuttosto che fornire risultati incerti).
-
-**Strategia fallback:**
-
-1. Orchestrator analizza query → seleziona tool.
-2. Se tool match ad alta confidenza → esegue tool, restituisce output.
-3. Se nessun tool match → fallback a Phase 2 RAG (ricerca semantica esistente).
-4. Se Phase 2 RAG non trova fonti rilevanti → messaggio template
-   *"Ecco cosa so fare: [lista capabilities]"*.
 
 ---
 
-## 2. Convenzioni trasversali
+## 2. Agent loop
 
-### 2.1 Tool interface (Decisione 1, chiusa)
+The entry point is `run_agent_turn(query, ctx, *, on_text=, on_tool_call=, llm=, synthesis_llm=)` in
+`src/elh_rag/agent/loop.py`. The algorithm:
 
-Ogni tool è composto da:
+1. **Input validation** (D6.4): reject empty queries and queries longer
+   than `settings.agent_max_query_chars` (default 4 000 chars) — a hard
+   cap that protects against accidental cost runaway.
+2. **Setup**: build the messages list with the user's query, the system
+   prompt (~9 700 tokens including tool schemas attached by the SDK),
+   the tool schemas array, and the model clients.
+3. **Loop** for up to `settings.agent_max_hops` (default 5):
+   1. Choose the active LLM client based on `hop_index` (Sonnet at
+      hop 0, Haiku at hop ≥ 1 when the synthesis split is enabled —
+      see §6 Step 3.7.3).
+   2. Call the LLM (streaming if `on_text` is provided, plain call
+      otherwise — D4.9).
+   3. Aggregate token usage and emit a log line with cache statistics.
+   4. If `stop_reason == "end_turn"`, extract the text and exit the
+      loop.
+   5. If `stop_reason == "tool_use"`, dispatch every tool_use block
+      via `execute_tool`, build matching tool_result blocks, append
+      the assistant message and the tool_result list to the
+      conversation, and continue. Tool errors are passed through
+      to the model with `is_error=True` (D4.8 — pass-through).
+4. **Termination**: assemble an `AgentResponse` carrying the final
+   message, the full `ToolCall` trace, aggregate token counts, total
+   wall-clock duration, and `stop_reason` (`end_turn`,
+   `max_hops_reached`, `error`, or `input_invalid`).
 
-* **Input:** classe Pydantic `<ToolName>Input` con validazione runtime
-* **Output:** frozen `dataclass` con metodo `to_dict()` (full) e ove rilevante
-  `to_dict_for_user()` (sanitized, senza campi interni come `sql_executed`)
-* **Funzione:** decorata con `@register_tool(name, description, input_model)`,
-  riceve un'istanza dell'input model validato
+The loop is single-turn and stateless (D4.6): no conversation history
+is preserved across turns. Multi-turn behaviour is the LLM's job
+within the turn's message list; across turns the agent starts fresh.
 
-Registrazione single-source-of-truth in `TOOLS_REGISTRY: dict[str, ToolSpec]`,
-popolato a import time. Dispatcher `execute_tool(name, payload)` valida il
-payload e dispatcha la funzione, normalizzando errori in tre tipi:
-`ToolNotFoundError`, `ToolValidationError`, `ToolExecutionError`.
+---
 
-Layout file: `src/elh_rag/tools/{base,errors,find_rooms,find_available_rooms,...}.py`
-(flat structure).
+## 3. The eight registered tools
 
-### 2.2 Identificatori entità
-
-Le tabelle DB hanno chiavi composite `(loc_idhouse, loc_dateupdate, idroom, dateupdate)`
-per supportare il versioning (price drift). Per semplificare l'interfaccia con
-l'LLM, usiamo **stringhe encoded**:
-
-| Tipo | Formato | Esempio |
+| Tool | Category | What it does |
 |---|---|---|
-| Room ID | `H{house_id}_R{room_id}_{ISO8601_dateupdate}` | `H42_R3_2024-09-15T10:30:00` |
-| House ID | `H{house_id}_{ISO8601_dateupdate}` | `H42_2024-09-15T10:30:00` |
+| `find_rooms` | DB structured | Filter rooms by city / price / amenities / metro proximity, ordered |
+| `find_available_rooms` | DB structured | Same as `find_rooms` but constrained to a check-in/out window |
+| `compute_total_cost` | DB structured | Full quote for one room + period: rent, 9% fee, deposits, utility caps, admin tax |
+| `get_property_details` | DB structured | Detailed snapshot of one house or room incl. review aggregates |
+| `get_booking_stats` | DB structured | Aggregate k-anonymous metrics (occupancy, top neighbourhoods, lead time) |
+| `answer_policy_question` | KB | FAQ over 26 curated policy entries (cancellation, deposits, utilities, …) |
+| `search_descriptions` | RAG semantic | Vector search over house + room descriptions (Pinecone `elh-descriptions`) |
+| `search_reviews` | RAG semantic | Vector search over student reviews (Pinecone `elh-reviews`) |
 
-Encoder/decoder in `src/elh_rag/tools/_room_id.py`.
+Each tool is implemented as a Python function decorated with
+`@register_tool(name, description, input_model, *, ctx_attr=...)` and
+exposes a typed Pydantic `Input` model. The LLM only sees the JSON
+schema derived from the `Input` model; it never produces SQL directly.
+The dispatcher `execute_tool(name, payload, ctx)` validates the
+payload against the model, dispatches the function, and normalises
+errors into `ToolNotFoundError`, `ToolValidationError`, or
+`ToolExecutionError` — all subclasses of `ToolError`, all caught by
+the loop and returned to the LLM as `tool_result` blocks with
+`is_error=True`.
 
-### 2.3 Output dataclass condivise
+The two RAG-corpora tools (`search_descriptions`, `search_reviews`)
+wrap the Phase 2 retrieval pipelines (Pinecone vector search +
+optional cross-encoder reranking, disabled in the Phase 3 default
+configuration because the reranker showed weak score discrimination
+on the small reviews corpus — see [`phase2_observations.md`](phase2_observations.md)).
 
-| Dataclass | Usato da |
-|---|---|
-| `RoomMatch` | Tool 1, Tool 2, Tool 4 (lista risultati) |
-| `CostLineItem` | Tool 3 (line items breakdown) |
-| `StatPoint` | Tool 5 (data points aggregati) |
+---
 
-### 2.4 Stagionalità prezzi
+## 4. Declarative `ctx_attr` — per-tool context resolution
 
-Il DB ELH usa 3 fasce stagionali:
+Different tools expect different shapes of `ctx`:
 
-| Fascia | Mesi | Note |
-|---|---|---|
-| `springprice` | marzo–giugno | media stagione |
-| `summerprice` | luglio–agosto | bassa stagione (Erasmus assenti) |
-| `autumnprice` | settembre–febbraio | **alta stagione Erasmus** |
+* Tools 1–5 (`find_rooms` … `get_booking_stats`) expect a `DBExecutor`.
+* Tool 6 (`answer_policy_question`) expects a `KBContext` (the
+  in-memory knowledge base with 112 variant embeddings).
+* The two RAG wrappers want the full `AgentContext` (they need the
+  embedder *and* the relevant Pinecone vector store).
 
-**Default per Tool 1** (date opzionali): mostra `autumnprice` (caso d'uso più frequente).
-**Tool 2** (date obbligatorie): calcola **avg ponderato sui giorni** che cadono in
-ciascuna stagione.
-
-### 2.5 Mapping zone → linee metro
-
-File `src/elh_rag/tools/_metro_lines.py` con dati statici Wikipedia (Lisbona +
-Porto). Mappa zone/quartieri alle linee metro che li servono. Esempio:
+The Step 3.5 fix introduces a declarative resolution: each tool
+declares which attribute of the `AgentContext` it needs via the
+optional `ctx_attr` kwarg on `@register_tool`. The loop reads
+`spec.ctx_attr` from the registry and calls
+`getattr(agent_ctx, ctx_attr)` before invoking the tool. When
+`ctx_attr` is `None` (default), the full `AgentContext` is forwarded.
 
 ```python
-LISBON_METRO_LINES = {
-    "Alameda": ["green", "red"],
-    "Areeiro": ["green"],
-    "Cais do Sodre": ["green"],
-    "Marques de Pombal": ["yellow", "blue"],
+@register_tool(
+    name="find_rooms",
+    description="...",
+    input_model=FindRoomsInput,
+    ctx_attr="db",          # ← receives agent_ctx.db
+)
+def find_rooms(payload, ctx: DBExecutor) -> FindRoomsOutput:
     ...
-}
+
+@register_tool(
+    name="answer_policy_question",
+    description="...",
+    input_model=AnswerPolicyQuestionInput,
+    ctx_attr="kb",          # ← receives agent_ctx.kb
+)
+def answer_policy_question(payload, ctx: KBContext) -> ...:
+    ...
 ```
+
+This design is **Open/Closed**: adding a new tool only requires
+adding `ctx_attr=...` in its decorator. The loop is never modified.
+The know-how about what each tool needs lives co-located with the
+tool itself, where it belongs architecturally. The dispatcher
+`execute_tool` remains agnostic to `ctx_attr` and forwards whatever
+`ctx` it receives, which preserves backwards compatibility with the
+Phase 2/3 unit-test patterns that construct tools with mock `ctx`
+objects directly.
 
 ---
 
-## 3. Tool 1 — `find_rooms`
+## 5. Multilingual support
 
-### 3.1 Scopo
+The user can write in English, Italian, Portuguese, Spanish, German,
+or French; the agent's final answer is produced in the user's
+language. This is achieved via:
 
-Ricerca strutturata di stanze su criteri multipli. Risponde alla maggior parte
-delle query informative degli studenti (~70% del traffico atteso).
+* **Six few-shot examples in six languages** in the SYSTEM_PROMPT
+  (decision D4.4): one each in EN (structural), IT (policy),
+  PT (semantic), ES (multi-hop), DE (semantic), FR (period
+  availability). The examples model both the reasoning and the
+  expected answer language.
+* **Multilingual embeddings** (`paraphrase-multilingual-mpnet-base-v2`)
+  used by both Pinecone indexes and by the in-memory KB, so semantic
+  search works regardless of the query language.
+* **Multilingual reranker** (`BAAI/bge-reranker-v2-m3`, 100+ languages)
+  available for the Phase 2 semantic-search wrappers when needed.
 
-### 3.2 Esempi reali (dal meeting + marketing ELH)
-
-**Q1:** *"Stanze per coppie sulla linea verde, max 5 persone"*
-```json
-{
-  "metro_line": "green",
-  "accepts_couples": true,
-  "max_house_occupancy": 5
-}
-```
-
-**Q2:** *"Cheapest rooms in Lisbon, internal ok"*
-```json
-{
-  "city": "Lisbon",
-  "must_have_window": false,
-  "sort_by": "price_asc"
-}
-```
-
-**Q3:** *"Porto, contratto annuale, vicino metro, accetta gatto"*
-```json
-{
-  "city": "Porto",
-  "min_contract_months": 12,
-  "max_distance_to_transport_m": 500,
-  "accepts_pets": true
-}
-```
+In the 20-query Step 3.7 benchmark, all four non-English queries
+(IT, PT, ES, DE) succeeded with 100% tool routing accuracy and
+produced answers in the user's language, replicating the Step 3.6
+baseline.
 
 ---
 
-## 4. Tool 2 — `find_available_rooms`
+## 6. Step-by-step progress
 
-### 4.1 Scopo
+Phase 3 was split into seven incremental steps committed and tested
+in isolation, each closed with green tests before moving on.
 
-Specializzazione di `find_rooms` con **date come vincolo hard**. Esegue check
-di sovrapposizione contro `reservation` ed esclude room non realmente libere
-nel periodo specificato. Calcola prezzi season-aware ponderati.
-
-Esempio: query `2026-09-01 → 2027-01-31` → 100% giorni in `autumnprice`.
-Query `2026-05-15 → 2026-08-31` → 47 giorni `springprice` + 62 `summerprice`.
-
-### 4.2 Quando l'orchestrator sceglie Tool 2 vs Tool 1
-
-| Query | Tool | Motivo |
+| Step | Scope | Tests added |
 |---|---|---|
-| "Stanze libere dal 20 ago al 31 dic vicino NOVA" | **Tool 2** | "libere" + date specifiche |
-| "Stanze couples linea verde da settembre" | **Tool 1** | "settembre" generico, no end date |
-| "3 bedrooms free August 20 till end of December" | **Tool 2** | "free" + range esplicito |
-| "Stanze Lisbona vicino metro" | **Tool 1** | nessuna data |
+| 3.1 | Scaffold agent package layout aligned with codebase style | 0 |
+| 3.2 | `AgentLLMClient` with tenacity retry on transients + streaming | +17 |
+| 3.3 | Tool registry, RAG corpora wrappers, dispatcher | +25 |
+| 3.4 | `AgentContext` + multilingual SYSTEM_PROMPT with 6 few-shot examples | +11 |
+| 3.5 | `run_agent_turn` loop + `AgentResponse`/`ToolCall` models + declarative `ctx_attr` | +26 |
+| 3.6 | 20-query benchmark + analyser + Excel template for Tier-2 human eval | 0 |
+| 3.7 | Latency optimisations: prompt caching + anti-repetition rule + dual-model dispatch | +8 |
 
-**Regola:** se la query contiene verbi tipo *free / available / libere* +
-range date esplicito → Tool 2. Altrimenti Tool 1.
+Test count grew from 723 (Phase 2.5 close) to 852 (+129 across
+Phase 3); all tests run offline in under 5 seconds with zero API
+calls.
 
-### 4.3 Esempi reali
+### Step 3.7 — latency optimisations
 
-**Q1** (marketing): *"3 bedrooms free Aug 20 – end of Dec close to NOVA, 3 Italian
-girls, max 6 ppl, female only, 500€ bills included"*
+The 20-query benchmark of Step 3.6 ran with a median wall-clock of
+~50 s per query, dominated by Anthropic API rate-limit retries and
+by repeated processing of the 9 700-token system prompt on every
+hop. The ELH team flagged this as "too high for an interactive
+demo". Three optimisations were applied:
 
-```json
-{
-  "available_from": "2026-08-20",
-  "available_to": "2026-12-31",
-  "near_landmark": "NOVA University",
-  "max_house_occupancy": 6,
-  "gender_preference": "female_only",
-  "max_price_eur": 500,
-  "num_rooms_needed": 3
-}
-```
-
----
-
-## 5. Tool 3 — `compute_total_cost`
-
-### 5.1 Scopo
-
-Dato `room_id` + periodo, restituisce il **costo totale all-in** con breakdown
-per linea: affitto mensile season-aware, bills, cleaning, deposit, reservation
-fee, administrative tax, eventuale extra-person.
-
-### 5.2 Componenti del costo
-
-| Voce | Sorgente | Tipo |
-|---|---|---|
-| Affitto mensile | `room.springprice/summerprice/autumnprice` (ponderato sui giorni) | ricorrente |
-| Bills | tabella `expenses` (per house) | ricorrente |
-| Cleaning | tabella `cleaning` (per house) | ricorrente |
-| Reservation fee | funzione `compute_reservation_fee(room, months)` ⚠️ | **una tantum** |
-| Deposit | `room.depositvalue` (o `room.lastmonthdeposit` se Y) | una tantum |
-| Administrative tax | `room.administrativetax` | una tantum |
-| Extra person | `room.extrapersoncost` se `extrapersonallowed=Y` | ricorrente |
-
-⚠️ **TODO da meeting marketing 2026-05-06:** chiarire la formula esatta della
-reservation fee. Allo stato attuale: funzione separata in `tools/_pricing.py`
-con placeholder ragionevole, da aggiornare con la formula reale ELH una volta
-nota.
-
-### 5.3 Edge case — durata < `minreservemonths`
-
-Se la durata richiesta è inferiore al `minreservemonths` della room, **il tool
-calcola comunque il costo** ma aggiunge un warning all'output. Motivazione:
-l'orchestrator può presentare il calcolo con disclaimer (*"Questa stanza richiede
-minimo 5 mesi, la tua richiesta è di 2 — il landlord potrebbe rifiutare"*),
-invece di forzare la decisione fuori dal tool.
+* **3.7.1 Prompt caching** — `AgentLLMClient` wraps the system prompt
+  in a single `cache_control: ephemeral` content block. The first
+  call in a 5-minute window writes the cache; subsequent calls read
+  it at 10% of the standard input price. Implementation is internal
+  to the client; `loop.py` continues to pass `system: str` and is
+  unchanged.
+* **3.7.2 Anti-repetition rule** — routing rule 7 in the SYSTEM_PROMPT
+  was strengthened to forbid consecutive same-tool calls chasing a
+  "better" answer (the pattern observed in `policy_03`, where the
+  model issued three `answer_policy_question` reformulations before
+  falling back to semantic search).
+* **3.7.3 Dual-model dispatch** — the loop now uses Claude Sonnet 4.5
+  for hop 0 (where routing-quality matters most) and Claude
+  Haiku 4.5 for hop ≥ 1 (synthesis and follow-up tool calls). Haiku
+  delivers ~90% of Sonnet's agentic performance at 4–5× the speed
+  (Anthropic, October 2025). The split is observable in the run logs
+  and disable-able via the `agent_use_haiku_synthesis` setting.
 
 ---
 
-## 6. Tool 4 — `get_property_details`
+## 7. Final results
 
-### 6.1 Scopo
+A second run of the 20-query benchmark on 18 May 2026, identical
+methodology to the baseline, with the three Step 3.7 optimisations
+applied between runs:
 
-Lookup completo di una **singola room** o **singola house** dato l'ID encoded.
-Tipicamente chiamato come follow-up dopo `find_rooms` (*"dimmi di più sul
-primo risultato"*).
+| Metric | Before (Step 3.6) | After (Step 3.7) | Δ |
+|---|---|---|---|
+| Success rate | 100% (20/20) | 100% (20/20) | = |
+| Tool routing coverage | 100% (20/20) | 100% (20/20) | = |
+| Latency average | 50.8 s | **9.5 s** | **−81%** |
+| Latency p50 | 49.6 s | 8.9 s | −82% |
+| Latency p95 | 69.5 s | 14.0 s | −80% |
+| Latency max | 111.6 s | 14.5 s | −87% |
+| Tokens in (total) | 538 725 | 60 756 | −89% |
+| Cost total | $1.81 USD | $0.37 USD | −80% |
 
+**The ELH operational target of "under 30 s" is met with margin: the
+worst-case wall-clock is 14.5 s, average 9.5 s.** Coverage is
+preserved across every category (structural, policy, cost, semantic,
+multilingual) and every language tested (EN, IT, PT, ES, DE).
 
-### 6.2 Note di design
+A Tier-2 qualitative evaluation by an ELH domain expert is in
+progress: a 1–10 correctness/completeness scoring of all 20
+post-optimisation answers in
+`benchmarks/human_eval/human_eval_2026-05-18-172004.xlsx`.
 
-* **Discriminator `kind`** invece di due dataclass separate: più semplice da
-  consumare per l'LLM (shape unica, controlla `kind`).
-* **NO testo recensioni** in output: solo aggregati numerici. Per query tipo
-  *"cosa dicono le recensioni?"*, l'orchestrator instrada su Phase 2 RAG
-  (ricerca semantica sull'indice `elh-reviews`).
-* **`current_availability`**: finestre libere calcolate via query inversa su
-  `reservation`, orizzonte 12 mesi.
-
----
-
-## 7. Tool 5 — `get_booking_stats`
-
-### 7.1 Scopo
-
-Aggregati statistici per il **team interno ELH** (~20% del traffico atteso).
-Risponde a query operative su occupazione, durata media, top zone, paesi
-clienti, pattern stagionali.
-
-### 7.2 Vincoli GDPR (da meeting ELH 2026-05-05)
-
-* ✅ Lettura ammessa: `reservation`, `house`, `room`, `review`
-* ❌ Lettura **vietata**: `users`, `payment`, `email`, `question`, `reply`
-* Solo aggregati (count, avg, distribution), **mai dati riga-per-riga**
-* **k-anonymity con k=5**: se un aggregato si basa su < 5 record, restituisce
-  `data_points=[]` + warning "insufficient data for privacy-safe aggregation"
-* **Disclaimer obbligatorio** in ogni output
-
-### 7.3 Esempi
-
-**Q1:** *"Tasso di occupazione di Lisbona?"*
-```json
-{"metric": "occupancy_rate", "city": "Lisbon"}
-```
-
-**Q2:** *"Top 5 paesi degli studenti?"*
-```json
-{"metric": "top_countries", "top_n": 5}
-```
-
-**Q3** (NON ammessa): *"Mostrami tutte le prenotazioni di gennaio"*
-→ Tool 5 NON gestisce. Fallback su risposta tipo *"Non posso mostrare prenotazioni
-individuali"*.
-
----
-
-## 8. Tool 6 — `answer_policy_question` (TBD)
-
-### 8.1 Scopo
-
-Knowledge base di FAQ ELH per policy aziendali, contratti, fees, cancellazioni,
-regole, supporto. Risponde alla **maggioranza** delle domande del marketing
-analizzate (10 su 16 = 62%).
-
-### 8.2 Stato
-
-⏸️ **Decisione 5 — APERTA.** Da definire dopo il meeting marketing,
-quando avremo il materiale FAQ completo.
-
-### 8.3 Esempi di query in scope (preview)
-
-* *"Do you accept long term rental? Max e min?"*
-* *"How much reservation fee will I pay?"* (generica, non per stanza specifica)
-* *"Accept families? Young professionals?"*
-* *"Overnight guests allowed? Pay extra?"*
-* *"Provide contract?"*
-* *"Communication with landlord after move-in?"*
-* *"What if room not as listed? Cancel and refund?"*
-* *"Bring my guitar?"*
-
-### 8.4 Approccio probabile (da confermare)
-
-* Knowledge base statica caricata su Pinecone (terzo indice o sotto-namespace
-  di `elh-descriptions`)
-* Tool 6 fa retrieval semantico + reranking + generazione, simile a Phase 2 RAG
-  ma su corpus FAQ invece di descriptions
-* Vantaggio: risposta tipata "policy" con citazione esplicita della fonte
-  ("Source: ELH Terms of Service, section 4.2")
-
----
-
-## 9. Fallback Phase 2 RAG
-
-### 9.1 Quando l'orchestrator cade su Phase 2 RAG
-
-* Nessun tool match con confidenza sufficiente
-* Query semantica/qualitativa che non si traduce in parametri strutturati
-* Esempi:
-  * *"Cosa dicono gli studenti italiani della casa di Bairro Alto?"* → review search
-  * *"Stanze accoglienti vicino vita notturna"* → semantic match
-  * *"Posso lavorare in smart working dalla camera?"* → soft criteria multipli
-
-### 9.2 Implementazione
-
-Nessun cambio rispetto a Phase 2: pipeline esistente
-(intent_router → retriever → reranker → generator). L'orchestrator passa la
-query nativa all'API Phase 2 RAG e ne presenta la `RAGResponse` direttamente.
-
----
-
-## 10. Riepilogo decisionale
-
-### 10.1 Decisioni chiuse
-
-| # | Argomento | Esito |
-|---|---|---|
-| **D1** | Tool interface | Pydantic input + frozen dataclass output + decoratore registry |
-| **D2** | Layout file | Flat: `src/elh_rag/tools/{base,errors,find_rooms,...}.py` |
-| **D3.1** | Tool 1 parametri | 29 parametri (16 strutturali + 11 amenity esplicite + 1 generico) |
-| **D3.2** | Tool 2 ereditarietà | `class FindAvailableRoomsInput(FindRoomsInput)` |
-| **D3.3** | Prezzi season-aware | Tool 1 default `autumnprice`; Tool 2 avg ponderato |
-| **D3.4** | `RoomMatch` condivisa | tra Tool 1, 2, 4 |
-| **D3.5** | Room ID encoding | stringa opaca `"H{h}_R{r}_{ISO}"` |
-| **D3.6** | Tool 3 promo code | nascosto (non parametro pubblico) |
-| **D3.7** | Tool 4 discriminator | `kind` Literal + dataclass unica |
-| **D3.8** | Tool 5 metric | Literal di 7 valori fissi (no SQL libero) |
-| **D3.9** | Tool 5 GDPR | k-anonymity k=5 + disclaimer obbligatorio |
-| **D3.10** | Output sanitization | `to_dict()` full + `to_dict_for_user()` sanitized |
-
-### 10.2 Decisioni aperte
-
-| # | Argomento | Quando |
-|---|---|---|
-| **D4** | Orchestrator decision logic (LLM tool selection, fallback threshold, prompt) | Dopo implementazione Tool 1+2 |
-| **D5** | Tool 6 knowledge base policy (struttura, indice Pinecone, retrieval) | Dopo meeting marketing ELH |
-| **D6** | Edge case + safety (logging, rate limiting, error handling) | Pre-merge feature/phase3-tools |
-
-### 10.3 TODO espliciti
-
-* ⚠️ Reservation fee formula (Tool 3): chiarire al meeting marketing 2026-05-06
-* ⚠️ Knowledge base FAQ (Tool 6): richiedere materiale al marketing
-* ⚠️ Distribuzione `minreservemonths` (deployata): verificare media ~5 dopo
-  re-populate del DB
-
----
-
-## Appendice A — Mapping query reali → tool
-
-Sintesi delle 16 domande reali ricevute dal marketing manager ELH:
-
-| # | Query | Tool |
-|---|---|---|
-| 1 | Couples + green line + max 5 ppl + sett-gen | `find_rooms` |
-| 2 | 3 stanze + 20 ago–fine dic + NOVA + 3 ragazze ITA + female + 500€ (bills via descr.) | `find_available_rooms` |
-| 3 | Porto + year contract + metro + accepts cat | `find_rooms` |
-| 4 | "Long term rental? Max e min?" | `answer_policy` |
-| 5 | "Reservation fee?" (generica) | `answer_policy` |
-| 6 | "Accept families?" | `answer_policy` |
-| 7 | "Strictly students or young professionals?" | `answer_policy` |
-| 8 | "Overnight guests? Pay extra?" | `answer_policy` |
-| 9 | "Girlfriend weekend visit, how works?" | `answer_policy` |
-| 10 | "Cheapest rooms, internal ok" | `find_rooms` (sort_by=price_asc, must_have_window=False) |
-| 11 | "Room not as listed? Cancel + refund?" | `answer_policy` |
-| 12 | "Flatmate broke the rules?" | `answer_policy` |
-| 13 | "Provide contract?" | `answer_policy` |
-| 14 | "Communication with landlord after move-in?" | `answer_policy` |
-| 15 | "Flats only for girls?" | `find_rooms` (gender_preference=female_only) |
-| 16 | "Bring my guitar?" | `answer_policy` |
-
-**Distribuzione attesa:**
-* `find_rooms` / `find_available_rooms`: 6/16 (38%)
-* `answer_policy_question`: 10/16 (62%)
-
-Conferma l'intuizione del meeting: **policy è importante quanto la ricerca**.
+The full breakdown — per-category latency, per-language statistics,
+the `policy_03` outlier analysis — lives in
+[`phase3_outcomes.md`](phase3_outcomes.md). The raw run data is
+preserved as JSONL under `benchmarks/runs/` for both runs.
