@@ -1113,3 +1113,107 @@ the agent with the rule-based orchestrator from Phase 2.5 (run
 the orchestrator over the same queries), or to measure the impact
 of optimisations like prompt caching, which is identified as future
 work and not part of the Phase 3 deliverable.
+
+## Step 3.7 — Latency optimizations (before/after benchmark)
+
+A second run of the 20-query benchmark was executed on 18 May 2026
+after applying three latency optimisations, with no changes to the
+benchmark methodology, query set or success criteria. Both runs are
+preserved under `benchmarks/runs/` and `benchmarks/reports/` for
+reproducibility.
+
+### Optimisations applied
+
+1. **Prompt caching (commit `1a8b3ed`)** — `AgentLLMClient.call()`
+   and `.stream()` wrap the system prompt in a single content block
+   carrying `cache_control={"type": "ephemeral"}`. The first call in
+   a 5-minute window writes the cache; subsequent calls within the
+   window read it at 10% of the standard input price. The
+   SYSTEM_PROMPT is ~9 700 tokens (including tool schemas attached by
+   the SDK), so the threshold for cacheability is comfortably met.
+
+2. **Anti-repetition routing rule (commit `b5ac7a1`)** — routing rule
+   7 in the SYSTEM_PROMPT was strengthened with an explicit
+   "TRUST TOOL OUTPUTS" directive that targets the specific
+   anti-pattern observed in policy_03 (three consecutive calls to
+   `answer_policy_question` chasing a better KB answer). The rule
+   now enumerates the three tool families prone to this behaviour
+   and instructs the model to accept the first non-empty result.
+
+3. **Dual-model dispatch (commit `0df7782`)** — the agent loop uses
+   Claude Sonnet 4.5 for hop 0 (where routing quality matters most)
+   and Claude Haiku 4.5 for hop 1+ (follow-up tool calls and
+   synthesis), where the trade-off favours speed. Haiku 4.5 delivers
+   approximately 90% of Sonnet 4.5's agentic performance at 4–5×
+   the speed (Anthropic, October 2025). The split is observable in
+   the run logs (`hop=N using model=...`) and disable-able via the
+   `agent_use_haiku_synthesis` setting.
+
+### Results
+
+| Metric | Before (3.6) | After (3.7) | Δ |
+|---|---|---|---|
+| Success rate | 100% (20/20) | 100% (20/20) | = |
+| Tool routing coverage | 100% (20/20) | 100% (20/20) | = |
+| Latency average | 50.8 s | 9.5 s | **−81%** |
+| Latency p50 | 49.6 s | 8.9 s | −82% |
+| Latency p95 | 69.5 s | 14.0 s | −80% |
+| Latency max | 111.6 s | 14.5 s | −87% |
+| Hops average | 2.5 | 2.3 | −0.2 |
+| Tokens in (total) | 538 725 | 60 756 | −89% |
+| Tokens out (total) | 13 185 | 12 231 | −7% |
+| Cost total | $1.81 USD | $0.37 USD | **−80%** |
+
+Coverage remained at 100% in every category and language: the speed
+gains did not cost any answer quality at the routing-accuracy level.
+Output tokens dropped only marginally (−7%), confirming that the
+benchmark's answer richness is preserved — the speed-up comes from
+faster inference, not shorter answers.
+
+### Per-category breakdown (after)
+
+| Category | n | Coverage | Lat. avg | Lat. p95 |
+|---|---|---|---|---|
+| structural | 4 | 100% | 9.9 s | 13.8 s |
+| policy | 4 | 100% | 7.9 s | 12.7 s |
+| cost | 4 | 100% | 10.1 s | 12.9 s |
+| semantic | 4 | 100% | 10.2 s | 13.4 s |
+| multilingual | 4 | 100% | 9.5 s | 13.3 s |
+
+Latency is now homogeneous across categories (7.9–10.2 s averages),
+where the baseline run showed a 2× spread (30.1 s structural vs
+63.2 s cost). Multi-hop cost queries are no longer the dominant
+cost driver.
+
+### The `policy_03` outlier
+
+The query *"What is included in the monthly rent?"* was the worst
+case in the Step 3.6 baseline: 5 hops, 4 tool calls (three
+consecutive `answer_policy_question` reformulations plus a
+`search_descriptions` fallback), 111.6 s wall-clock, 55 K input
+tokens. In the Step 3.7 run the same query completed in 3 hops,
+2 tool calls (`answer_policy_question` followed by
+`search_descriptions`), 13.8 s wall-clock, 3 289 input tokens — an
+8.1× speed-up and a 17× token reduction on a single query. The
+anti-repetition rule applied at Step 3.7.2 eliminated the redundant
+KB retries.
+
+### Notes on the language distribution
+
+The benchmark contains 16 English queries and one each in IT, PT,
+ES, DE. All four non-English queries succeeded with perfect tool
+routing and produced answers in the user's language, replicating
+the Step 3.6 result. The German query was the fastest of the run
+(6.6 s); Spanish was the slowest non-English (13.6 s) because it
+was the only non-English multi-hop (cost) query.
+
+### Reproducibility
+
+Both benchmark runs were executed with the same script
+(`scripts/benchmarks/run_agent_benchmark.py`), the same query set
+(`benchmarks/queries/agent_queries.yaml`), and the same agent
+context (live Postgres + Pinecone). The only differences between
+the two runs are the three commits applied between them, listed
+above. Re-running the analyser
+(`python -m scripts.benchmarks.analyze_agent_benchmark`) regenerates
+the corresponding Markdown report from either JSONL.
