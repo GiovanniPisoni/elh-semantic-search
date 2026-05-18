@@ -52,3 +52,21 @@ class TestSystemPromptShape:
 
     def test_contains_error_handling_section(self) -> None:
         assert "ERROR HANDLING" in SYSTEM_PROMPT
+
+
+class TestAntiRepetitionRule:
+    """Verify the strengthened anti-repetition routing rule."""
+
+    def test_contains_trust_tool_outputs_directive(self) -> None:
+        """SYSTEM_PROMPT must include the explicit anti-retry guidance."""
+        assert "TRUST TOOL OUTPUTS" in SYSTEM_PROMPT
+        # The rule must name the specific tools that were prone to retry
+        # in the Step 3.6 benchmark.
+        assert "answer_policy_question" in SYSTEM_PROMPT
+        assert "anti-pattern" in SYSTEM_PROMPT
+
+    def test_does_not_break_other_routing_rules(self) -> None:
+        """The other 9 rules must still be present after the rewrite."""
+        # Sanity: routing rules section is still numbered through rule 10.
+        for n in range(1, 11):
+            assert f"{n}." in SYSTEM_PROMPT, f"Rule {n} missing"
