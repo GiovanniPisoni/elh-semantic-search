@@ -1,0 +1,493 @@
+# ELH Knowledge Base — Tool 6 (answer_policy_question)
+#
+# Hand-curated from three sources:
+#   1. Website FAQ (https://www.erasmuslifehousing.com/faq) — canonical
+#   2. Reamaze email templates (cancellation, confirmation, re-ask, etc.)
+#   3. ELH presentation deck (PDF)
+#
+# Schema (see _kb.KBEntry):
+#   id                   stable identifier, used in `related` cross-refs
+#   category             grouping label
+#   audience             "student" | "landlord" | "both"
+#   canonical_question   primary phrasing (also embedded for matching)
+#   question_variants    additional phrasings, each embedded for matching
+#   answer               50-80 words; LLM may rephrase but should not contradict
+#   sources              provenance, surfaced to the user
+#   related              IDs of related entries for follow-up suggestions
+
+entries:
+
+  # booking_flow
+
+  - id: how_to_book
+    category: booking_flow
+    audience: student
+    canonical_question: "How do I make a reservation?"
+    question_variants:
+      - "How do I book a room?"
+      - "What is the booking process?"
+      - "How do I reserve a room?"
+      - "Steps to reserve accommodation"
+    answer: >
+      Choose the room you want on the ELH platform and send a reservation
+      request. After the landlord accepts, you will receive a confirmation
+      email. Your reservation is finalised once payment is processed, which
+      typically takes 2-3 days depending on the payment method.
+    sources:
+      - "Website FAQ"
+      - "Reamaze: Received-PP template"
+    related: [costs_overview, confirmation_timing, contract_and_house_rules]
+
+  - id: visit_before_booking
+    category: booking_flow
+    audience: student
+    canonical_question: "Can I visit the room before booking?"
+    question_variants:
+      - "Is it possible to see the apartment before I reserve?"
+      - "Can I do a video tour of the room?"
+      - "Do you offer apartment viewings?"
+    answer: >
+      Yes. Erasmus Life Housing offers in-person visits or video calls before
+      booking, subject to landlord availability. Contact our team to arrange a
+      viewing for any listing you are interested in.
+    sources:
+      - "Website FAQ"
+    related: [verification_process, contact_info]
+
+  - id: confirmation_timing
+    category: booking_flow
+    audience: student
+    canonical_question: "How long does it take to confirm my reservation?"
+    question_variants:
+      - "When will my booking be confirmed?"
+      - "How long does payment processing take?"
+      - "When do I get the final confirmation email?"
+    answer: >
+      After we receive your proof of payment, we update the landlord and
+      secure the room for you. Final confirmation is sent once the payment is
+      processed, typically within 2-3 days depending on the payment method
+      chosen.
+    sources:
+      - "Reamaze: Received-PP template"
+    related: [how_to_book, costs_overview]
+
+  - id: tracking_reservations
+    category: booking_flow
+    audience: student
+    canonical_question: "How can I track my reservations?"
+    question_variants:
+      - "Where can I see my bookings?"
+      - "How do I check the status of my reservation?"
+      - "Is there a dashboard for my bookings?"
+    answer: >
+      You can check all your reservations and their statuses directly on the
+      ELH online platform. You will also receive email notifications at each
+      stage of the booking process.
+    sources:
+      - "Website FAQ"
+    related: [how_to_book, contact_info]
+
+  # payments_and_fees
+
+  - id: costs_overview
+    category: payments_and_fees
+    audience: student
+    canonical_question: "What are the costs involved in a booking?"
+    question_variants:
+      - "What do I have to pay at booking?"
+      - "How much does it cost?"
+      - "What fees do I pay?"
+      - "Breakdown of booking costs"
+    answer: >
+      At booking you pay the first month's rent (or deposit) and the service
+      fee. The service fee is non-refundable except in exceptional cases such
+      as landlord cancellation or significant discrepancies between the
+      reserved room and what was presented. Additional one-time fees (e.g.
+      administrative tax) may apply at check-in directly to the landlord.
+    sources:
+      - "Website FAQ"
+    related: [service_fee, deposit_required, cancellation_policy]
+
+  - id: deposit_required
+    category: payments_and_fees
+    audience: student
+    canonical_question: "Do I need to pay a deposit?"
+    question_variants:
+      - "Is there a security deposit?"
+      - "How much is the deposit?"
+      - "Will I get my deposit back?"
+    answer: >
+      Yes, a deposit is normally required. It is returned at the end of the
+      stay, provided there is no damage to the room or shared spaces. The
+      exact amount depends on the specific room — check the listing or use
+      the cost computation tool for an itemised quote.
+    sources:
+      - "Website FAQ"
+    related: [costs_overview, refund_room_mismatch]
+
+  - id: service_fee
+    category: payments_and_fees
+    audience: student
+    canonical_question: "What is the service fee and when is it refundable?"
+    question_variants:
+      - "Is the service fee refundable?"
+      - "Can I get the booking fee back?"
+      - "What does the service fee cover?"
+    answer: >
+      The service fee covers room verification, booking support, and ELH
+      operations. It is non-refundable in standard cancellation cases. It is
+      refunded only in exceptional cases — landlord cancellation, or
+      significant discrepancy between the reserved room and the one
+      presented (reported within 24 hours of check-in with evidence).
+    sources:
+      - "Website FAQ"
+      - "Reamaze: cancellation template"
+    related: [cancellation_policy, refund_room_mismatch, evidence_window]
+
+  # cancellation_and_refunds
+
+  - id: cancellation_policy
+    category: cancellation_and_refunds
+    audience: student
+    canonical_question: "What is the cancellation policy?"
+    question_variants:
+      - "Can I cancel my reservation?"
+      - "How do I get a refund if I cancel?"
+      - "What if I change my mind about booking?"
+      - "I want my money back"
+      - "How do cancellations work?"
+    answer: >
+      Refunds depend on how far ahead you cancel: 60 or more days before
+      check-in → full refund (minus applicable fees); 30-59 days before
+      check-in → 50% refund; less than 30 days → no refund. The service fee
+      is non-refundable in standard cases. For exceptions (landlord cancels,
+      room not as advertised), see related entries.
+    sources:
+      - "Website FAQ"
+      - "Reamaze: cancellation template"
+    related: [refund_room_mismatch, refund_landlord_cancellation, service_fee, subletting_for_refund]
+
+  - id: refund_room_mismatch
+    category: cancellation_and_refunds
+    audience: student
+    canonical_question: "What if the room doesn't match what was advertised?"
+    question_variants:
+      - "The flat is not like the photos, what do I do?"
+      - "Can I get a refund if the room is different from the listing?"
+      - "How do I report a discrepancy with the room?"
+      - "The room is wrong, what are my options?"
+    answer: >
+      You have 24 hours after check-in to report a discrepancy with evidence
+      (photos, videos). If your complaint is valid, you may receive a refund
+      of the first rent, deposit, and service fee. Contact ELH support
+      immediately if the room does not meet expectations.
+    sources:
+      - "Website FAQ"
+    related: [cancellation_policy, evidence_window, contact_info, service_fee]
+
+  - id: refund_landlord_cancellation
+    category: cancellation_and_refunds
+    audience: student
+    canonical_question: "What if the landlord cancels my reservation?"
+    question_variants:
+      - "The landlord cancelled, what happens?"
+      - "Will I get relocated if the landlord backs out?"
+      - "Do I get a refund if the landlord cancels?"
+    answer: >
+      ELH guarantees either relocation to a room with similar or superior
+      characteristics, or a full refund of amounts paid. You will not be left
+      without housing or out of pocket if a landlord cancels on you.
+    sources:
+      - "Website FAQ"
+    related: [cancellation_policy, contact_info]
+
+  - id: subletting_for_refund
+    category: cancellation_and_refunds
+    audience: student
+    canonical_question: "Can I find a replacement tenant to get my money back?"
+    question_variants:
+      - "Can I sublet my room if I need to cancel?"
+      - "Will I get a refund if I find someone to take my place?"
+      - "Replacement tenant for cancellation"
+    answer: >
+      In some cases, landlords may refund a portion or the full amount if you
+      find a replacement tenant. If you inform ELH in advance, we can help
+      advertise your room on the platform. Once another tenant pays, the
+      deposit is refunded to you.
+    sources:
+      - "Reamaze: cancellation template"
+    related: [cancellation_policy, contact_info]
+
+  # room_quality_and_verification
+
+  - id: verification_process
+    category: room_quality_and_verification
+    audience: student
+    canonical_question: "How do you verify the rooms?"
+    question_variants:
+      - "Are the listings real?"
+      - "How do I know the room is legit?"
+      - "How does ELH check the apartments?"
+      - "Are the photos accurate?"
+    answer: >
+      Erasmus Life Housing acts as an intermediary between students and
+      landlords, carefully verifying all accommodations before listing them.
+      The process includes direct contact with the landlord and an in-person
+      or virtual visit to the apartment. No landlord is accepted without our
+      approval. Note that images shown may not be an exact representation of
+      the final product.
+    sources:
+      - "Website FAQ"
+      - "ELH presentation"
+    related: [scam_protection, visit_before_booking, refund_room_mismatch]
+
+  - id: evidence_window
+    category: room_quality_and_verification
+    audience: student
+    canonical_question: "How long do I have to report a problem after check-in?"
+    question_variants:
+      - "What's the deadline for reporting issues?"
+      - "When must I complain about the room?"
+      - "How fast do I need to flag a problem?"
+    answer: >
+      You have 24 hours after check-in to report a discrepancy with evidence
+      (photos, videos). Reports made after this window are harder to process
+      and may not qualify for the room-mismatch refund.
+    sources:
+      - "Website FAQ"
+    related: [refund_room_mismatch, contact_info]
+
+  - id: scam_protection
+    category: room_quality_and_verification
+    audience: student
+    canonical_question: "How does ELH protect me from scams?"
+    question_variants:
+      - "How do I avoid rental scams?"
+      - "Is ELH safe?"
+      - "Can I trust the listings?"
+    answer: >
+      Every room on ELH is personally verified and approved by the team —
+      direct landlord contact plus in-person or virtual apartment visits. ELH
+      partners with dozens of vetted landlords, so the listings you see have
+      been screened before reaching you. This protects students from the
+      scams that are common on open rental platforms.
+    sources:
+      - "ELH presentation"
+      - "Reamaze: Received-PP template"
+    related: [verification_process, refund_room_mismatch]
+
+  # contracts_and_legal
+
+  - id: contract_and_house_rules
+    category: contracts_and_legal
+    audience: student
+    canonical_question: "How do I get the contract and house rules?"
+    question_variants:
+      - "Where do I find the rental contract?"
+      - "Will I receive the house rules?"
+      - "What documents do I get after booking?"
+    answer: >
+      After booking, you will receive the contract and house rules provided
+      by the landlord for consultation. Landlords are required to share an
+      example of these documents when creating the listing, so the information
+      reaches you with the booking.
+    sources:
+      - "Website FAQ"
+    related: [how_to_book, legal_protection]
+
+  - id: legal_protection
+    category: contracts_and_legal
+    audience: student
+    canonical_question: "Do I have any legal protection?"
+    question_variants:
+      - "Is the rental legally binding?"
+      - "Am I protected by law?"
+      - "What if there is a dispute?"
+    answer: >
+      Yes. All reservations are made with valid contracts and the ELH system
+      ensures transparency and security for both parties. In case of conflict,
+      ELH first encourages direct resolution; if not possible, we analyse the
+      evidence and make an impartial, binding decision.
+    sources:
+      - "Website FAQ"
+    related: [contract_and_house_rules, contact_info]
+
+  # privacy_and_tenants
+
+  - id: tenant_privacy
+    category: privacy_and_tenants
+    audience: student
+    canonical_question: "Can I know who lives in the apartment?"
+    question_variants:
+      - "Who are the other tenants?"
+      - "Will you tell me about my housemates?"
+      - "Information on current residents"
+    answer: >
+      For privacy reasons, ELH does not disclose specific information about
+      current tenants of an apartment. As a general rule, the platform
+      accommodates Erasmus students, interns, and young professionals, so you
+      can expect housemates within that demographic.
+    sources:
+      - "Website FAQ"
+    related: [verification_process, contact_info]
+
+  # landlord_onboarding
+
+  - id: landlord_promotion
+    category: landlord_onboarding
+    audience: landlord
+    canonical_question: "How does the promotion of my accommodation work?"
+    question_variants:
+      - "How do you advertise my flat?"
+      - "Where will my room be listed?"
+      - "How do tenants find my property?"
+    answer: >
+      ELH advertises your accommodation for free on the platform, targeting
+      international students. Listings reach a wide audience of Erasmus
+      students, interns, and young professionals across Lisbon and Porto.
+    sources:
+      - "Website FAQ"
+    related: [landlord_listing_cost, landlord_documents]
+
+  - id: landlord_payment_timing
+    category: landlord_onboarding
+    audience: landlord
+    canonical_question: "When and how do I receive payment?"
+    question_variants:
+      - "When does the landlord get paid?"
+      - "How long after check-in is the rent transferred?"
+      - "Payment timing for landlords"
+    answer: >
+      Payment is transferred to the landlord 48 hours after the start of the
+      reservation. During this period, ELH holds the funds in custody to
+      ensure security and prevent fraud for both parties.
+    sources:
+      - "Website FAQ"
+    related: [landlord_promotion, landlord_documents]
+
+  - id: landlord_listing_cost
+    category: landlord_onboarding
+    audience: landlord
+    canonical_question: "Are there any costs for landlords to advertise?"
+    question_variants:
+      - "How much does it cost to list a property?"
+      - "Are landlord listings free?"
+      - "What does ELH charge landlords?"
+    answer: >
+      Listings are completely free. Charges to the landlord only occur after
+      booking confirmation and tenant check-in. There are no fees to add a
+      property to the platform.
+    sources:
+      - "Website FAQ"
+      - "Reamaze: new-partnership template"
+    related: [landlord_promotion, landlord_payment_timing]
+
+  - id: landlord_documents
+    category: landlord_onboarding
+    audience: landlord
+    canonical_question: "What documents do I need to provide as a landlord?"
+    question_variants:
+      - "What paperwork is required to list?"
+      - "Landlord onboarding documents"
+      - "What do I need to sign up as a host?"
+    answer: >
+      Only an identification document and IBAN are required to receive
+      payments, after booking confirmation. When creating the listing, you
+      are also asked to share an example of the rental contract and the house
+      rules so tenants receive this information when they book.
+    sources:
+      - "Website FAQ"
+    related: [landlord_promotion, landlord_payment_timing]
+
+  - id: landlord_conflict_resolution
+    category: landlord_onboarding
+    audience: landlord
+    canonical_question: "How are conflicts between landlord and tenant managed?"
+    question_variants:
+      - "What if I have a dispute with a tenant?"
+      - "How does ELH mediate problems?"
+      - "Conflict resolution process"
+    answer: >
+      ELH encourages direct resolution of conflicts between landlord and
+      tenant. If direct resolution is not possible, ELH analyses the evidence
+      presented by both sides and makes an impartial, binding decision.
+    sources:
+      - "Website FAQ"
+    related: [legal_protection, contact_info]
+
+  # contact_and_support
+
+  - id: contact_info
+    category: contact_and_support
+    audience: both
+    canonical_question: "How do I contact ELH?"
+    question_variants:
+      - "How can I reach support?"
+      - "What is the ELH phone number?"
+      - "Where is the ELH office?"
+      - "ELH email address"
+    answer: >
+      You can reach Erasmus Life Housing at hello@erasmuslifehousing.com,
+      by phone at +351 932 483 834, or in person at Travessa da Cara 14,
+      Lisbon (Erasmus Corner). The team also responds on Facebook
+      (Erasmus Life Housing) and Instagram (@erasmuslifehousing).
+    sources:
+      - "ELH presentation"
+    related: [tracking_reservations]
+
+  # promotions_and_discounts
+
+  - id: promo_code_promo25
+    category: promotions_and_discounts
+    audience: student
+    canonical_question: "Is there a promo code for the service fee?"
+    question_variants:
+      - "Can I get a discount on the booking fee?"
+      - "Is there a coupon code?"
+      - "How do I get 25% off?"
+      - "Promo code for ELH"
+    answer: >
+      Use promo code PROMO25 at booking to get 25% off the service fee.
+      Every booking also includes a €25 voucher to spend on Erasmus Life
+      Lisboa or Erasmus Life Porto events — useful for meeting other
+      students after arrival.
+    sources:
+      - "Reamaze: re-ask template"
+    related: [costs_overview, service_fee, events_discount_offer]
+
+  - id: events_discount_offer
+    category: promotions_and_discounts
+    audience: student
+    canonical_question: "What is the ELH events and fee discount?"
+    question_variants:
+      - "Do I get discounts on events?"
+      - "Is there a fee promotion?"
+      - "What's the current ELH offer?"
+    answer: >
+      Active ELH promotions include €10 to spend on ELH events and 50% off
+      the service fee for new bookings. Promotions change over time; check
+      the latest details with the ELH team or on the website before booking.
+    sources:
+      - "ELH presentation"
+    related: [promo_code_promo25, costs_overview]
+
+  # about_elh
+
+  - id: about_elh
+    category: about_elh
+    audience: both
+    canonical_question: "What is Erasmus Life Housing?"
+    question_variants:
+      - "Tell me about ELH"
+      - "Who is Erasmus Life Housing?"
+      - "What does ELH do?"
+    answer: >
+      Erasmus Life Housing is the official digital platform supporting the
+      accommodation search of Erasmus Life Lisboa and Erasmus Life Porto.
+      It offers verified student accommodation, secure reservations, local
+      support, and housing across multiple cities, with partnerships
+      including ISCTE, NOVA, Católica, Lusófona, Porto Business School and
+      others.
+    sources:
+      - "ELH presentation"
+    related: [contact_info, verification_process]

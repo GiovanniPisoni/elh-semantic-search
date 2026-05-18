@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elh-rag"
-version = "0.2.0"
-description = "Semantic search over Erasmus Life Housing reviews — RAG-based system"
+version = "0.3.0"
+description = "Semantic search over Erasmus Life Housing reviews - RAG-based system"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
@@ -15,6 +15,7 @@ license = { text = "Proprietary" }
 
 dependencies = [
     "anthropic>=0.40.0",
+    "tenacity>=8.2.0",
     "sentence-transformers>=2.7.0",
     "pinecone>=3.0.0",
     "psycopg2-binary>=2.9.0",
@@ -34,6 +35,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "ruff>=0.5.0",
     "mypy>=1.10.0",
+    "types-PyYAML>=6.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -42,7 +44,7 @@ where = ["src"]
 [tool.setuptools.package-dir]
 "" = "src"
 
-# ── pytest ────────────────────────────────────────────────────────────────
+# pytest
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -54,7 +56,7 @@ addopts = [
 testpaths = ["tests"]
 pythonpath = ["src"]
 
-# ── ruff (linter + formatter) ─────────────────────────────────────────────
+# ruff (linter + formatter)
 
 [tool.ruff]
 target-version = "py312"
@@ -79,7 +81,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011"]
 
-# ── mypy ──────────────────────────────────────────────────────────────────
+# mypy
 
 [tool.mypy]
 python_version = "3.12"

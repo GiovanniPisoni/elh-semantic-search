@@ -1,0 +1,187 @@
+# Phase 3 agent benchmark queries.
+#
+# Twenty queries across five families, designed to exercise each tool
+# at least once and to cover four languages beyond English (IT, PT,
+# ES, DE) so we can verify multilingual response generation.
+
+metadata:
+  version: 1
+  description: Benchmark queries for Phase 3 agent.
+  total_queries: 20
+  categories:
+    structural: 4
+    policy: 4
+    cost: 4
+    semantic: 4
+    multilingual: 4
+
+queries:
+  # Structural: pure DB filter queries.
+
+  - id: structural_01
+    category: structural
+    language: en
+    query: "Find the cheapest single rooms in Lisbon"
+    expected_tools: [find_rooms]
+    expected_hop_count: 2
+    notes: Pure structural filter, no dates. Tests price ordering.
+
+  - id: structural_02
+    category: structural
+    language: en
+    query: "Show me rooms with a private bathroom under 600 EUR in Porto"
+    expected_tools: [find_rooms]
+    expected_hop_count: 2
+    notes: Multi-filter, edge case (Porto prices often above 600 with private bath).
+
+  - id: structural_03
+    category: structural
+    language: en
+    query: "What rooms are available within 500 meters of a metro station in Lisbon?"
+    expected_tools: [find_rooms]
+    expected_hop_count: 2
+    notes: Tests metro proximity filter (D6 enrichment).
+
+  - id: structural_04
+    category: structural
+    language: en
+    query: "Find rooms larger than 20 square meters in Lisbon under 700 EUR"
+    expected_tools: [find_rooms]
+    expected_hop_count: 2
+    notes: Tests size + price filter combination.
+
+  # Policy: KB-backed FAQ queries.
+
+  - id: policy_01
+    category: policy
+    language: en
+    query: "What is the cancellation policy if I cancel 45 days before check-in?"
+    expected_tools: [answer_policy_question]
+    expected_hop_count: 2
+    notes: Tests specific policy lookup with quantitative context.
+
+  - id: policy_02
+    category: policy
+    language: en
+    query: "When is the security deposit refunded after I leave?"
+    expected_tools: [answer_policy_question]
+    expected_hop_count: 2
+    notes: Tests deposit-related policy.
+
+  - id: policy_03
+    category: policy
+    language: en
+    query: "What is included in the monthly rent?"
+    expected_tools: [answer_policy_question]
+    expected_hop_count: 2
+    notes: Tests inclusion policy (utilities, services).
+
+  - id: policy_04
+    category: policy
+    language: en
+    query: "How does the check-in process work?"
+    expected_tools: [answer_policy_question]
+    expected_hop_count: 2
+    notes: Tests operational policy.
+
+  # Cost: multi-hop find -> compute chains.
+
+  - id: cost_01
+    category: cost
+    language: en
+    query: "Find the cheapest room in Lisbon and tell me the total cost for 6 months from September 2026"
+    expected_tools: [find_available_rooms, compute_total_cost]
+    expected_hop_count: 3
+    notes: Standard multi-hop. Dates trigger find_available_rooms.
+
+  - id: cost_02
+    category: cost
+    language: en
+    query: "Find the cheapest room in Porto available for the full academic year (September 2026 to June 2027) and compute the total cost"
+    expected_tools: [find_available_rooms, compute_total_cost]
+    expected_hop_count: 3
+    notes: Long stay (10 months), tests seasonal pricing aggregation.
+
+  - id: cost_03
+    category: cost
+    language: en
+    query: "Compare the total cost of the cheapest room in Lisbon vs the cheapest in Porto for 6 months from September 2026"
+    expected_tools: [find_available_rooms, compute_total_cost]
+    expected_hop_count: 5
+    notes: Hard multi-hop (4 tool calls). May hit max_hops; coverage > strict.
+
+  - id: cost_04
+    category: cost
+    language: en
+    query: "What is the total cost for a 12-month stay in Lisbon starting January 2027 in the cheapest single room?"
+    expected_tools: [find_available_rooms, compute_total_cost]
+    expected_hop_count: 3
+    notes: Winter start date (spring/summer rate). Tests off-season pricing.
+
+  # Semantic: RAG queries.
+
+  - id: semantic_01
+    category: semantic
+    language: en
+    query: "I am looking for a room with a balcony and a view of the Tagus river in Lisbon"
+    expected_tools: [search_descriptions]
+    expected_hop_count: 2
+    notes: Feature ("Tagus view") with no structured column.
+
+  - id: semantic_02
+    category: semantic
+    language: en
+    query: "Is the Alfama neighborhood quiet at night according to student reviews?"
+    expected_tools: [search_reviews]
+    expected_hop_count: 2
+    notes: Subjective question, opinions -> reviews.
+
+  - id: semantic_03
+    category: semantic
+    language: en
+    query: "Find rooms in bright spaces with lots of natural light in Lisbon"
+    expected_tools: [search_descriptions]
+    expected_hop_count: 2
+    notes: Aesthetic feature without filter column.
+
+  - id: semantic_04
+    category: semantic
+    language: en
+    query: "What do students say about how responsive the hosts are at ELH?"
+    expected_tools: [search_reviews]
+    expected_hop_count: 2
+    notes: Opinion on host quality.
+
+  # Multilingual: same tool categories but in IT, PT, ES, DE.
+
+  - id: multilingual_01
+    category: multilingual
+    language: it
+    query: "Quanto costa la cauzione e quando viene restituita?"
+    expected_tools: [answer_policy_question]
+    expected_hop_count: 2
+    notes: Italian policy question; response must be in Italian.
+
+  - id: multilingual_02
+    category: multilingual
+    language: pt
+    query: "Procuro quartos com varanda em Lisboa para setembro de 2026"
+    expected_tools: [find_available_rooms]
+    expected_hop_count: 2
+    notes: Portuguese (PT) date-bounded search; varanda = balcony.
+
+  - id: multilingual_03
+    category: multilingual
+    language: es
+    query: "Cuál es la habitación más barata en Porto para 6 meses desde septiembre 2026?"
+    expected_tools: [find_available_rooms]
+    expected_hop_count: 2
+    notes: Spanish find query with dates; response must be in Spanish.
+
+  - id: multilingual_04
+    category: multilingual
+    language: de
+    query: "Wie funktioniert die Stornierung bei Erasmus Life Housing?"
+    expected_tools: [answer_policy_question]
+    expected_hop_count: 2
+    notes: German cancellation policy question.

@@ -74,6 +74,17 @@ class Settings(BaseSettings):
     )
     reranker_batch_size: int = Field(default=16, gt=0)
 
+    # Tool 3: total cost computation
+    reservation_fee_pct: float = Field(
+        default=0.09,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Reservation fee as a fraction of total rent (default 0.09 = 9%). "
+            "Confirmed with ELH business 2026-05-11."
+        ),
+    )
+
     # Intent routing
     enable_intent_routing: bool = Field(
         default=True,
@@ -125,8 +136,76 @@ class Settings(BaseSettings):
     indexing_upsert_batch: int = Field(default=100, gt=0)
     min_text_length: int = Field(default=30, ge=0)
 
+    # Agent layer
+    agent_llm_model: str = Field(
+        default="claude-sonnet-4-5",
+        description="LLM model used by the Phase 3 agent loop (D4.1).",
+    )
+    agent_synthesis_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description=(
+            "Faster, cheaper model used for hop 1+ of the agent loop "
+            "(synthesis and follow-up tool calls)."
+        ),
+    )
+    agent_use_haiku_synthesis: bool = Field(
+        default=True,
+        description=(
+            "If True, hop_index >= 1 uses the synthesis model; if False, "
+            "the primary model handles all hops."
+        ),
+    )
+    agent_llm_max_tokens: int = Field(default=4096, gt=0)
+    agent_llm_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Sampling temperature for the agent LLM. Default 0.0 for "
+            "deterministic tool routing and reproducible benchmarks."
+        ),
+    )
+    agent_llm_max_retries: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description=(
+            "Maximum number of tenacity retry attempts on transient LLM API errors (D4.8)."
+        ),
+    )
+    agent_max_hops: int = Field(
+        default=5,
+        ge=1,
+        le=20,
+        description=("Maximum LLM-call + tool-dispatch iterations per agent turn (D4.5)."),
+    )
+    agent_max_query_chars: int = Field(
+        default=4000,
+        gt=0,
+        description=("Hard upper bound on user query length in characters (D6.4)."),
+    )
+
     # Logging
     log_level: str = Field(default="INFO")
+    log_file_path: Path | None = Field(
+        default=None,
+        description=(
+            "Optional path to a JSON Lines log file. When set, structured "
+            "events are persisted in addition to stdout. Leave unset for "
+            "development; set in benchmark/production environments to "
+            "enable post-hoc analysis (e.g. logs/elh_rag.jsonl)."
+        ),
+    )
+    log_file_max_bytes: int = Field(
+        default=10_485_760,  # 10 MB
+        gt=0,
+        description="Maximum size of a single rotated log file, in bytes.",
+    )
+    log_file_backup_count: int = Field(
+        default=5,
+        ge=0,
+        description="Number of rotated log file backups to keep.",
+    )
 
 
 @lru_cache(maxsize=1)
