@@ -190,12 +190,7 @@ class TestTypeCoercion:
 
 
 def _make_room_row(idroom: int, idhouse: int = 42, **overrides: Any) -> dict[str, Any]:
-    """Build a fake row matching find_rooms' SELECT projection.
-
-    Defaults are sane and overridable for per-test customisation. The
-    encoded room_id is then ``f"H{idhouse}_R{idroom}_..."`` after
-    Tool 1's ``_row_to_match`` runs.
-    """
+    """Build a fake row matching find_rooms' SELECT projection."""
     base = {
         "idroom": idroom,
         "loc_idhouse": idhouse,
@@ -213,6 +208,7 @@ def _make_room_row(idroom: int, idhouse: int = 42, **overrides: Any) -> dict[str
         "neighborhood": "Chiado",
         "distancepublictransport": 200,
         "maxoccupancy": 5,
+        "total_matches": 1,
     }
     base.update(overrides)
     return base
@@ -427,6 +423,36 @@ class TestOrchestration:
         assert len(result.rooms) == 1
         assert result.rooms[0].price_per_month_eur == 400.00
         assert result.rooms[0].is_fixed_price is True
+
+    def test_total_matches_propagates_structural_count(self):
+        """find_available_rooms must surface the structural pre-LIMIT total,
+        not len(rooms_available_in_window). Lets the LLM say '47 match
+        your filters, 8 of them are free in your dates'."""
+        db = FakeDbExecutor()
+        # Two structural matches, both reported as part of a 47-row pre-LIMIT total.
+        db.add_response(
+            "JOIN house h",
+            [
+                _make_room_row(idroom=3, total_matches=47),
+                _make_room_row(idroom=4, total_matches=47),
+            ],
+        )
+        db.add_response("FROM reservation", [{"loc_idhouse": 42, "idroom": 3}])
+        db.add_response(
+            "DISTINCT ON (loc_idhouse, idroom)",
+            [_make_price_row(idroom=4)],
+        )
+
+        result = find_available_rooms(
+            FindAvailableRoomsInput(
+                available_from=date(2026, 9, 1),
+                available_to=date(2027, 1, 31),
+            ),
+            ctx=db,
+        )
+
+        assert len(result.rooms) == 1  # only idroom=4 survives the occupancy filter
+        assert result.total_matches == 47  # structural pre-LIMIT total
 
     def test_available_from_propagated_to_room_match(self):
         """RoomMatch.available_from should reflect the query window, not None."""

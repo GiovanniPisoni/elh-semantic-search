@@ -48,6 +48,7 @@ def fake_row():
         "zone": "Chiado",
         "neighborhood": "Chiado",
         "distancepublictransport": 200,
+        "total_matches": 1,
     }
 
 
@@ -541,3 +542,41 @@ class TestOutputSerialisation:
         out = FindRoomsOutput(rooms=[], total_matches=0, query_summary="test")
         d = out.to_dict()
         assert d == {"rooms": [], "total_matches": 0, "query_summary": "test"}
+
+
+# total_matches semantics (pre-LIMIT row count via COUNT(*) OVER ())
+
+
+class TestTotalMatches:
+    """Verify the tool surfaces the true pre-LIMIT match count."""
+
+    def test_sql_includes_count_window_function(self):
+        """SQL must include `COUNT(*) OVER () AS total_matches`."""
+        sql, _ = _build_sql(FindRoomsInput())
+        assert "COUNT(*) OVER () AS total_matches" in sql
+
+    def test_total_matches_reflects_count_column(self, fake_row):
+        """When the SQL returns N rows each carrying total_matches=M,
+        the output's total_matches must be M, not N."""
+        # Simulate "47 matched, here are the top 3" by giving every row
+        # the same large count.
+        rows = []
+        for idroom in (1, 2, 3):
+            r = dict(fake_row)
+            r["idroom"] = idroom
+            r["total_matches"] = 47
+            rows.append(r)
+        db = FakeDbExecutor()
+        db.add_response("SELECT", rows)
+
+        result = execute_tool("find_rooms", {"city": "Lisbon"}, ctx=db)
+
+        assert result.total_matches == 47
+        assert len(result.rooms) == 3  # the rows the SQL returned
+
+    def test_total_matches_zero_when_no_rows(self):
+        """No rows -> total_matches must be 0, not raise."""
+        empty_db = FakeDbExecutor()
+        result = execute_tool("find_rooms", {"city": "Lisbon"}, ctx=empty_db)
+        assert result.total_matches == 0
+        assert result.rooms == []

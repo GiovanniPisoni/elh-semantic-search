@@ -66,7 +66,23 @@ class TestAntiRepetitionRule:
         assert "anti-pattern" in SYSTEM_PROMPT
 
     def test_does_not_break_other_routing_rules(self) -> None:
-        """The other 9 rules must still be present after the rewrite."""
-        # Sanity: routing rules section is still numbered through rule 10.
-        for n in range(1, 11):
+        """The other rules must still be present after the rewrite."""
+        # Sanity: routing rules section is numbered through rule 11.
+        for n in range(1, 12):
             assert f"{n}." in SYSTEM_PROMPT, f"Rule {n} missing"
+
+
+class TestResultCountRule:
+    """Verify the EXPLICIT RESULT COUNT routing rule (Fix #1)."""
+
+    def test_contains_explicit_result_count_directive(self) -> None:
+        """SYSTEM_PROMPT must instruct the agent to surface total_matches."""
+        assert "EXPLICIT RESULT COUNT" in SYSTEM_PROMPT
+        assert "total_matches" in SYSTEM_PROMPT
+
+    def test_rule_11_is_present_with_number(self) -> None:
+        """The new rule is numbered 11 in the ROUTING RULES section."""
+        rules_section = SYSTEM_PROMPT[
+            SYSTEM_PROMPT.index("## ROUTING RULES") : SYSTEM_PROMPT.index("## EXAMPLES")
+        ]
+        assert "11. EXPLICIT RESULT COUNT" in rules_section

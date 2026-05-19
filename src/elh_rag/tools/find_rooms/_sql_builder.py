@@ -67,6 +67,7 @@ def _build_sql(payload: FindRoomsInput) -> tuple[str, list[Any]]:
         "h.zone",
         "h.neighboorhood AS neighborhood",
         "h.distancepublictransport",
+        "COUNT(*) OVER () AS total_matches",
     ]
 
     where_parts: list[str] = ["r.status = 'Available'"]

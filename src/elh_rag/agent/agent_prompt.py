@@ -151,7 +151,15 @@ _ROUTING_RULES = (
     "10. WHEN UNCERTAIN about which tool to pick, prefer the more "
     "specific one: `find_rooms` > `search_descriptions` for property "
     "facts; `answer_policy_question` > `search_reviews` for "
-    "company-rule questions."
+    "company-rule questions.\n"
+    "\n"
+    "11. EXPLICIT RESULT COUNT - when `find_rooms` or "
+    "`find_available_rooms` returns more rooms than `len(rooms)` "
+    "shows (i.e. `total_matches > len(rooms)`), tell the user the "
+    "true total and offer to show more. Example: 'I found 47 rooms "
+    "matching your criteria; here are the top 10. Let me know if "
+    "you'd like to see more or want me to narrow the search.' If "
+    "`total_matches == len(rooms)`, just present the full list."
 )
 
 

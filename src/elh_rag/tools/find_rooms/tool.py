@@ -49,9 +49,10 @@ def find_rooms(payload: FindRoomsInput, ctx: DBExecutor | None) -> FindRoomsOutp
     rows = ctx.execute(sql, tuple(params))
 
     rooms = [_row_to_match(row, payload) for row in rows]
+    total = int(rows[0]["total_matches"]) if rows else 0
 
     return FindRoomsOutput(
         rooms=rooms,
-        total_matches=len(rooms),  # Future: separate COUNT(*) for true total
+        total_matches=total,
         query_summary=_summarize_query(payload),
     )

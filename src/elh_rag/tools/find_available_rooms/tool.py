@@ -225,7 +225,7 @@ def find_available_rooms(
     # Re-use Tool 1's structural filtering.
     structural = find_rooms(payload, ctx=ctx)
     if not structural.rooms:
-        return _empty_output(payload, structural.query_summary)
+        return _empty_output(payload, structural.query_summary, total_matches=0)
 
     # Find rooms with reservation overlap on the requested window.
     occupied = _find_occupied_room_ids(
@@ -236,7 +236,11 @@ def find_available_rooms(
 
     available = [rm for rm in structural.rooms if _room_match_keys(rm) not in occupied]
     if not available:
-        return _empty_output(payload, structural.query_summary)
+        return _empty_output(
+            payload,
+            structural.query_summary,
+            total_matches=structural.total_matches,
+        )
 
     # Fetch raw seasonal prices for the survivors and recompute the
     # monthly price + contextual label.
@@ -261,7 +265,7 @@ def find_available_rooms(
 
     return FindRoomsOutput(
         rooms=enriched,
-        total_matches=len(enriched),
+        total_matches=structural.total_matches,
         query_summary=_compose_summary(payload, structural.query_summary),
     )
 
@@ -269,11 +273,16 @@ def find_available_rooms(
 # Output helpers
 
 
-def _empty_output(payload: FindAvailableRoomsInput, base_summary: str) -> FindRoomsOutput:
+def _empty_output(
+    payload: FindAvailableRoomsInput,
+    base_summary: str,
+    *,
+    total_matches: int,
+) -> FindRoomsOutput:
     """Return an empty FindRoomsOutput with a contextualised summary."""
     return FindRoomsOutput(
         rooms=[],
-        total_matches=0,
+        total_matches=total_matches,
         query_summary=_compose_summary(payload, base_summary),
     )
 
