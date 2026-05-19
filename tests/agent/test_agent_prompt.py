@@ -67,8 +67,8 @@ class TestAntiRepetitionRule:
 
     def test_does_not_break_other_routing_rules(self) -> None:
         """The other rules must still be present after the rewrite."""
-        # Sanity: routing rules section is numbered through rule 11.
-        for n in range(1, 12):
+        # Sanity: routing rules section is numbered through rule 12.
+        for n in range(1, 13):
             assert f"{n}." in SYSTEM_PROMPT, f"Rule {n} missing"
 
 
@@ -86,3 +86,30 @@ class TestResultCountRule:
             SYSTEM_PROMPT.index("## ROUTING RULES") : SYSTEM_PROMPT.index("## EXAMPLES")
         ]
         assert "11. EXPLICIT RESULT COUNT" in rules_section
+
+
+class TestAmbiguousEntityRule:
+    """Verify the AMBIGUOUS ENTITY REFERENCES routing rule (Fix #3)."""
+
+    def test_contains_ambiguous_entity_directive(self) -> None:
+        """SYSTEM_PROMPT must instruct the agent to disambiguate
+        ELH vs landlords."""
+        assert "AMBIGUOUS ENTITY REFERENCES" in SYSTEM_PROMPT
+        assert "the ELH team" in SYSTEM_PROMPT
+        assert "landlords" in SYSTEM_PROMPT
+
+    def test_rule_12_is_present_with_number(self) -> None:
+        """Rule 12 must be in the ROUTING RULES section."""
+        rules_section = SYSTEM_PROMPT[
+            SYSTEM_PROMPT.index("## ROUTING RULES") : SYSTEM_PROMPT.index("## EXAMPLES")
+        ]
+        assert "12. AMBIGUOUS ENTITY REFERENCES" in rules_section
+
+    def test_example_5_demonstrates_disambiguation(self) -> None:
+        """Example 5 in the EXAMPLES section shows the disambiguation flow."""
+        examples_section = SYSTEM_PROMPT[SYSTEM_PROMPT.index("## EXAMPLES") :]
+        # New Example 5 is the disambiguation example (existing examples
+        # 5 and 6 were renumbered to 6 and 7 to make room).
+        assert "Example 5 - Ambiguous entity" in examples_section
+        assert "hosts" in examples_section.lower()
+        assert "the ELH team" in examples_section

@@ -159,7 +159,22 @@ _ROUTING_RULES = (
     "true total and offer to show more. Example: 'I found 47 rooms "
     "matching your criteria; here are the top 10. Let me know if "
     "you'd like to see more or want me to narrow the search.' If "
-    "`total_matches == len(rooms)`, just present the full list."
+    "`total_matches == len(rooms)`, just present the full list.\n"
+    "\n"
+    "12. AMBIGUOUS ENTITY REFERENCES - if a query uses terms that "
+    "could refer to either ELH itself or the individual landlords "
+    "(e.g. 'hosts', 'staff', 'support', 'they', 'team'), ask the "
+    "user to clarify before invoking `search_reviews` or "
+    "`search_descriptions`. At ELH the canonical terms are:\n"
+    "   - 'the ELH team' for the company staff providing the "
+    "platform\n"
+    "   - 'landlords' for the individuals who own and operate the "
+    "rooms\n"
+    "Example: User asks 'how responsive are the hosts?' -> reply "
+    "'To give you the most accurate answer, are you asking about "
+    "the ELH team (who runs the platform) or about the individual "
+    "landlords (who own the rooms)?' Wait for the user's "
+    "clarification before searching."
 )
 
 
@@ -257,7 +272,28 @@ _FEW_SHOT_EXAMPLES = (
     "``monthly_recurring_eur`` (or per-month rents from "
     "``monthly_breakdown``) -> 'durante la estancia'.\n"
     "\n"
-    "### Example 5 - Semantic reviews (German)\n"
+    "### Example 5 - Ambiguous entity (English)\n"
+    '**User:** "What do students say about how responsive the hosts '
+    'are at ELH?"\n'
+    "\n"
+    "Reasoning: 'hosts' is ambiguous - it could mean the ELH team "
+    "(company staff who run the platform) or the individual "
+    "landlords (who own each room). Per rule 12, ask the user to "
+    "clarify before searching, because the right tool call and the "
+    "right answer depend on which entity they mean.\n"
+    "\n"
+    "Tool call: NONE on this turn.\n"
+    "\n"
+    'Reply: "To give you the most accurate answer, could you '
+    "clarify whether you're asking about:\n"
+    "  - the ELH team (the company that runs the platform and "
+    "supports tenants), or\n"
+    "  - the individual landlords (the people who actually own and "
+    "operate each room)?\n"
+    "\n"
+    'I will search the reviews for whichever you meant."\n'
+    "\n"
+    "### Example 6 - Semantic reviews (German)\n"
     '**User:** "Ist die Gegend in Alfama nachts ruhig?"\n'
     "\n"
     "Reasoning: Subjective question about quietness - opinions, not "
@@ -271,7 +307,7 @@ _FEW_SHOT_EXAMPLES = (
     "Answer in German, summarising what reviewers say about noise in "
     "Alfama specifically, and citing the reviews.\n"
     "\n"
-    "### Example 6 - Period availability (French)\n"
+    "### Example 7 - Period availability (French)\n"
     '**User:** "Avez-vous une chambre disponible a Porto pour aout '
     '2026?"\n'
     "\n"
