@@ -106,6 +106,35 @@ class ComputeTotalCostOutput(BaseModel):
             "reservation fee, and extra-person cost (when opted in)."
         ),
     )
+    total_stay_cost_eur: Decimal = Field(
+        ...,
+        description=(
+            "Total cash outflow for the entire stay: every monthly rent + "
+            "reservation fee + security deposit + extra-person cost + admin "
+            "tax. Equivalent to summing the at-booking, at-check-in and all "
+            "monthly payments; the last-month advance (when applicable) is "
+            "already accounted for in the monthly rent total, so this is "
+            "the gross amount the student parts with."
+        ),
+    )
+    total_out_of_pocket_eur: Decimal = Field(
+        ...,
+        description=(
+            "Net non-refundable spend: ``total_stay_cost_eur`` minus "
+            "``refundable_at_checkout_eur``. This is the figure the "
+            "student actually loses to ELH and the landlord."
+        ),
+    )
+    refundable_at_checkout_eur: Decimal = Field(
+        ...,
+        description=(
+            "Amount returned to the student at check-out: the security "
+            "deposit (subject to landlord assessment). The reservation "
+            "fee is refundable only in the rare case of a listing "
+            "mismatch on arrival and is NOT included here; the last-month "
+            "advance is a rent pre-payment, not refundable."
+        ),
+    )
     monthly_recurring_eur: Decimal | None = Field(
         default=None,
         description=(
@@ -248,6 +277,21 @@ def _compute(
     admin_raw = _to_decimal(room["administrativetax"])
     one_time_checkin: Decimal | None = _q(admin_raw) if admin_raw > 0 else None
 
+    # 7b. Aggregates: gross spend, refundable portion, net out-of-pocket.
+    # Note: ``breakdown.total_rent_eur`` already includes the last month's
+    # rent, so adding it directly avoids double-counting the lastmonth
+    # advance (which is just the last month's rent paid early).
+    admin_amount = one_time_checkin or Decimal("0")
+    total_stay_cost = _q(
+        security_deposit
+        + reservation_fee
+        + extra_person_cost
+        + breakdown.total_rent_eur
+        + admin_amount
+    )
+    refundable_at_checkout = _q(security_deposit)
+    total_out_of_pocket = _q(total_stay_cost - refundable_at_checkout)
+
     # 8. Recurring vs breakdown
     if breakdown.is_uniform_rent:
         monthly_recurring: Decimal | None = breakdown.months[0].rent_eur
@@ -277,6 +321,9 @@ def _compute(
 
     return ComputeTotalCostOutput(
         payable_at_booking_eur=payable_at_booking,
+        total_stay_cost_eur=total_stay_cost,
+        total_out_of_pocket_eur=total_out_of_pocket,
+        refundable_at_checkout_eur=refundable_at_checkout,
         monthly_recurring_eur=monthly_recurring,
         monthly_breakdown=monthly_breakdown_out,
         one_time_at_checkin_eur=one_time_checkin,

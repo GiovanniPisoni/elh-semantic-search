@@ -641,3 +641,161 @@ class TestSummary:
             ctx=fake_db,
         )
         assert "fixed rate" in result.summary
+
+
+# Aggregate fields: total_stay_cost, refundable, out-of-pocket
+
+
+class TestStructuredAggregates:
+    """Verify the new aggregate fields are correct and internally consistent."""
+
+    def test_total_stay_cost_matches_sum_of_components(self, fake_db):
+        """Gross total = rent + deposit + reservation fee + extra + admin tax."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                deposit="Y",
+                deposit_value="550.00",
+                lastmonth="N",
+                extra_allowed="N",
+                admin_tax="0",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        # 3 months autumn (550) -> rent = 1650
+        # deposit = 550, reservation = 148.50, extra = 0, admin = 0
+        # total = 1650 + 550 + 148.50 = 2348.50
+        assert result.total_stay_cost_eur == Decimal("2348.50")
+
+    def test_total_stay_cost_includes_admin_tax(self, fake_db):
+        """The admin tax (paid to landlord at check-in) is part of the gross total."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                deposit="N",
+                lastmonth="N",
+                admin_tax="120.00",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        # rent 1650 + reservation 148.50 + admin 120 = 1918.50
+        assert result.total_stay_cost_eur == Decimal("1918.50")
+
+    def test_total_stay_cost_no_double_count_when_lastmonth_advance(self, fake_db):
+        """lastmonth='Y' pre-pays the final month but that month is still in
+        breakdown.total_rent_eur; the aggregate must NOT add it twice."""
+        _seed(
+            fake_db,
+            room=_make_room_row(deposit="N", lastmonth="Y", admin_tax="0"),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        # 3 months autumn (550) -> rent = 1650
+        # reservation = 148.50, deposit = 0, extra = 0, admin = 0
+        # total = 1650 + 148.50 = 1798.50 (NOT 1798.50 + 550)
+        assert result.total_stay_cost_eur == Decimal("1798.50")
+
+    def test_refundable_equals_security_deposit(self, fake_db):
+        """Only the security deposit is refundable. Reservation fee and
+        last-month advance are NOT in the refundable bucket."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                deposit="Y",
+                deposit_value="550.00",
+                lastmonth="Y",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        assert result.refundable_at_checkout_eur == Decimal("550.00")
+
+    def test_refundable_zero_when_no_deposit(self, fake_db):
+        _seed(fake_db, room=_make_room_row(deposit="N", deposit_value="0"))
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        assert result.refundable_at_checkout_eur == Decimal("0")
+
+    def test_out_of_pocket_equals_total_minus_refundable(self, fake_db):
+        """Invariant: total_out_of_pocket = total_stay_cost - refundable."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                deposit="Y",
+                deposit_value="550.00",
+                lastmonth="Y",
+                admin_tax="50.00",
+                extra_allowed="Y",
+                extra_cost="100.00",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+                extra_person=True,
+            ),
+            ctx=fake_db,
+        )
+        assert (
+            result.total_out_of_pocket_eur
+            == result.total_stay_cost_eur - result.refundable_at_checkout_eur
+        )
+
+    def test_aggregates_consistent_for_cross_season_stay(self, fake_db):
+        """Cross-season stay: the aggregates must reconcile with
+        per-month breakdown + booking + admin."""
+        _seed(
+            fake_db,
+            room=_make_room_row(deposit="Y", deposit_value="550.00", admin_tax="50.00"),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 1, 1),
+                check_out_date=date(2026, 4, 30),
+            ),
+            ctx=fake_db,
+        )
+        # months: Jan, Feb autumn 550 + Mar, Apr spring 400 = 1900
+        # deposit 550 + reservation (1900 * 0.09 = 171) + admin 50
+        # total = 1900 + 550 + 171 + 50 = 2671
+        assert result.monthly_breakdown is not None
+        per_month_sum = sum((m.rent_eur for m in result.monthly_breakdown), Decimal("0"))
+        assert per_month_sum == Decimal("1900.00")
+        assert result.total_stay_cost_eur == Decimal("2671.00")
+        assert result.refundable_at_checkout_eur == Decimal("550.00")
+        assert result.total_out_of_pocket_eur == Decimal("2121.00")
