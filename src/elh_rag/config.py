@@ -184,6 +184,18 @@ class Settings(BaseSettings):
         gt=0,
         description=("Hard upper bound on user query length in characters (D6.4)."),
     )
+    agent_max_history_turns: int = Field(
+        default=10,
+        ge=0,
+        le=50,
+        description=(
+            "Hard cap on the number of conversation turns the backend "
+            "accepts in a single run_agent_turn call. The frontend is "
+            "expected to truncate to ~5 turns (FIFO) before sending; "
+            "this cap defends against runaway client state or malicious "
+            "input. Requests exceeding the cap raise InputValidationError."
+        ),
+    )
 
     # Logging
     log_level: str = Field(default="INFO")
