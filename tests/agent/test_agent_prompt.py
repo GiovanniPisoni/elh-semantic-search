@@ -67,8 +67,8 @@ class TestAntiRepetitionRule:
 
     def test_does_not_break_other_routing_rules(self) -> None:
         """The other rules must still be present after the rewrite."""
-        # Sanity: routing rules section is numbered through rule 12.
-        for n in range(1, 13):
+        # Sanity: routing rules section is numbered through rule 13.
+        for n in range(1, 14):
             assert f"{n}." in SYSTEM_PROMPT, f"Rule {n} missing"
 
 
@@ -108,8 +108,36 @@ class TestAmbiguousEntityRule:
     def test_example_5_demonstrates_disambiguation(self) -> None:
         """Example 5 in the EXAMPLES section shows the disambiguation flow."""
         examples_section = SYSTEM_PROMPT[SYSTEM_PROMPT.index("## EXAMPLES") :]
-        # New Example 5 is the disambiguation example (existing examples
-        # 5 and 6 were renumbered to 6 and 7 to make room).
+        # Example 5 is the disambiguation example.
         assert "Example 5 - Ambiguous entity" in examples_section
         assert "hosts" in examples_section.lower()
         assert "the ELH team" in examples_section
+
+
+class TestWeakMatchFlaggingRule:
+    """Verify the WEAK MATCH FLAGGING routing rule (Fix #5)."""
+
+    def test_contains_weak_match_directive(self) -> None:
+        """SYSTEM_PROMPT must instruct the agent to inspect similarity
+        scores and flag weak matches."""
+        assert "WEAK MATCH FLAGGING" in SYSTEM_PROMPT
+        assert "hits[0].score" in SYSTEM_PROMPT
+        assert "0.5" in SYSTEM_PROMPT  # the cut-off threshold
+
+    def test_rule_13_is_present_with_number(self) -> None:
+        """Rule 13 must be in the ROUTING RULES section."""
+        rules_section = SYSTEM_PROMPT[
+            SYSTEM_PROMPT.index("## ROUTING RULES") : SYSTEM_PROMPT.index("## EXAMPLES")
+        ]
+        assert "13. WEAK MATCH FLAGGING" in rules_section
+
+    def test_thresholds_present(self) -> None:
+        """The three threshold tiers must be documented."""
+        assert "0.7" in SYSTEM_PROMPT
+        assert "0.5" in SYSTEM_PROMPT
+
+    def test_example_6_demonstrates_weak_match(self) -> None:
+        """Example 6 in the EXAMPLES section shows the weak-match flow."""
+        examples_section = SYSTEM_PROMPT[SYSTEM_PROMPT.index("## EXAMPLES") :]
+        assert "Example 6 - Weak semantic match" in examples_section
+        assert "tagus" in examples_section.lower()
