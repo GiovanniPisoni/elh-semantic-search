@@ -294,3 +294,51 @@ class TestKBStoreSearch:
     def test_len_reflects_entry_count(self):
         store = KBStore([_indexed(_entry(id=f"e{i}"), [[1.0]]) for i in range(5)])
         assert len(store) == 5
+
+
+# payment_schedule entry
+
+
+class TestPaymentScheduleEntry:
+    """Verify the payment_schedule KB entry added."""
+
+    def test_entry_is_loaded(self):
+        """The payment_schedule entry is present in the loaded KB."""
+        entries = load_entries()
+        entry = next((e for e in entries if e.id == "payment_schedule"), None)
+        assert entry is not None
+        assert entry.category == "payments_and_fees"
+        assert entry.audience == "student"
+
+    def test_canonical_question_indexed(self):
+        """Canonical question mentions the payment schedule explicitly."""
+        entries = load_entries()
+        entry = next((e for e in entries if e.id == "payment_schedule"), None)
+        assert entry is not None
+        assert "payment schedule" in entry.canonical_question.lower()
+
+    def test_multilingual_variants_present(self):
+        """The entry includes question variants in IT, PT, ES, FR, DE."""
+        entries = load_entries()
+        entry = next((e for e in entries if e.id == "payment_schedule"), None)
+        assert entry is not None
+        variants_lower = " ".join(entry.question_variants).lower()
+        assert "quando devo pagare" in variants_lower  # IT
+        assert "quando se paga" in variants_lower or "quando é o pagamento" in variants_lower  # PT
+        assert "cuándo se paga" in variants_lower  # ES
+        assert "quel est le calendrier" in variants_lower  # FR
+        assert "wann muss ich" in variants_lower  # DE
+
+    def test_answer_mentions_booking_and_checkin(self):
+        """The answer must cover both moments of payment."""
+        entries = load_entries()
+        entry = next((e for e in entries if e.id == "payment_schedule"), None)
+        assert entry is not None
+        answer_lower = entry.answer.lower()
+        assert "booking" in answer_lower or "reservation" in answer_lower
+        assert "check-in" in answer_lower or "checkin" in answer_lower
+
+    def test_kb_total_count_is_27(self):
+        """KB count went from 26 to 27 after adding payment_schedule."""
+        entries = load_entries()
+        assert len(entries) == 27

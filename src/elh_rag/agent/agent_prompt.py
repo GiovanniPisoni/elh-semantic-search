@@ -258,11 +258,13 @@ _FEW_SHOT_EXAMPLES = (
     "sujeta a evaluación del propietario)\n"
     "\n"
     "  Calendario de pagos:\n"
-    "  - Al reservar (a ELH): €1.143,00 - fianza €450 + 9% fianza de "
-    "reserva €243 + adelanto último mes €450\n"
-    "  - Al check-in (al propietario): €50,00 - tasa administrativa\n"
-    "  - Durante la estancia: €450/mes los primeros 5 meses (el sexto "
-    'mes ya está pagado por adelantado)."\n'
+    "  - Al reservar (a ELH): €693,00 - primer mes €450 + 9% fianza "
+    "de reserva €243\n"
+    "  - Al check-in (al propietario): €950,00 - fianza reembolsable "
+    "€450 + adelanto último mes €450 + tasa administrativa €50\n"
+    "  - Mensualidades 2-5 (4 meses): €450/mes - los meses 2 a 5 del "
+    "contrato (el primer mes ya está pagado por adelantado, el sexto "
+    'ya está cubierto por el adelanto del último mes)."\n'
     "\n"
     "Always map the tool fields explicitly: ``total_stay_cost_eur`` -> "
     "'costo total', ``total_out_of_pocket_eur`` -> 'no reembolsable', "

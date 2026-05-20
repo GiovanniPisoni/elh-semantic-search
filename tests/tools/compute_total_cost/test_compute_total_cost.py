@@ -1,16 +1,18 @@
 """Tests for Tool 3 — ``compute_total_cost``.
 
 These tests exercise the entry point with a ``FakeDbExecutor`` and pin
-the business rules confirmed by ELH on 2026-05-11:
+the business rules confirmed by ELH operations on 2026-05-19
+(supersedes 2026-05-11):
 
-    * Booking total = security deposit + last-month advance (if
-      ``lastmonthdeposit='Y'``) + reservation fee (9% of total rent) +
-      extra-person cost (one-shot, only if ``extrapersonallowed='Y'``).
+    * AT BOOKING (to ELH) = first month rent + 9% reservation fee.
+    * AT CHECK-IN (to landlord) = security deposit + last-month
+      advance (if ``lastmonthdeposit='Y'`` and stay >= 2 months) +
+      administrative tax (if ``administrativetax > 0``).
+    * MONTHLY DURING STAY = rent for months 2..N (or 2..N-1 if a
+      last-month advance applies), plus an extra-person surcharge on
+      every month when ``extrapersonallowed='Y'`` and the user opted in.
     * Same-season stay -> ``monthly_recurring_eur`` populated and
       ``monthly_breakdown`` is None; cross-season stay flips that.
-    * Admin fee (``administrativetax``) is paid directly to the
-      landlord at check-in; it is NOT included in
-      ``payable_at_booking_eur``.
     * Utilities are informational (lists of strings), never a cost line.
     * VAT disclosure always present in notes.
 """
@@ -135,7 +137,7 @@ class TestInputValidation:
 
 class TestBookingTotal:
     def test_deposit_only(self, fake_db):
-        """deposit=Y, lastmonth=N -> booking = deposit + reservation_fee."""
+        """deposit=Y, lastmonth=N -> booking = first month rent + reservation."""
         _seed(
             fake_db,
             room=_make_room_row(deposit="Y", deposit_value="550.00", lastmonth="N"),
@@ -148,13 +150,15 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        # total rent = 3 * 550 = 1650
-        # reservation = 1650 * 0.09 = 148.50
-        # booking = deposit (550) + reservation (148.50) = 698.50
+        # total rent = 3 * 550 = 1650; reservation = 1650 * 0.09 = 148.50
+        # Booking = first_month (550) + reservation (148.50) = 698.50
+        # Deposit (550) moved to at-check-in bucket.
         assert result.payable_at_booking_eur == Decimal("698.50")
+        assert result.one_time_at_checkin_eur == Decimal("550.00")
 
     def test_lastmonth_only(self, fake_db):
-        """deposit=N, lastmonth=Y -> booking = last-month rent + reservation."""
+        """deposit=N, lastmonth=Y -> booking = first month rent + reservation;
+        last-month advance lives in at-check-in."""
         _seed(
             fake_db,
             room=_make_room_row(deposit="N", deposit_value="0", lastmonth="Y"),
@@ -167,12 +171,14 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        # last month (Nov) = autumn = 550
-        # booking = 550 + 148.50 = 698.50
+        # First month (Sep, autumn) = 550; booking = 550 + 148.50.
+        # last-month advance (Nov, autumn) = 550 moves to one_time_at_checkin.
         assert result.payable_at_booking_eur == Decimal("698.50")
+        assert result.one_time_at_checkin_eur == Decimal("550.00")
 
     def test_both_deposit_and_lastmonth(self, fake_db):
-        """Both Y -> both amounts contribute to booking total."""
+        """Both Y -> booking still = first month + reservation; deposit and
+        last-month advance both live in at-check-in."""
         _seed(
             fake_db,
             room=_make_room_row(deposit="Y", deposit_value="600.00", lastmonth="Y"),
@@ -185,11 +191,13 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        # 600 (deposit) + 550 (last-month) + 148.50 (reservation) = 1298.50
-        assert result.payable_at_booking_eur == Decimal("1298.50")
+        # booking = first month (550, autumn) + reservation (148.50) = 698.50
+        # check-in = deposit (600) + last-month (550) = 1150
+        assert result.payable_at_booking_eur == Decimal("698.50")
+        assert result.one_time_at_checkin_eur == Decimal("1150.00")
 
     def test_neither_deposit_nor_lastmonth(self, fake_db):
-        """Both N -> booking = reservation only."""
+        """Both N -> booking = first month + reservation; at-check-in = None."""
         _seed(fake_db, room=_make_room_row(deposit="N", lastmonth="N"))
         result = compute_total_cost(
             ComputeTotalCostInput(
@@ -199,10 +207,12 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        assert result.payable_at_booking_eur == Decimal("148.50")
+        # booking = 550 (first month) + 148.50 (reservation) = 698.50
+        assert result.payable_at_booking_eur == Decimal("698.50")
+        assert result.one_time_at_checkin_eur is None
 
     def test_reservation_fee_is_nine_percent_of_total_rent(self, fake_db):
-        """Reservation fee scales linearly with total rent."""
+        """Reservation fee scales linearly with total rent and is paid at booking."""
         _seed(fake_db, room=_make_room_row(deposit="N", lastmonth="N"))
         result = compute_total_cost(
             ComputeTotalCostInput(
@@ -212,13 +222,15 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        # 6 autumn (550) + 4 spring (400) + 2 summer (300)
-        # = 3300 + 1600 + 600 = 5500
+        # 6 autumn (550) + 4 spring (400) + 2 summer (300) = 5500
         # reservation = 5500 * 0.09 = 495.00
-        assert result.payable_at_booking_eur == Decimal("495.00")
+        # first month (Sep, autumn) = 550
+        # booking = 550 + 495 = 1045
+        assert result.payable_at_booking_eur == Decimal("1045.00")
 
-    def test_extra_person_allowed_adds_one_shot_cost(self, fake_db):
-        """extra_person=True + extrapersonallowed=Y -> cost added once to booking."""
+    def test_extra_person_allowed_is_recurring_monthly(self, fake_db):
+        """extra_person=True + extrapersonallowed=Y -> surcharge applies every
+        month of the stay, NOT as a one-shot at booking (corrected 2026-05-19)."""
         _seed(
             fake_db,
             room=_make_room_row(
@@ -237,8 +249,14 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        # reservation (148.50) + extra (200) = 348.50
-        assert result.payable_at_booking_eur == Decimal("348.50")
+        # Booking is just first month + reservation (no extra-person here)
+        # = 550 + 148.50 = 698.50
+        assert result.payable_at_booking_eur == Decimal("698.50")
+        # Extra-person now folded into the monthly recurring amount
+        assert result.monthly_recurring_eur == Decimal("750.00")  # 550 + 200
+        # Total stay includes extra-person * 3 months = 600 (not 200)
+        # 1650 rent + 148.50 reservation + 600 extra = 2398.50
+        assert result.total_stay_cost_eur == Decimal("2398.50")
 
     def test_extra_person_allowed_but_not_requested_no_cost(self, fake_db):
         """Room allows extra person, user did not opt in -> cost not added."""
@@ -260,8 +278,9 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        # only reservation
-        assert result.payable_at_booking_eur == Decimal("148.50")
+        # first month + reservation, no extra
+        assert result.payable_at_booking_eur == Decimal("698.50")
+        assert result.monthly_recurring_eur == Decimal("550.00")
 
     def test_extra_person_requested_but_not_allowed_silently_skipped(self, fake_db):
         """extra_person=True but extrapersonallowed=N -> cost ignored + note added."""
@@ -283,7 +302,8 @@ class TestBookingTotal:
             ),
             ctx=fake_db,
         )
-        assert result.payable_at_booking_eur == Decimal("148.50")
+        assert result.payable_at_booking_eur == Decimal("698.50")
+        assert result.monthly_recurring_eur == Decimal("550.00")
         # User must be informed that the option was unavailable
         assert any("does not allow" in n for n in result.notes)
 
@@ -368,6 +388,8 @@ class TestRecurringVsBreakdown:
 
 class TestAdminFee:
     def test_admin_fee_populated_when_positive(self, fake_db):
+        """admin_tax > 0 -> at-check-in bucket includes it alongside the
+        deposit (from the _make_room_row default of deposit='Y'/550)."""
         _seed(fake_db, room=_make_room_row(admin_tax="120.00"))
         result = compute_total_cost(
             ComputeTotalCostInput(
@@ -377,7 +399,8 @@ class TestAdminFee:
             ),
             ctx=fake_db,
         )
-        assert result.one_time_at_checkin_eur == Decimal("120.00")
+        # one_time_at_checkin = deposit (550) + admin (120) = 670
+        assert result.one_time_at_checkin_eur == Decimal("670.00")
         assert any("Administrative fee" in n for n in result.notes)
         assert any("directly to the landlord" in n for n in result.notes)
 
@@ -395,12 +418,14 @@ class TestAdminFee:
             ),
             ctx=fake_db,
         )
-        # booking only contains reservation; admin is one_time_at_checkin
-        assert result.payable_at_booking_eur == Decimal("148.50")
+        # booking = first month (550) + reservation (148.50) = 698.50
+        # admin lives in at-check-in (and is the only thing, deposit=N and lastmonth=N)
+        assert result.payable_at_booking_eur == Decimal("698.50")
         assert result.one_time_at_checkin_eur == Decimal("120.00")
 
     def test_admin_fee_none_when_zero(self, fake_db):
-        _seed(fake_db, room=_make_room_row(admin_tax="0"))
+        """admin=0 + deposit=N + lastmonth=N -> at-check-in bucket is None."""
+        _seed(fake_db, room=_make_room_row(deposit="N", lastmonth="N", admin_tax="0"))
         result = compute_total_cost(
             ComputeTotalCostInput(
                 encoded_room_id=_encoded(),
@@ -799,3 +824,243 @@ class TestStructuredAggregates:
         assert result.total_stay_cost_eur == Decimal("2671.00")
         assert result.refundable_at_checkout_eur == Decimal("550.00")
         assert result.total_out_of_pocket_eur == Decimal("2121.00")
+
+
+# Corrected payment schedule
+
+
+class TestCorrectedPaymentSchedule:
+    """Verify the payment schedule corresponds to ELH operations
+    confirmation 2026-05-19 (supersedes 2026-05-11)."""
+
+    def test_first_month_rent_in_payable_at_booking(self, fake_db):
+        """Booking total = first month rent + reservation fee (no deposit,
+        no last-month advance)."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                spring="450.00",
+                summer="450.00",
+                autumn="450.00",
+                fixed="Y",
+                deposit="N",
+                lastmonth="N",
+                admin_tax="0",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2027, 2, 28),  # 6 months
+            ),
+            ctx=fake_db,
+        )
+        # rent = 6 * 450 = 2700; reservation = 2700 * 0.09 = 243
+        # booking = first month (450) + reservation (243) = 693
+        assert result.payable_at_booking_eur == Decimal("693.00")
+        # No other check-in or refundable buckets
+        assert result.one_time_at_checkin_eur is None
+        assert result.refundable_at_checkout_eur == Decimal("0")
+
+    def test_deposit_in_at_checkin(self, fake_db):
+        """Deposit lives in one_time_at_checkin, not payable_at_booking."""
+        _seed(
+            fake_db,
+            room=_make_room_row(deposit="Y", deposit_value="500.00", lastmonth="N", admin_tax="0"),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        # 500 must NOT be in payable_at_booking (which has only first month +
+        # reservation), but MUST be in one_time_at_checkin.
+        assert Decimal("500.00") not in (
+            result.payable_at_booking_eur,
+            result.payable_at_booking_eur - Decimal("148.50"),
+        )
+        assert result.one_time_at_checkin_eur == Decimal("500.00")
+        assert result.refundable_at_checkout_eur == Decimal("500.00")
+
+    def test_last_month_advance_in_at_checkin(self, fake_db):
+        """Last-month advance lives in one_time_at_checkin (paid to landlord)."""
+        _seed(fake_db, room=_make_room_row(deposit="N", lastmonth="Y", admin_tax="0"))
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        # Last month (Nov, autumn) = 550; at-check-in = 550 (no deposit, no admin)
+        assert result.one_time_at_checkin_eur == Decimal("550.00")
+
+    def test_admin_tax_in_at_checkin(self, fake_db):
+        """Administrative tax lives in one_time_at_checkin (paid to landlord)."""
+        _seed(
+            fake_db,
+            room=_make_room_row(deposit="N", lastmonth="N", admin_tax="80.00"),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+            ),
+            ctx=fake_db,
+        )
+        assert result.one_time_at_checkin_eur == Decimal("80.00")
+        # And NOT in payable_at_booking
+        assert result.payable_at_booking_eur == Decimal("698.50")  # 550 + 148.50
+
+    def test_extra_person_is_recurring_monthly(self, fake_db):
+        """Extra-person surcharge applies to every month, not just booking.
+        For 6 months at €50/mo extra: total adds €300, NOT €50."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                spring="450.00",
+                summer="450.00",
+                autumn="450.00",
+                fixed="Y",
+                deposit="N",
+                lastmonth="N",
+                extra_allowed="Y",
+                extra_cost="50.00",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2027, 2, 28),  # 6 months
+                extra_person=True,
+            ),
+            ctx=fake_db,
+        )
+        # rent 2700 + reservation 243 + extra (50 * 6) = 300 -> total 3243
+        assert result.total_stay_cost_eur == Decimal("3243.00")
+        # Recurring includes the surcharge
+        assert result.monthly_recurring_eur == Decimal("500.00")  # 450 + 50
+
+    def test_extra_person_zero_when_not_opted_in(self, fake_db):
+        """payload.extra_person=False -> no surcharge regardless of room
+        ``extrapersonallowed``."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                deposit="N",
+                lastmonth="N",
+                extra_allowed="Y",
+                extra_cost="200.00",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 11, 30),
+                extra_person=False,
+            ),
+            ctx=fake_db,
+        )
+        # No extra anywhere
+        assert result.monthly_recurring_eur == Decimal("550.00")  # rent only
+        # Notes do NOT mention the surcharge
+        assert not any("surcharge" in n.lower() for n in result.notes)
+
+    def test_monthly_breakdown_includes_extra_person(self, fake_db):
+        """In cross-season stays, each monthly_breakdown entry's rent_eur
+        already folds in the extra-person surcharge."""
+        _seed(
+            fake_db,
+            room=_make_room_row(extra_allowed="Y", extra_cost="50.00"),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 1, 1),
+                check_out_date=date(2026, 4, 30),
+                extra_person=True,
+            ),
+            ctx=fake_db,
+        )
+        # Jan, Feb autumn 550 + 50 = 600; Mar, Apr spring 400 + 50 = 450
+        assert result.monthly_breakdown is not None
+        rents = [m.rent_eur for m in result.monthly_breakdown]
+        assert rents == [
+            Decimal("600.00"),
+            Decimal("600.00"),
+            Decimal("450.00"),
+            Decimal("450.00"),
+        ]
+
+    def test_total_stay_cost_breakdown_consistent(self, fake_db):
+        """total_stay_cost = at_booking + at_check_in + remaining months
+        rent + extra_person_total. Verify the invariant on a stay with
+        every component active."""
+        _seed(
+            fake_db,
+            room=_make_room_row(
+                spring="450.00",
+                summer="450.00",
+                autumn="450.00",
+                fixed="Y",
+                deposit="Y",
+                deposit_value="450.00",
+                lastmonth="Y",
+                admin_tax="50.00",
+                extra_allowed="Y",
+                extra_cost="50.00",
+            ),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2027, 2, 28),  # 6 months
+                extra_person=True,
+            ),
+            ctx=fake_db,
+        )
+        # rent = 6 * 450 = 2700; reservation = 243
+        # booking = 450 + 243 = 693
+        # at_checkin = deposit 450 + last-month 450 + admin 50 = 950
+        # remaining months 2..5 (lastmonth=Y so excludes month 6): 4 * 450 = 1800
+        # extra: 6 * 50 = 300
+        # total = 693 + 950 + 1800 + 300 = 3743
+        assert result.payable_at_booking_eur == Decimal("693.00")
+        assert result.one_time_at_checkin_eur == Decimal("950.00")
+        assert result.total_stay_cost_eur == Decimal("3743.00")
+        # Refundable = deposit only
+        assert result.refundable_at_checkout_eur == Decimal("450.00")
+        # Out of pocket = total - refundable
+        assert result.total_out_of_pocket_eur == Decimal("3293.00")
+
+    def test_one_month_stay_ignores_lastmonth_advance(self, fake_db):
+        """Defensive guard: a 1-month stay with lastmonthdeposit='Y' would
+        otherwise charge the same month twice (once at booking as first
+        month, once at check-in as last-month advance). Treat as if
+        lastmonth='N'."""
+        _seed(
+            fake_db,
+            room=_make_room_row(deposit="N", lastmonth="Y", admin_tax="0"),
+        )
+        result = compute_total_cost(
+            ComputeTotalCostInput(
+                encoded_room_id=_encoded(),
+                check_in_date=date(2026, 9, 1),
+                check_out_date=date(2026, 9, 30),  # 1 month (Sep only)
+            ),
+            ctx=fake_db,
+        )
+        # rent = 550; reservation = 49.50; total = 599.50 (no double-count)
+        assert result.total_stay_months == 1
+        assert result.one_time_at_checkin_eur is None
+        assert result.payable_at_booking_eur == Decimal("599.50")  # 550 + 49.50
+        assert result.total_stay_cost_eur == Decimal("599.50")
