@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from elh_rag.agent._models import AgentResponse, ToolCall
+from elh_rag.agent._models import AgentResponse, ConversationTurn, ToolCall
 
 # Fixtures
 
@@ -149,3 +149,23 @@ class TestViews:
         # Round-trip through json without errors.
         s = json.dumps(d)
         assert "2026-05-14" in s
+
+
+# ConversationTurn
+
+
+class TestConversationTurn:
+    """Verify the conversation-turn input model."""
+
+    def test_construction(self) -> None:
+        t = ConversationTurn(role="user", content="hello")
+        assert t.role == "user"
+        assert t.content == "hello"
+
+    def test_invalid_role_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            ConversationTurn(role="system", content="hi")  # type: ignore[arg-type]
+
+    def test_empty_content_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            ConversationTurn(role="user", content="")
