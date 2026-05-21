@@ -342,3 +342,18 @@ class TestPaymentScheduleEntry:
         """KB count went from 26 to 27 after adding payment_schedule."""
         entries = load_entries()
         assert len(entries) == 27
+
+
+# deposit_required entry (Fix 6)
+
+
+class TestSecurityDepositPolicyEntry:
+    """Verify the security-deposit KB entry acknowledges landlord variability (Fix 6)."""
+
+    def test_entry_acknowledges_landlord_variability(self):
+        entries = load_entries()
+        entry = next((e for e in entries if e.id == "deposit_required"), None)
+        assert entry is not None
+        text = entry.answer.lower()
+        assert "vary" in text or "varies" in text
+        assert "listing" in text or "website" in text

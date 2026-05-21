@@ -140,11 +140,25 @@ entries:
       - "Is there a security deposit?"
       - "How much is the deposit?"
       - "Will I get my deposit back?"
-    answer: >
-      Yes, a deposit is normally required. It is returned at the end of the
-      stay, provided there is no damage to the room or shared spaces. The
-      exact amount depends on the specific room — check the listing or use
-      the cost computation tool for an itemised quote.
+    answer: |
+      Security deposit policy (general):
+
+      - Standard rule: the security deposit is equal to one month's rent and
+        is paid to the landlord at check-in. It is refunded at check-out
+        minus any deductions for damage to the room or shared spaces.
+
+      - Important variability: actual deposit terms vary by landlord. Some
+        landlords charge a flat amount (e.g. €250), others may request two
+        months' rent on arrival. The exact terms applicable to your room are
+        stated in the listing on the ELH website.
+
+      - Recommendation: always check the listing on the ELH website
+        carefully for the exact deposit amount and any landlord-specific
+        conditions. If anything is unclear, contact the ELH team before
+        booking.
+
+      - Refund timing: at check-out the landlord assesses the room condition;
+        if there is no damage, the deposit is returned in full.
     sources:
       - "Website FAQ"
     related: [costs_overview, refund_room_mismatch]
