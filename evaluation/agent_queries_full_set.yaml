@@ -1,0 +1,297 @@
+# Unified golden set for Phase 2 vs Phase 3 comparative evaluation.
+#
+# Built from benchmarks/queries/agent_queries.yaml (the Phase 3 agent
+# benchmark) by adding must_mention annotations in the Phase 2
+# golden_set.yaml schema. This unified set is architecture-neutral:
+# both pipelined-RAG (Phase 2) and agentic-RAG (Phase 3) can be
+# scored on the same 20 queries with the same custom-metric framework
+# (faithfulness, context_recall, answer_relevancy, task_success).
+#
+# Categories: 4 structural, 4 policy, 4 cost, 4 semantic, 4 multilingual.
+# Languages: 16 EN, 1 IT, 1 PT, 1 ES, 1 DE.
+#
+# Phase 2 will excel on semantic queries (its design target). Phase 3
+# will excel on structural/policy/cost queries (which require DB / KB
+# / multi-hop tools Phase 2 lacks). The capability matrix that emerges
+# from this unified set is the primary argument for the architectural
+# shift, not the within-set averages.
+
+queries:
+  # --- STRUCTURAL (4) ---
+  # Phase 2 cannot answer these: no DB tool. Will retrieve reviews
+  # that mention prices vaguely. Phase 3 uses find_rooms with filters.
+
+  - id: structural_01
+    category: structural
+    language: en
+    question: "Find the cheapest single rooms in Lisbon"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Intendente"
+      - "€370"
+      - "single"
+    notes: "Pure structural filter. Phase 3 uses find_rooms; Phase 2 lacks DB access."
+
+  - id: structural_02
+    category: structural
+    language: en
+    question: "Show me rooms with a private bathroom under 600 EUR in Porto"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Porto"
+      - "private bathroom"
+      - "€600"
+      - "none available"
+    notes: "Multi-filter with edge case (Porto private bath often above 600). 'none available' is a valid informed answer."
+
+  - id: structural_03
+    category: structural
+    language: en
+    question: "What rooms are available within 500 meters of a metro station in Lisbon?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Lisbon"
+      - "metro"
+      - "500"
+    notes: "Tests metro proximity filter (D6 enrichment). Phase 3 uses find_rooms metro_distance filter."
+
+  - id: structural_04
+    category: structural
+    language: en
+    question: "Find rooms larger than 20 square meters in Lisbon under 700 EUR"
+    expected_tools: [find_rooms]
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Lisbon"
+      - "€700"
+      - "20"
+    notes: "Tests size + price filter combination. Phase 3 uses find_rooms; Phase 2 has no size filter."
+
+  # --- POLICY (4) ---
+  # Phase 2 cannot answer these properly: no KB tool. Will retrieve
+  # reviews mentioning policies vaguely. Phase 3 uses answer_policy_question.
+
+  - id: policy_01
+    category: policy
+    language: en
+    question: "What is the cancellation policy if I cancel 45 days before check-in?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "45 days"
+      - "full refund"
+      - "reservation fee"
+    notes: "Tests specific policy lookup with quantitative context."
+
+  - id: policy_02
+    category: policy
+    language: en
+    question: "When is the security deposit refunded after I leave?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "security deposit"
+      - "30 days"
+      - "landlord"
+    notes: "Tests deposit-related policy. KB post-Fix-6 mentions landlord variability."
+
+  - id: policy_03
+    category: policy
+    language: en
+    question: "What is included in the monthly rent?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "utilities"
+      - "internet"
+      - "cleaning"
+    notes: "Tests inclusion policy (utilities, services)."
+
+  - id: policy_04
+    category: policy
+    language: en
+    question: "How does the check-in process work?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "check-in"
+      - "agreement"
+      - "key"
+    notes: "Tests operational policy."
+
+  # --- COST (4) ---
+  # Phase 2 cannot answer these: no compute_total_cost tool. Will
+  # retrieve reviews mentioning rents. Phase 3 chains find_available_rooms
+  # + compute_total_cost.
+
+  - id: cost_01
+    category: cost
+    language: en
+    question: "Find the cheapest room in Lisbon and tell me the total cost for 6 months from September 2026"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Intendente"
+      - "€370"
+      - "6 months"
+      - "September"
+      - "total"
+    notes: "Standard multi-hop. Phase 3 uses find_available_rooms + compute_total_cost."
+
+  - id: cost_02
+    category: cost
+    language: en
+    question: "Find the cheapest room in Porto available for the full academic year (September 2026 to June 2027) and compute the total cost"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Porto"
+      - "10 months"
+      - "September"
+      - "June"
+      - "total"
+    notes: "Long stay (10 months); tests seasonal pricing aggregation."
+
+  - id: cost_03
+    category: cost
+    language: en
+    question: "Compare the total cost of the cheapest room in Lisbon vs the cheapest in Porto for 6 months from September 2026"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Lisbon"
+      - "Porto"
+      - "6 months"
+      - "comparison"
+      - "total"
+    notes: "Hard multi-hop (4 tool calls, max 5 hops). May hit max_hops; coverage > strict."
+
+  - id: cost_04
+    category: cost
+    language: en
+    question: "What is the total cost for a 12-month stay in Lisbon starting January 2027 in the cheapest single room?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Lisbon"
+      - "12 months"
+      - "January"
+      - "single"
+      - "total"
+    notes: "Winter start date (spring/summer rate). Tests off-season pricing."
+
+  # --- SEMANTIC (4) ---
+  # Fair territory for both systems. Phase 2 retrieves reviews/descriptions;
+  # Phase 3 uses search_reviews / search_descriptions (same Pinecone index).
+
+  - id: semantic_01
+    category: semantic
+    language: en
+    question: "I am looking for a room with a balcony and a view of the Tagus river in Lisbon"
+    expected_intent: descriptions
+    expected_property_ids: []
+    must_mention:
+      - "balcony"
+      - "Tagus"
+      - "river"
+      - "Lisbon"
+      - "view"
+    notes: "Feature with no structured column. Both systems do semantic search on descriptions."
+
+  - id: semantic_02
+    category: semantic
+    language: en
+    question: "Is the Alfama neighborhood quiet at night according to student reviews?"
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "Alfama"
+      - "quiet"
+      - "noise"
+      - "night"
+      - "reviews"
+    notes: "Subjective question with explicit 'reviews' anchor. Phase 2 territory."
+
+  - id: semantic_03
+    category: semantic
+    language: en
+    question: "Find rooms in bright spaces with lots of natural light in Lisbon"
+    expected_intent: descriptions
+    expected_property_ids: []
+    must_mention:
+      - "natural light"
+      - "bright"
+      - "Lisbon"
+      - "windows"
+    notes: "Aesthetic feature without filter column. Both systems do semantic search."
+
+  - id: semantic_04
+    category: semantic
+    language: en
+    question: "What do students say about how responsive the hosts are at ELH?"
+    expected_intent: reviews
+    expected_property_ids: []
+    must_mention:
+      - "hosts"
+      - "responsive"
+      - "ELH"
+    notes: "Ambiguity-disambiguation case (Phase 3 routing rule 12). Phase 3 may ask clarification (correct); Phase 2 will retrieve reviews about landlord responsiveness."
+
+  # --- MULTILINGUAL (4) ---
+  # Tests language coverage across both systems. Phase 3's KB has
+  # multilingual variant embeddings (125 variants for 27 entries).
+  # Phase 2 retrieves on multilingual embedder but no KB.
+
+  - id: multilingual_01
+    category: multilingual
+    language: it
+    question: "Quanto costa la cauzione e quando viene restituita?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "cauzione"
+      - "landlord"
+      - "restituita"
+    notes: "Italian policy question. Response should be in Italian."
+
+  - id: multilingual_02
+    category: multilingual
+    language: pt
+    question: "Procuro quartos com varanda em Lisboa para setembro de 2026"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "varanda"
+      - "Lisboa"
+      - "setembro"
+      - "2026"
+    notes: "Portuguese date-bounded search (varanda = balcony). Phase 3 uses find_available_rooms."
+
+  - id: multilingual_03
+    category: multilingual
+    language: es
+    question: "¿Cuál es la habitación más barata en Porto para 6 meses desde septiembre 2026?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Porto"
+      - "barata"
+      - "6 meses"
+      - "septiembre"
+    notes: "Spanish find + cost query with dates. Phase 3 chains find_available_rooms + compute_total_cost."
+
+  - id: multilingual_04
+    category: multilingual
+    language: de
+    question: "Wie funktioniert die Stornierung bei Erasmus Life Housing?"
+    expected_intent: both
+    expected_property_ids: []
+    must_mention:
+      - "Stornierung"
+      - "Erasmus Life Housing"
+      - "Tage"
+    notes: "German cancellation policy question. Response should be in German."
