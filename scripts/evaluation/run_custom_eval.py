@@ -581,7 +581,7 @@ def main() -> None:
     if problems:
         print("Top 3 most severe:")
         for p in problems[:3]:
-            print(f"  {p['query_id']}  {p['metric']}={p['score']}  → {p['question'][:60]}")
+            print(f"  {p['query_id']}  {p['metric']}={p['score']}  -> {p['question'][:60]}")
 
 
 if __name__ == "__main__":
