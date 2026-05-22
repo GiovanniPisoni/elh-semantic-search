@@ -59,7 +59,7 @@ class FindRoomsOutput:
     """Result of a find_rooms call."""
 
     rooms: list[RoomMatch]
-    total_matches: int  # pre-pagination count
+    total_matches: int
     query_summary: str  # natural-language summary of filters
 
     def to_dict(self) -> dict[str, Any]:

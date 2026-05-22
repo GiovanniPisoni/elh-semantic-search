@@ -9,6 +9,39 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# ConversationTurn
+
+
+class ConversationTurn(BaseModel):
+    """One turn in a conversation: a user message or an assistant reply.
+
+    Used to pass conversation history into ``run_agent_turn``. Only
+    the natural-language content is preserved across turns; tool
+    calls and results are NOT carried over (they would balloon the
+    context without giving the model new information it can't
+    re-derive from the assistant's final reply).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    role: Literal["user", "assistant"] = Field(
+        ...,
+        description=(
+            "Speaker of this turn. 'user' for the student's message, "
+            "'assistant' for the agent's prior reply."
+        ),
+    )
+    content: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "Text of the turn. For assistant turns, this is the "
+            "agent's final_message from the prior run_agent_turn call. "
+            "For user turns, this is the user's natural-language query."
+        ),
+    )
+
+
 # ToolCall
 
 

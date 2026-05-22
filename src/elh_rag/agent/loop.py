@@ -36,7 +36,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from elh_rag.agent._models import AgentResponse, ToolCall
+from elh_rag.agent._models import AgentResponse, ConversationTurn, ToolCall
 from elh_rag.agent.agent_llm_client import AgentLLMClient
 from elh_rag.agent.agent_prompt import SYSTEM_PROMPT
 from elh_rag.agent.context import AgentContext
@@ -75,10 +75,19 @@ def run_agent_turn(
     on_tool_call: OnToolCallCallback | None = None,
     llm: AgentLLMClient | None = None,
     synthesis_llm: AgentLLMClient | None = None,
+    conversation_history: list[ConversationTurn] | None = None,
 ) -> AgentResponse:
-    """Execute one agent turn end-to-end."""
+    """Execute one agent turn end-to-end.
+
+    If ``conversation_history`` is provided, those turns are prepended to
+    the messages list before the new query, giving the model context from
+    prior exchanges. The list is hard-capped at
+    ``settings.agent_max_history_turns``; longer histories raise
+    :class:`InputValidationError`.
+    """
     # 1. Input validation
     _validate_query(query)
+    _validate_conversation_history(conversation_history)
 
     # 2. Setup
     started_at = datetime.now(UTC)
@@ -98,7 +107,13 @@ def run_agent_turn(
     tools = build_tool_schemas()
     streaming = on_text is not None
 
-    messages: list[dict[str, Any]] = [{"role": "user", "content": query}]
+    # Build the messages list. If history is provided, prepend it
+    # preserving order, then append the new user query.
+    messages: list[dict[str, Any]] = []
+    if conversation_history:
+        for turn in conversation_history:
+            messages.append({"role": turn.role, "content": turn.content})
+    messages.append({"role": "user", "content": query})
     tool_trace: list[ToolCall] = []
     input_tokens_total = 0
     output_tokens_total = 0
@@ -204,6 +219,27 @@ def _validate_query(query: str) -> None:
         raise InputValidationError(
             f"Query length {len(query)} exceeds limit of "
             f"{settings.agent_max_query_chars} characters."
+        )
+
+
+def _validate_conversation_history(
+    history: list[ConversationTurn] | None,
+) -> None:
+    """Hard cap on conversation history length.
+
+    The frontend is expected to truncate history to ~5 turns (FIFO)
+    before sending; the backend hard-caps at
+    ``settings.agent_max_history_turns`` as a defensive check against
+    runaway client state or malicious input.
+    """
+    if not history:
+        return
+    cap = settings.agent_max_history_turns
+    if len(history) > cap:
+        raise InputValidationError(
+            f"conversation_history has {len(history)} turns, "
+            f"exceeds hard cap of {cap}. The frontend should "
+            "truncate FIFO before sending."
         )
 
 

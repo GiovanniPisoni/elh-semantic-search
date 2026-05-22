@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from elh_rag.agent._models import ToolCall
+from elh_rag.agent._models import ConversationTurn, ToolCall
 from elh_rag.agent.agent_llm_client import StreamChunk
 from elh_rag.agent.loop import InputValidationError, run_agent_turn
 from elh_rag.tools.errors import ToolExecutionError, ToolValidationError
@@ -499,3 +499,106 @@ class TestModelSplit:
 
         assert mock_llm.call.call_count == 2  # both hops used the same mock
         assert response.hop_count == 2
+
+
+# Conversation history (stateless backend, client supplies prior turns)
+
+
+class TestConversationHistory:
+    """Verify conversation_history handling in run_agent_turn."""
+
+    def test_no_history_default_behavior_unchanged(
+        self, mock_ctx: Any, mock_llm: MagicMock
+    ) -> None:
+        """When conversation_history is None, messages starts with only
+        the new user query (backward compat)."""
+        mock_llm.call.return_value = _end_turn_message("ok")
+
+        run_agent_turn("Find rooms", mock_ctx, llm=mock_llm)
+
+        # Inspect the messages array the LLM saw on the first (only) call.
+        messages = mock_llm.call.call_args.kwargs["messages"]
+        assert len(messages) == 1
+        assert messages[0] == {"role": "user", "content": "Find rooms"}
+
+    def test_history_turns_prepended_in_order(self, mock_ctx: Any, mock_llm: MagicMock) -> None:
+        """When history is provided, turns are prepended in order before the new query."""
+        mock_llm.call.return_value = _end_turn_message("ok")
+        history = [
+            ConversationTurn(role="user", content="Find rooms in Lisbon"),
+            ConversationTurn(
+                role="assistant",
+                content="I found 5 rooms; the cheapest is in Chiado at €450.",
+            ),
+        ]
+
+        run_agent_turn(
+            "What about the second one?",
+            mock_ctx,
+            llm=mock_llm,
+            conversation_history=history,
+        )
+
+        messages = mock_llm.call.call_args.kwargs["messages"]
+        assert len(messages) == 3
+        assert messages[0]["role"] == "user"
+        assert messages[0]["content"] == "Find rooms in Lisbon"
+        assert messages[1]["role"] == "assistant"
+        assert messages[1]["content"] == "I found 5 rooms; the cheapest is in Chiado at €450."
+        assert messages[2] == {"role": "user", "content": "What about the second one?"}
+
+    def test_history_assistant_turn_uses_correct_role(
+        self, mock_ctx: Any, mock_llm: MagicMock
+    ) -> None:
+        """An assistant ConversationTurn becomes role=assistant in the
+        messages list, not flipped or omitted."""
+        mock_llm.call.return_value = _end_turn_message("ok")
+        history = [ConversationTurn(role="assistant", content="Hello!")]
+
+        run_agent_turn("hi", mock_ctx, llm=mock_llm, conversation_history=history)
+
+        messages = mock_llm.call.call_args.kwargs["messages"]
+        assert messages[0] == {"role": "assistant", "content": "Hello!"}
+        assert messages[1] == {"role": "user", "content": "hi"}
+
+    def test_history_exceeding_cap_raises(
+        self,
+        mock_ctx: Any,
+        mock_llm: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """conversation_history longer than agent_max_history_turns raises."""
+        monkeypatch.setattr("elh_rag.agent.loop.settings.agent_max_history_turns", 3)
+        history = [ConversationTurn(role="user", content="msg") for _ in range(4)]
+
+        with pytest.raises(InputValidationError, match="exceeds hard cap"):
+            run_agent_turn("new query", mock_ctx, llm=mock_llm, conversation_history=history)
+        # Validation runs before any LLM call.
+        mock_llm.call.assert_not_called()
+
+    def test_history_equal_to_cap_succeeds(
+        self,
+        mock_ctx: Any,
+        mock_llm: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Exactly cap turns is allowed (boundary)."""
+        monkeypatch.setattr("elh_rag.agent.loop.settings.agent_max_history_turns", 3)
+        mock_llm.call.return_value = _end_turn_message("ok")
+        history = [ConversationTurn(role="user", content="msg") for _ in range(3)]
+
+        # Should NOT raise.
+        run_agent_turn("new query", mock_ctx, llm=mock_llm, conversation_history=history)
+
+        messages = mock_llm.call.call_args.kwargs["messages"]
+        assert len(messages) == 4  # 3 history + 1 new query
+
+    def test_empty_history_treated_as_none(self, mock_ctx: Any, mock_llm: MagicMock) -> None:
+        """An empty list (not None) is also fine; treated as no history."""
+        mock_llm.call.return_value = _end_turn_message("ok")
+
+        run_agent_turn("just one query", mock_ctx, llm=mock_llm, conversation_history=[])
+
+        messages = mock_llm.call.call_args.kwargs["messages"]
+        assert len(messages) == 1
+        assert messages[0] == {"role": "user", "content": "just one query"}

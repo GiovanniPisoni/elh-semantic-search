@@ -28,7 +28,7 @@ import elh_rag.tools.get_property_details.tool  # noqa: F401
 from elh_rag.agent import tools_RAG_corpora  # noqa: F401
 
 # Public API symbols
-from elh_rag.agent._models import AgentResponse, ToolCall
+from elh_rag.agent._models import AgentResponse, ConversationTurn, ToolCall
 from elh_rag.agent.agent_llm_client import AgentLLMClient
 from elh_rag.agent.context import AgentContext
 from elh_rag.agent.loop import (
@@ -40,6 +40,7 @@ __all__ = [
     "AgentContext",
     "AgentLLMClient",
     "AgentResponse",
+    "ConversationTurn",
     "InputValidationError",
     "ToolCall",
     "run_agent_turn",

@@ -148,9 +148,13 @@ queries:
     category: semantic
     language: en
     query: "What do students say about how responsive the hosts are at ELH?"
-    expected_tools: [search_reviews]
-    expected_hop_count: 2
-    notes: Opinion on host quality.
+    expected_tools: []
+    expected_hop_count: 1
+    notes: >
+      Ambiguity-disambiguation case (routing rule 12). The word 'hosts'
+      is ambiguous between 'the ELH team' and 'the individual landlords', so
+      the correct behavior is to ask the user to clarify before invoking
+      search_reviews. Expected tools is the empty list.
 
   # Multilingual: same tool categories but in IT, PT, ES, DE.
 

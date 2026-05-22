@@ -1,18 +1,30 @@
 """Tool 3: ``compute_total_cost``.
 
-Given a specific room and a stay window,
-return the full cost picture the student needs at booking time:
+Given a specific room and a stay window, return the full cost picture
+the student needs at booking time. Schedule per ELH operations
+confirmation 2026-05-19 (supersedes 2026-05-11):
 
-    * amount payable at booking
-        = security deposit
-        + last-month advance (if lastmonthdeposit='Y')
-        + reservation fee (9% of total rent, configurable)
-        + extra-person cost (one-shot, opt-in)
-    * monthly recurring amount (if all months bill at the same rate)
-        or per-month breakdown (cross-season stays)
-    * one-time amount paid to landlord at check-in (administrativetax)
-    * utility coverage lists (informational, not a cost line)
-    * notes explaining refundability, last-month semantics, who-pays-what
+    * AT BOOKING (paid to ELH)
+        = first month's rent
+        + reservation fee (9% of total stay rent, configurable, non-refundable)
+
+    * AT CHECK-IN (paid to the landlord)
+        = security deposit (refundable, when deposit='Y')
+        + last-month advance (when lastmonthdeposit='Y' AND stay >= 2 months)
+        + administrative tax (when administrativetax > 0)
+
+    * MONTHLY DURING STAY
+        = rent for months 2..N (or 2..N-1 if last-month advance applies)
+        + extra-person surcharge for every month of the stay
+          (when extrapersonallowed='Y' AND payload.extra_person=True)
+
+    * AT CHECK-OUT
+        = refundable deposit returned, minus landlord deductions
+
+The total cash outflow is reported via ``total_stay_cost_eur``;
+``total_out_of_pocket_eur`` excludes the refundable deposit;
+``refundable_at_checkout_eur`` reports what comes back. Utility
+coverage lists are informational, not a cost line.
 """
 
 from __future__ import annotations
@@ -26,7 +38,7 @@ from pydantic import BaseModel, Field, model_validator
 from elh_rag.config import settings
 
 from .._shared.db import DBExecutor
-from .._shared.pricing import MonthRent, StayCostBreakdown, compute_stay_breakdown
+from .._shared.pricing import StayCostBreakdown, compute_stay_breakdown
 from .._shared.room_id import decode_room_id, normalize_id
 from ..base import register_tool
 from ._expenses import UtilityCategorization, fetch_utility_categorization
@@ -101,32 +113,65 @@ class ComputeTotalCostOutput(BaseModel):
     payable_at_booking_eur: Decimal = Field(
         ...,
         description=(
-            "Single total the student pays to confirm the booking. "
-            "Includes security deposit, last-month advance (when applicable), "
-            "reservation fee, and extra-person cost (when opted in)."
+            "Amount paid to ELH at booking to confirm the reservation: "
+            "first month's rent + 9% non-refundable reservation fee."
+        ),
+    )
+    total_stay_cost_eur: Decimal = Field(
+        ...,
+        description=(
+            "Total cash outflow for the entire stay: every monthly rent + "
+            "reservation fee + security deposit + extra-person surcharge "
+            "across every month + admin tax. The deposit is included even "
+            "though it is refunded at check-out; see "
+            "``refundable_at_checkout_eur`` for what comes back."
+        ),
+    )
+    total_out_of_pocket_eur: Decimal = Field(
+        ...,
+        description=(
+            "Net non-refundable spend: ``total_stay_cost_eur`` minus "
+            "``refundable_at_checkout_eur``. This is the figure the "
+            "student actually loses to ELH and the landlord."
+        ),
+    )
+    refundable_at_checkout_eur: Decimal = Field(
+        ...,
+        description=(
+            "Amount returned to the student at check-out: the security "
+            "deposit (subject to landlord assessment). The reservation "
+            "fee is refundable only in the rare case of a listing "
+            "mismatch on arrival and is NOT included here; the last-month "
+            "advance is a rent pre-payment, not refundable."
         ),
     )
     monthly_recurring_eur: Decimal | None = Field(
         default=None,
         description=(
-            "Recurring monthly amount. Populated when every month of the "
-            "stay bills at the same rate; otherwise ``None`` and "
-            "``monthly_breakdown`` is populated instead."
+            "Recurring monthly amount (rent + extra-person surcharge when "
+            "applicable). Excludes the first month (paid at booking) and "
+            "the last month (prepaid at check-in if lastmonthdeposit='Y'). "
+            "Populated when every month bills at the same effective rate; "
+            "otherwise ``None`` and ``monthly_breakdown`` is populated."
         ),
     )
     monthly_breakdown: list[MonthRentOut] | None = Field(
         default=None,
         description=(
-            "Per-month rent for cross-season stays. Populated when "
-            "``monthly_recurring_eur`` is ``None``."
+            "Per-month rent for cross-season stays. Each entry's "
+            "``rent_eur`` already includes the extra-person surcharge "
+            "when applicable. Populated when ``monthly_recurring_eur`` "
+            "is ``None``."
         ),
     )
     one_time_at_checkin_eur: Decimal | None = Field(
         default=None,
         description=(
-            "Administrative fee paid by the student directly to the "
-            "landlord at check-in (not to ELH). Populated only if the "
-            "room has a non-zero administrativetax."
+            "Total paid to the landlord at check-in (not to ELH): "
+            "refundable security deposit + last-month advance (when "
+            "lastmonthdeposit='Y' and stay >= 2 months) + administrative "
+            "tax (when applicable). ``None`` only when all three "
+            "components are zero."
         ),
     )
     utilities_included: list[str] = Field(
@@ -222,52 +267,103 @@ def _compute(
         check_out=payload.check_out_date,
     )
 
-    # 2. Reservation fee (% of total rent)
+    # 2. Reservation fee (% of total rent, non-refundable, paid to ELH at booking)
     pct = Decimal(str(settings.reservation_fee_pct))
     reservation_fee = _q(breakdown.total_rent_eur * pct)
 
-    # 3. Security deposit
+    # 3. Security deposit (refundable, paid to landlord at check-in)
     deposit_required = room["deposit"] == "Y"
     security_deposit = _q(_to_decimal(room["depositvalue"])) if deposit_required else Decimal("0")
 
-    # 4. Last-month advance (paid upfront, no payment due in final month)
-    is_lastmonth = room["lastmonthdeposit"] == "Y"
+    # 4. Last-month advance: paid to the landlord at check-in, covers the
+    # last month so no rent is due that month
+    is_lastmonth = room["lastmonthdeposit"] == "Y" and breakdown.total_months >= 2
     lastmonth_advance = breakdown.months[-1].rent_eur if is_lastmonth else Decimal("0")
 
-    # 5. Extra-person cost — one-shot for the entire stay, only if allowed
-    extra_person_cost = Decimal("0")
+    # 5. Extra-person: recurring monthly surcharge for every month of the
+    # stay
+    extra_person_monthly = Decimal("0")
+    extra_person_total = Decimal("0")
     if payload.extra_person and room["extrapersonallowed"] == "Y":
-        extra_person_cost = _q(_to_decimal(room["extrapersoncost"]))
+        extra_person_monthly = _q(_to_decimal(room["extrapersoncost"]))
+        extra_person_total = _q(extra_person_monthly * Decimal(breakdown.total_months))
 
-    # 6. Booking total
-    payable_at_booking = _q(
-        security_deposit + lastmonth_advance + reservation_fee + extra_person_cost
+    # 6. Booking total: first month rent + reservation fee, paid to ELH
+    first_month_rent = breakdown.months[0].rent_eur
+    payable_at_booking = _q(first_month_rent + reservation_fee)
+
+    # 7. Check-in total: deposit + last-month advance + admin tax, paid
+    # to the landlord
+    admin_raw = _to_decimal(room["administrativetax"])
+    admin_tax = _q(admin_raw) if admin_raw > 0 else Decimal("0")
+    one_time_checkin_total = _q(security_deposit + lastmonth_advance + admin_tax)
+    one_time_checkin: Decimal | None = (
+        one_time_checkin_total if one_time_checkin_total > 0 else None
     )
 
-    # 7. Admin fee at check-in (paid directly to landlord, not ELH)
-    admin_raw = _to_decimal(room["administrativetax"])
-    one_time_checkin: Decimal | None = _q(admin_raw) if admin_raw > 0 else None
+    # 8. Monthly breakdown: every calendar month, rent + per-month extra
+    # already folded in
+    all_month_outs = [
+        MonthRentOut(
+            year=m.year,
+            month=m.month,
+            season=m.season,
+            rent_eur=_q(m.rent_eur + extra_person_monthly),
+        )
+        for m in breakdown.months
+    ]
 
-    # 8. Recurring vs breakdown
-    if breakdown.is_uniform_rent:
-        monthly_recurring: Decimal | None = breakdown.months[0].rent_eur
+    # 9. Recurring monthly amount when every month bills the same effective
+    # rate. Includes extra-person when applicable. Otherwise return the
+    # per-month list.
+    effective_rents = {mo.rent_eur for mo in all_month_outs}
+    if len(effective_rents) == 1:
+        monthly_recurring: Decimal | None = next(iter(effective_rents))
         monthly_breakdown_out: list[MonthRentOut] | None = None
     else:
         monthly_recurring = None
-        monthly_breakdown_out = [_to_month_out(m) for m in breakdown.months]
+        monthly_breakdown_out = all_month_outs
 
-    # 9. Notes
+    # 10. Total stay cost: at-booking + at-check-in + rent for the months
+    # that are still paid month-by-month + extra-person every month.
+    if is_lastmonth:
+        remaining_months_rent = sum(
+            (m.rent_eur for m in breakdown.months[1:-1]),
+            Decimal("0"),
+        )
+    else:
+        remaining_months_rent = sum(
+            (m.rent_eur for m in breakdown.months[1:]),
+            Decimal("0"),
+        )
+
+    total_stay_cost = _q(
+        payable_at_booking
+        + (one_time_checkin or Decimal("0"))
+        + remaining_months_rent
+        + extra_person_total
+    )
+
+    # 11. Refundable: just the deposit (returned at check-out).
+    refundable_at_checkout = _q(security_deposit)
+
+    # 12. Out of pocket: everything except the refundable deposit.
+    total_out_of_pocket = _q(total_stay_cost - refundable_at_checkout)
+
+    # 13. Notes
     notes = _build_notes(
         security_deposit=security_deposit,
         lastmonth_advance=lastmonth_advance,
         reservation_fee=reservation_fee,
-        extra_person_cost=extra_person_cost,
+        extra_person_monthly=extra_person_monthly,
+        extra_person_total=extra_person_total,
+        extra_person_months=breakdown.total_months,
         extra_person_requested=payload.extra_person,
         extra_person_allowed=(room["extrapersonallowed"] == "Y"),
-        one_time_checkin=one_time_checkin,
+        admin_tax=admin_tax,
     )
 
-    # 10. Summary
+    # 14. Summary
     summary = _compose_summary(
         breakdown=breakdown,
         payable_at_booking=payable_at_booking,
@@ -277,6 +373,9 @@ def _compute(
 
     return ComputeTotalCostOutput(
         payable_at_booking_eur=payable_at_booking,
+        total_stay_cost_eur=total_stay_cost,
+        total_out_of_pocket_eur=total_out_of_pocket,
+        refundable_at_checkout_eur=refundable_at_checkout,
         monthly_recurring_eur=monthly_recurring,
         monthly_breakdown=monthly_breakdown_out,
         one_time_at_checkin_eur=one_time_checkin,
@@ -289,53 +388,54 @@ def _compute(
     )
 
 
-def _to_month_out(m: MonthRent) -> MonthRentOut:
-    return MonthRentOut(year=m.year, month=m.month, season=m.season, rent_eur=m.rent_eur)
-
-
 def _build_notes(
     *,
     security_deposit: Decimal,
     lastmonth_advance: Decimal,
     reservation_fee: Decimal,
-    extra_person_cost: Decimal,
+    extra_person_monthly: Decimal,
+    extra_person_total: Decimal,
+    extra_person_months: int,
     extra_person_requested: bool,
     extra_person_allowed: bool,
-    one_time_checkin: Decimal | None,
+    admin_tax: Decimal,
 ) -> list[str]:
     """Compose user-facing disclosures from the cost components."""
     notes: list[str] = []
     if security_deposit > 0:
         notes.append(
-            f"Security deposit of €{security_deposit} is refundable at the "
-            "end of the stay, subject to landlord assessment."
+            f"Security deposit of €{security_deposit} is paid to the landlord "
+            "at check-in. It is refundable at check-out, subject to landlord "
+            "assessment."
         )
     if lastmonth_advance > 0:
         notes.append(
-            f"The last month's rent (€{lastmonth_advance}) has been paid "
-            "upfront at booking; no further payment is due for the final "
+            f"The last month's rent (€{lastmonth_advance}) is prepaid to the "
+            "landlord at check-in; no further payment is due for the final "
             "month of the stay."
         )
     if reservation_fee > 0:
         notes.append(
-            f"Reservation fee of €{reservation_fee} is refundable only if "
-            "the room does not match the listing upon arrival."
+            f"Reservation fee of €{reservation_fee} is paid to ELH at booking. "
+            "It is non-refundable except if the room does not match the "
+            "listing upon arrival."
         )
-    if extra_person_cost > 0:
+    if extra_person_monthly > 0:
         notes.append(
-            f"Extra-person cost (€{extra_person_cost}) is a one-time fee "
-            "for the entire stay, not a recurring monthly charge."
+            f"Extra-person surcharge of €{extra_person_monthly}/month "
+            f"applies, totalling €{extra_person_total} across "
+            f"{extra_person_months} month{'s' if extra_person_months != 1 else ''}."
         )
     elif extra_person_requested and not extra_person_allowed:
         notes.append(
             "Extra-person option requested but this room does not allow "
             "additional guests (extrapersonallowed='N')."
         )
-    if one_time_checkin is not None:
+    if admin_tax > 0:
         notes.append(
-            f"Administrative fee of €{one_time_checkin} is paid directly "
-            "to the landlord at check-in, not to ELH. Request an invoice "
-            "from the landlord if needed."
+            f"Administrative fee of €{admin_tax} is paid directly to the "
+            "landlord at check-in, not to ELH. Request an invoice from the "
+            "landlord if needed."
         )
     notes.append("All prices include VAT.")
     return notes

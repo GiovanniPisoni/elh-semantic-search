@@ -1,19 +1,9 @@
-# ELH Knowledge Base — Tool 6 (answer_policy_question)
+# ELH Knowledge Base
 #
 # Hand-curated from three sources:
 #   1. Website FAQ (https://www.erasmuslifehousing.com/faq) — canonical
 #   2. Reamaze email templates (cancellation, confirmation, re-ask, etc.)
 #   3. ELH presentation deck (PDF)
-#
-# Schema (see _kb.KBEntry):
-#   id                   stable identifier, used in `related` cross-refs
-#   category             grouping label
-#   audience             "student" | "landlord" | "both"
-#   canonical_question   primary phrasing (also embedded for matching)
-#   question_variants    additional phrasings, each embedded for matching
-#   answer               50-80 words; LLM may rephrase but should not contradict
-#   sources              provenance, surfaced to the user
-#   related              IDs of related entries for follow-up suggestions
 
 entries:
 
@@ -99,14 +89,48 @@ entries:
       - "What fees do I pay?"
       - "Breakdown of booking costs"
     answer: >
-      At booking you pay the first month's rent (or deposit) and the service
-      fee. The service fee is non-refundable except in exceptional cases such
-      as landlord cancellation or significant discrepancies between the
-      reserved room and what was presented. Additional one-time fees (e.g.
-      administrative tax) may apply at check-in directly to the landlord.
+      At booking you pay the first month's rent and a 9% reservation fee to
+      ELH. At check-in you pay the landlord the refundable security deposit
+      (equal to one month's rent), the last-month rent advance if applicable,
+      and any administrative tax. Subsequent monthly rents are paid during
+      the stay. The reservation fee is non-refundable except in exceptional
+      cases such as landlord cancellation or significant discrepancies
+      between the reserved room and what was presented.
     sources:
       - "Website FAQ"
-    related: [service_fee, deposit_required, cancellation_policy]
+      - "ELH operational policy (confirmed May 2026)"
+    related: [payment_schedule, service_fee, deposit_required, cancellation_policy]
+
+  - id: payment_schedule
+    category: payments_and_fees
+    audience: student
+    canonical_question: "What is the payment schedule and when do I pay each amount?"
+    question_variants:
+      - "When do I pay what?"
+      - "How much do I pay at booking?"
+      - "How much do I pay at check-in?"
+      - "When are payments due?"
+      - "When do I pay the reservation fee?"
+      - "What do I pay upfront and what at check-in?"
+      - "Quando devo pagare cosa?"
+      - "Quando se paga?"
+      - "Quando é o pagamento?"
+      - "Cuándo se paga?"
+      - "Quel est le calendrier des paiements?"
+      - "Wann muss ich bezahlen?"
+    answer: >
+      At ELH the payment schedule has three moments. At the moment of
+      booking, the student pays ELH the first month's rent plus a 9%
+      non-refundable reservation fee. At check-in the student pays the
+      landlord the refundable security deposit (equal to one month's rent),
+      any last-month rent advance if applicable, and an administrative tax
+      if applicable. Subsequent monthly rents are due at the start of each
+      month during the stay (the prepaid last month, if applicable, covers
+      the final month). The refundable deposit is returned at check-out
+      minus any deductions.
+    sources:
+      - "ELH operational policy (confirmed May 2026)"
+    related: [costs_overview, deposit_required, service_fee]
 
   - id: deposit_required
     category: payments_and_fees
@@ -116,11 +140,25 @@ entries:
       - "Is there a security deposit?"
       - "How much is the deposit?"
       - "Will I get my deposit back?"
-    answer: >
-      Yes, a deposit is normally required. It is returned at the end of the
-      stay, provided there is no damage to the room or shared spaces. The
-      exact amount depends on the specific room — check the listing or use
-      the cost computation tool for an itemised quote.
+    answer: |
+      Security deposit policy (general):
+
+      - Standard rule: the security deposit is equal to one month's rent and
+        is paid to the landlord at check-in. It is refunded at check-out
+        minus any deductions for damage to the room or shared spaces.
+
+      - Important variability: actual deposit terms vary by landlord. Some
+        landlords charge a flat amount (e.g. €250), others may request two
+        months' rent on arrival. The exact terms applicable to your room are
+        stated in the listing on the ELH website.
+
+      - Recommendation: always check the listing on the ELH website
+        carefully for the exact deposit amount and any landlord-specific
+        conditions. If anything is unclear, contact the ELH team before
+        booking.
+
+      - Refund timing: at check-out the landlord assesses the room condition;
+        if there is no damage, the deposit is returned in full.
     sources:
       - "Website FAQ"
     related: [costs_overview, refund_room_mismatch]
