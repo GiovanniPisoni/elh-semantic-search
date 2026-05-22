@@ -268,7 +268,9 @@ def write_markdown_report(
     lines.append("Each metric is judged by Claude Sonnet 4.5 with a deterministic JSON-output ")
     lines.append("contract; per-claim reasoning is preserved in the JSONL companion file. ")
     lines.append("`task_success` is architecture-agnostic — it judges (question, answer) ")
-    lines.append("without retrieved contexts, so it applies equally to pipeline and agentic systems.")
+    lines.append(
+        "without retrieved contexts, so it applies equally to pipeline and agentic systems."
+    )
     lines.append("")
 
     # Aggregates

@@ -29,7 +29,6 @@ from __future__ import annotations
 import json
 import statistics
 import sys
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -37,16 +36,14 @@ try:
     import matplotlib
 except ImportError:
     print(
-        "ERROR: matplotlib not installed. Run: "
-        "venv/Scripts/pip.exe install matplotlib",
+        "ERROR: matplotlib not installed. Run: venv/Scripts/pip.exe install matplotlib",
         file=sys.stderr,
     )
     sys.exit(1)
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Paths
 
@@ -227,11 +224,11 @@ def plot_cost_comparison(cells: dict[str, list[dict[str, Any]]], path: Path) -> 
     plt.close(fig)
 
 
-# Plot 3 — Quality metrics grouped bar (4 metrics × 2 systems on unified set)
+# Plot 3 — Quality metrics grouped bar (4 metrics x 2 systems on unified set)
 
 
 def plot_quality_metrics(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
-    """4 metrics × 2 systems on the unified 20-query set (Cell 3 vs Cell 4)."""
+    """4 metrics x 2 systems on the unified 20-query set (Cell 3 vs Cell 4)."""
     metrics = ["faithfulness", "context_recall", "answer_relevancy", "task_success"]
     p2_recs = cells["cell3_p2_on_unified"]
     p3_recs = cells["cell4_p3_on_unified"]
@@ -301,7 +298,7 @@ def plot_quality_metrics(cells: dict[str, list[dict[str, Any]]], path: Path) -> 
     plt.close(fig)
 
 
-# Plot 4 — Capability matrix (5 categories × 2 systems)
+# Plot 4 — Capability matrix (5 categories x 2 systems)
 
 
 def plot_capability_matrix(path: Path) -> None:
@@ -324,8 +321,9 @@ def plot_capability_matrix(path: Path) -> None:
     for i in range(2):
         for j in range(len(categories)):
             label = "YES" if data[i, j] == 1 else "NO"
-            ax.text(j, i, label, ha="center", va="center", fontsize=12, fontweight="bold",
-                    color="white")
+            ax.text(
+                j, i, label, ha="center", va="center", fontsize=12, fontweight="bold", color="white"
+            )
 
     ax.text(
         0.5,
@@ -377,8 +375,16 @@ def plot_per_category_heatmap(cells: dict[str, list[dict[str, Any]]], path: Path
         for j in range(len(categories)):
             val = data[i, j]
             color = "white" if val < 0.5 else "black"
-            ax.text(j, i, f"{val:.2f}", ha="center", va="center",
-                    fontsize=12, fontweight="bold", color=color)
+            ax.text(
+                j,
+                i,
+                f"{val:.2f}",
+                ha="center",
+                va="center",
+                fontsize=12,
+                fontweight="bold",
+                color=color,
+            )
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("task_success score", fontsize=9)
@@ -427,7 +433,7 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
     lines.append("")
     lines.append(
         f"On the **20-query unified golden set** (`evaluation/agent_queries_full_set.yaml`), "
-        f"Phase 3 is **~{c3['latency']['avg'] / c4['latency']['avg']:.1f}× faster** than Phase 2 "
+        f"Phase 3 is **~{c3['latency']['avg'] / c4['latency']['avg']:.1f}x faster** than Phase 2 "
         f"({c4['latency']['avg']:.1f}s vs {c3['latency']['avg']:.1f}s average per query). "
         f"On the architecture-neutral `task_success` metric, Phase 3 leads "
         f"({c4['task_success']['avg']:.2f} vs {c3['task_success']['avg']:.2f}); on the "
@@ -496,14 +502,20 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
         "pipeline-vs-agentic paradigm boundary cleanly."
     )
     lines.append("")
-    lines.append("- **faithfulness** — fraction of answer claims supported by retrieved sources. "
-                 "Returns N/A when the answer has no factual claims or no contexts are available.")
-    lines.append("- **context_recall** — fraction of `must_mention` concepts semantically covered "
-                 "by retrieved sources. Returns N/A when `must_mention` is empty.")
-    lines.append("- **answer_relevancy** — how on-topic the answer is. 0.0–1.0 scale.")
-    lines.append("- **task_success** — did the answer solve the user's task? 3-point scale "
-                 "(1.0 / 0.5 / 0.0). Judges only (question, answer); no retrieved contexts. "
-                 "This is the metric that crosses architectures cleanly.")
+    lines.append(
+        "- **faithfulness** — fraction of answer claims supported by retrieved sources. "
+        "Returns N/A when the answer has no factual claims or no contexts are available."
+    )
+    lines.append(
+        "- **context_recall** — fraction of `must_mention` concepts semantically covered "
+        "by retrieved sources. Returns N/A when `must_mention` is empty."
+    )
+    lines.append("- **answer_relevancy** — how on-topic the answer is. 0.0-1.0 scale.")
+    lines.append(
+        "- **task_success** — did the answer solve the user's task? 3-point scale "
+        "(1.0 / 0.5 / 0.0). Judges only (question, answer); no retrieved contexts. "
+        "This is the metric that crosses architectures cleanly."
+    )
     lines.append("")
 
     lines.append("### 1.3 Caveats")
@@ -531,11 +543,11 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
     lines.append(
         "**The semantic_04 anomaly.** Phase 3 underperforms Phase 2 on the `semantic` category "
         "(task_success 0.62 vs 0.88, Cell 3 vs Cell 4). The single root cause is `semantic_04` "
-        "(_\"What do students say about how responsive the hosts are at ELH?\"_): the word "
+        '(_"What do students say about how responsive the hosts are at ELH?"_): the word '
         "*hosts* is ambiguous between ELH-the-organization and the individual landlords, so the "
         "agent was designed to ask a clarifying question (`expected_tools: []` in "
         "`benchmarks/queries/agent_queries.yaml`). The task_success judge scored the clarification "
-        "request 0.0 (\"no actionable content\"), while Phase 2 — having no clarification "
+        'request 0.0 ("no actionable content"), while Phase 2 — having no clarification '
         "capability — just retrieved review chunks and scored 1.0. This is a **known interaction "
         "between the metric and the agent's designed disambiguation behaviour, not a Phase 3 "
         "quality regression.** A future metric variant could reward correct disambiguation; for "
@@ -547,7 +559,7 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
         "both systems score 1.00 on task_success, but the answer quality differs: Phase 2 lists "
         "monthly rent figures and lets the user multiply by months; Phase 3 calls "
         "`compute_total_cost` and returns a fully computed total. The task_success judge accepts "
-        "both as \"solved the task\" because the user could complete the arithmetic, but the "
+        'both as "solved the task" because the user could complete the arithmetic, but the '
         "fully-computed answer is materially better. This is a metric-rubric limitation: the "
         "judge is generous on partial-but-completable answers. A stricter rubric would surface "
         "this gap; the current rubric does not. Noted as a known limitation."
@@ -610,9 +622,7 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
     lines.append("")
     lines.append("![Per-category heatmap](figures/per_category_heatmap.png)")
     lines.append("")
-    lines.append(
-        "On the unified 20-query set, task_success per category (n=4 each):"
-    )
+    lines.append("On the unified 20-query set, task_success per category (n=4 each):")
     lines.append("")
     lines.append("| Category | Phase 2 | Phase 3 | Winner |")
     lines.append("|---|---:|---:|:---:|")
@@ -663,8 +673,8 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
         )
     lines.append("")
     lines.append(
-        f"Phase 3 is ~{c1['latency']['avg'] / c2['latency']['avg']:.1f}× faster than Phase 2 on "
-        f"the Phase 2 golden set and ~{c3['latency']['avg'] / c4['latency']['avg']:.1f}× faster "
+        f"Phase 3 is ~{c1['latency']['avg'] / c2['latency']['avg']:.1f}x faster than Phase 2 on "
+        f"the Phase 2 golden set and ~{c3['latency']['avg'] / c4['latency']['avg']:.1f}x faster "
         "on the unified set. The speedup comes from skipping the cross-encoder reranker (Phase 2 "
         "loads `BAAI/bge-reranker-v2-m3` and rescores 20 candidates per query) and from "
         "short-circuiting on tool calls that return small structured outputs rather than 5 long "
@@ -680,13 +690,9 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
     lines.append("| Cell | System | Cost per query | Cost per 20q run |")
     lines.append("|---|---|---:|---:|")
     lines.append(f"| 1 | Phase 2 / P2 set | ~$0.0150 | ~${PHASE2_COST_PER_QUERY * 20:.4f} |")
-    lines.append(
-        f"| 2 | Phase 3 / P2 set | ~${p3_c2_cost / 20:.4f} | ~${p3_c2_cost:.4f} |"
-    )
+    lines.append(f"| 2 | Phase 3 / P2 set | ~${p3_c2_cost / 20:.4f} | ~${p3_c2_cost:.4f} |")
     lines.append(f"| 3 | Phase 2 / unified | ~$0.0150 | ~${PHASE2_COST_PER_QUERY * 20:.4f} |")
-    lines.append(
-        f"| 4 | Phase 3 / unified | ~${p3_c4_cost / 20:.4f} | ~${p3_c4_cost:.4f} |"
-    )
+    lines.append(f"| 4 | Phase 3 / unified | ~${p3_c4_cost / 20:.4f} | ~${p3_c4_cost:.4f} |")
     lines.append("")
     lines.append(
         "Costs are comparable. Phase 2's cost is dominated by the Sonnet-grade generator call; "
@@ -706,9 +712,7 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
         "task_success because it can call the right tool. answer_relevancy is effectively tied."
     )
     lines.append("")
-    lines.append(
-        "| Metric | Phase 2 | Phase 3 | Notes |"
-    )
+    lines.append("| Metric | Phase 2 | Phase 3 | Notes |")
     lines.append("|---|---:|---:|---|")
     lines.append(
         f"| faithfulness | {c3['faithfulness']['avg']:.3f} | {c4['faithfulness']['avg']:.3f} | "
@@ -747,15 +751,13 @@ def write_report(cells: dict[str, list[dict[str, Any]]], path: Path) -> None:
     )
     lines.append("")
     lines.append(
-        "3. **Phase 3 is ~2× faster** across both golden sets. The reranker step in Phase 2 (~10s "
+        "3. **Phase 3 is ~2x faster** across both golden sets. The reranker step in Phase 2 (~10s "
         "of CrossEncoder inference per query) is the biggest single component the agentic "
         "architecture skips."
     )
+    lines.append("")
     lines.append(
-        ""
-    )
-    lines.append(
-        "4. **Costs are comparable** (~$0.015–$0.020/query for both systems excluding judge), "
+        "4. **Costs are comparable** (~$0.015-$0.020/query for both systems excluding judge), "
         "and the comparison would be even closer in production where Anthropic's prompt cache "
         "would amortize the agent's larger system prompt across turns."
     )
