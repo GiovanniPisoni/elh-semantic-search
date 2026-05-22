@@ -33,6 +33,7 @@ from elh_rag.evaluation.metrics import (
     answer_relevancy,
     context_recall,
     faithfulness,
+    task_success,
 )
 from elh_rag.logging_setup import setup_logging
 from elh_rag.pipeline import RAGPipeline
@@ -150,10 +151,11 @@ def evaluate_query(
     contexts: list[str],
     must_mention: list[str],
 ) -> dict[str, Any]:
-    """Run the three metrics on a single (question, answer, contexts) tuple."""
+    """Run the four metrics on a single (question, answer, contexts) tuple."""
     f_result = faithfulness(judge=judge, answer=answer, contexts=contexts)
     cr_result = context_recall(judge=judge, must_mention=must_mention, contexts=contexts)
     ar_result = answer_relevancy(judge=judge, question=question, answer=answer)
+    ts_result = task_success(judge=judge, question=question, answer=answer)
 
     return {
         "faithfulness_score": f_result.score,
@@ -162,6 +164,8 @@ def evaluate_query(
         "context_recall_details": cr_result.details,
         "answer_relevancy_score": ar_result.score,
         "answer_relevancy_details": ar_result.details,
+        "task_success_score": ts_result.score,
+        "task_success_details": ts_result.details,
     }
 
 
@@ -259,10 +263,12 @@ def write_markdown_report(
     lines.append(f"**Queries:** {len(records)} total · {n_ok} OK · {n_err} errored")
     lines.append("")
     lines.append("Custom evaluation framework — written from scratch after RAGAS 0.4 ")
-    lines.append("produced ~90% NaN values on this golden set. Three metrics measured:")
-    lines.append("**faithfulness**, **context_recall**, **answer_relevancy**. Each metric ")
-    lines.append("is judged by Claude Sonnet 4.5 with a deterministic JSON-output ")
-    lines.append("contract; per-claim reasoning is preserved in the JSONL companion file.")
+    lines.append("produced ~90% NaN values on this golden set. Four metrics measured:")
+    lines.append("**faithfulness**, **context_recall**, **answer_relevancy**, **task_success**. ")
+    lines.append("Each metric is judged by Claude Sonnet 4.5 with a deterministic JSON-output ")
+    lines.append("contract; per-claim reasoning is preserved in the JSONL companion file. ")
+    lines.append("`task_success` is architecture-agnostic — it judges (question, answer) ")
+    lines.append("without retrieved contexts, so it applies equally to pipeline and agentic systems.")
     lines.append("")
 
     # Aggregates
@@ -270,7 +276,7 @@ def write_markdown_report(
     lines.append("")
     lines.append("| Metric | Avg | Median | Min | Max | Valid (N) | Skipped |")
     lines.append("|---|---:|---:|---:|---:|---:|---:|")
-    for metric in ["faithfulness", "context_recall", "answer_relevancy"]:
+    for metric in ["faithfulness", "context_recall", "answer_relevancy", "task_success"]:
         scores = [r.get(f"{metric}_score") for r in records if not r.get("error")]
         agg = aggregate(scores)
         lines.append(
@@ -324,7 +330,7 @@ def write_markdown_report(
 
         # Score row
         score_parts = []
-        for m in ["faithfulness", "context_recall", "answer_relevancy"]:
+        for m in ["faithfulness", "context_recall", "answer_relevancy", "task_success"]:
             s = r.get(f"{m}_score")
             score_str = "N/A" if s is None else f"{s:.3f}"
             score_parts.append(f"**{m}:** {score_str}")
@@ -386,6 +392,14 @@ def write_markdown_report(
     lines.append("unanswerable queries. Likely fix: prompt clarity, or upstream ")
     lines.append("retrieval quality (irrelevant sources push the LLM to improvise).")
     lines.append("")
+    lines.append("**task_success** — did the answer actually solve the user's task? ")
+    lines.append("3-point scale: 1.0 (fully solved with actionable specifics), 0.5 ")
+    lines.append("(partially helpful), 0.0 (off-topic / evasive). A correct refusal of ")
+    lines.append("a genuinely unanswerable question scores 1.0. Unlike faithfulness and ")
+    lines.append("context_recall, this metric needs no retrieved contexts, so it crosses ")
+    lines.append("architectural paradigms (pipeline vs agentic) cleanly. Avg < 0.5 means ")
+    lines.append("the system frequently fails to deliver actionable content.")
+    lines.append("")
     lines.append("**Skipped queries (None scores)** are the metrics opting out cleanly. ")
     lines.append("Queries q05 and q20 are unanswerable — `must_mention` is empty so ")
     lines.append("`context_recall` correctly skips. If the LLM said 'I don't know', ")
@@ -442,6 +456,7 @@ def main() -> None:
         "faithfulness": 0.70,
         "context_recall": 0.60,
         "answer_relevancy": 0.70,
+        "task_success": 0.50,
     }
 
     print("ELH RAG — light evaluation (custom evaluation)")
@@ -569,7 +584,7 @@ def main() -> None:
     print("=" * 60)
     print()
     print("Aggregates:")
-    for metric in ["faithfulness", "context_recall", "answer_relevancy"]:
+    for metric in ["faithfulness", "context_recall", "answer_relevancy", "task_success"]:
         scores = [r.get(f"{metric}_score") for r in records if not r.get("error")]
         agg = aggregate(scores)
         print(

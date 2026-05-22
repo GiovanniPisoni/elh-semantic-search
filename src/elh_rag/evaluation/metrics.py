@@ -269,3 +269,89 @@ def answer_relevancy(
             "is_unanswerable_query": result.get("is_unanswerable_query", False),
         },
     )
+
+
+# Metric 4 — Task Success
+
+_TASK_SUCCESS_SYSTEM = """You evaluate whether an AI assistant solved a \
+user's task.
+
+Score the (question, answer) pair on a 3-point scale:
+
+    1.0 — Fully solves the task with specific, actionable content
+          (concrete numbers, names, dates, recommendations).
+    0.5 — Partially helpful. Relevant to the task but missing key
+          information or too generic to act on.
+    0.0 — Off-topic, evasive, or provides no actionable content.
+
+SPECIAL CASE — correct refusals:
+    A response like "I cannot answer that, please ask the ELH team"
+    scores 1.0 IF the question is genuinely unanswerable (nonsense,
+    out-of-scope, ambiguous to the point that the intent is unclear).
+    An evasive non-answer to an answerable question scores 0.0.
+
+Unlike retrieval-shaped metrics, this metric judges only the
+(question, answer) pair. No retrieved contexts are considered.
+
+Output ONLY a JSON object with this exact schema:
+{
+  "score": 0.0,
+  "reason": "one sentence explaining the score"
+}
+
+The "score" must be exactly 0.0, 0.5, or 1.0.
+No preamble, no markdown fences, no commentary outside the JSON."""
+
+
+def task_success(
+    judge: EvaluationJudge,
+    question: str,
+    answer: str,
+) -> MetricResult:
+    """Judge whether the answer solved the user's task.
+
+    Unlike faithfulness/context_recall, this metric requires no
+    retrieved contexts. It evaluates the (question, answer) pair as
+    a black box: did the system give the user actionable, on-target
+    information? This is the metric that crosses architectural
+    paradigms (pipeline vs agentic) cleanly.
+
+    Score interpretation:
+        1.0 — answer fully solves the task with specific actionable
+              content (numbers, names, dates, concrete recommendations)
+        0.5 — answer partially solves the task; relevant but missing
+              key information or too generic
+        0.0 — answer is off-topic, evasive, or provides no actionable
+              content
+
+    A correct refusal of a genuinely unanswerable question scores 1.0.
+    """
+    if not answer.strip():
+        return MetricResult(score=0.0, details={"reason": "empty answer"})
+
+    user_prompt = (
+        f"QUESTION:\n{question}\n\n"
+        f"ANSWER:\n{answer}\n\n"
+        "Score whether the answer solved the user's task. Return JSON only."
+    )
+
+    try:
+        result = judge.ask_json(system=_TASK_SUCCESS_SYSTEM, user=user_prompt)
+    except JudgeError as exc:
+        logger.warning("Task success judge failed: %s", exc)
+        return MetricResult(score=None, details={"error": str(exc)})
+
+    score = result.get("score")
+    if score not in (0.0, 0.5, 1.0):
+        return MetricResult(
+            score=None,
+            details={
+                "error": f"invalid score {score!r}, expected 0.0/0.5/1.0",
+                "raw_result": result,
+            },
+        )
+
+    return MetricResult(
+        score=float(score),
+        details={"reason": result.get("reason", "")},
+    )
