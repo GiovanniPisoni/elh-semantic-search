@@ -152,16 +152,15 @@ after the post-evaluation fixes of May 2026:
 | Latency p95 | 12.6 s |
 | Cost per full benchmark | $0.37 USD |
 | Cost per question (mixed) | ~$0.018 USD |
+| Human-eval correctness (Eval 3 final) | 10 / 10 |
+| Human-eval completeness (Eval 3 final) | 10 / 10 |
+| Queries rated perfect | 20 / 20 |
 
 Full methodology, before/after comparison, and per-category breakdown
 are in [`benchmarks/reports/`](benchmarks/reports/). Raw run data is
 preserved as JSONL under `benchmarks/runs/` for reproducibility.
 
-Human evaluation by the ELH domain expert on the same 20-query
-benchmark scored **8.95 / 10 for correctness** and **8.58 / 10 for
-completeness** on average, with 13 / 20 queries rated 10 / 10 on both
-axes. Targeted fixes addressed the four lower-scoring cases (now passing
-qualitatively).
+Human evaluation by the ELH domain expert on the same 20-query benchmark was iterated across three cycles: Eval 1 (8.95 / 8.58, 13 / 20 perfect), then 5 targeted fixes on the four problematic queries, Eval 2 (9.65 / 9.65, 18 / 20 perfect), then 1 KB content fix on the residual feedback, Eval 3 (10 / 10 correctness, 10 / 10 completeness, 20 / 20 perfect). Full iteration log in `docs/phase3/phase3_outcomes.md`.
 
 ## Tech stack
 

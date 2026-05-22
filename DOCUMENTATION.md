@@ -62,6 +62,9 @@ Measured on a 20-question benchmark spanning all eight tools and five languages 
 | Worst-case response time | 12.6 seconds |
 | Cost per question (mixed) | ~$0.018 USD |
 | Cost per full benchmark run | $0.37 USD |
+| Human-eval correctness (Eval 3 final) | 10 / 10 |
+| Human-eval completeness (Eval 3 final) | 10 / 10 |
+| Queries rated perfect (10/10 on both) | 20 / 20 |
 
 The latency is dominated by the LLM provider (Anthropic) calls. Optimisations applied: prompt caching (90% input-token discount on repeated calls within 5 minutes), and a dual-model split — Claude Sonnet 4.5 for the first reasoning step, Claude Haiku 4.5 (about 5× faster) for follow-up steps.
 
