@@ -247,7 +247,9 @@ def write_markdown_report(
     """Write the human-facing Markdown diagnostic report."""
     lines: list[str] = []
 
-    system_label = "Pipeline RAG" if system == "pipelined-RAG" else "Agentic RAG"
+    system_label = (
+        "Phase 2 — Pipelined RAG" if system == "pipelined-RAG" else "Phase 3 — Agentic RAG"
+    )
     lines.append(f"# ELH RAG — Custom evaluation report — {system_label}")
     lines.append("")
     lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
@@ -424,13 +426,12 @@ def main() -> None:
     parser.add_argument(
         "--system",
         type=str,
-        choices=["phase2", "phase3"],
-        default="phase2",
+        choices=["pipelined-RAG", "agentic-RAG"],
+        default="pipelined-RAG",
         help=(
-            "Which system to evaluate. 'pipelined-RAG' runs the legacy RAGPipeline "
-            "(default, preserves existing behaviour). 'phase3' runs the "
-            "Agentic RAG agent via run_agent_turn and extracts contexts "
-            "from the tool trace."
+            "Which system to evaluate. 'pipelined-RAG' (default) runs the "
+            "Phase 2 RAGPipeline. 'agentic-RAG' runs the Phase 3 agent via "
+            "run_agent_turn and extracts contexts from the tool trace."
         ),
     )
     args = parser.parse_args()
@@ -481,7 +482,7 @@ def main() -> None:
 
         rec: dict[str, Any] = {**q, "system": args.system}
 
-        if args.system == "pipelined_RAG":
+        if args.system == "pipelined-RAG":
             assert pipeline is not None
             response, latency, error = run_pipeline_on_query(pipeline, q["question"])
             rec["latency_sec"] = round(latency, 3)
