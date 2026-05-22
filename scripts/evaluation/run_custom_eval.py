@@ -27,6 +27,7 @@ from typing import Any
 
 import yaml
 
+from elh_rag.agent import AgentContext, run_agent_turn
 from elh_rag.evaluation.judge import EvaluationJudge
 from elh_rag.evaluation.metrics import (
     answer_relevancy,
@@ -47,7 +48,7 @@ def load_golden_set(path: Path) -> list[dict[str, Any]]:
     real = [q for q in queries if not q.get("question", "").startswith("REPLACE_WITH_")]
     skipped = len(queries) - len(real)
     if skipped:
-        print(f"⚠️  Skipped {skipped} unannotated stub(s)")
+        print(f"Skipped {skipped} unannotated stub(s)")
     return real
 
 
@@ -73,6 +74,70 @@ def extract_contexts(response: RAGResponse) -> list[str]:
     if not response or not response.sources:
         return []
     return [src.text for src in response.sources if src.text]
+
+
+# Agent runner
+
+
+_PHASE3_SEMANTIC_TOOLS = ("search_descriptions", "search_reviews")
+_PHASE3_POLICY_TOOLS = ("answer_policy_question",)
+
+
+def run_phase3_on_query(
+    ctx: AgentContext, question: str
+) -> tuple[dict[str, Any] | None, float, str | None]:
+    """Run the Phase 3 agent and normalise its response for the judge.
+
+    The judge framework expects (answer, contexts) pairs. For Phase 3 we:
+        - take ``answer = AgentResponse.final_message``;
+        - extract ``contexts`` from the tool trace: ``hits[].text`` for
+          the two RAG-search tools, ``matches[].answer`` for the policy
+          tool. DB tools (find_rooms, compute_total_cost, ...) produce
+          no semantic context, so ``contexts`` stays empty for
+          structural/cost queries — that is the correct signal to the
+          judge that faithfulness/context_recall do not apply.
+    """
+    start = time.perf_counter()
+    try:
+        response = run_agent_turn(query=question, ctx=ctx)
+    except Exception as exc:
+        return None, time.perf_counter() - start, str(exc)
+
+    latency = time.perf_counter() - start
+
+    contexts: list[str] = []
+    tools_used: list[str] = []
+    for tool_call in response.tool_trace:
+        tools_used.append(tool_call.name)
+        if tool_call.output_json is None:
+            continue
+        try:
+            output = json.loads(tool_call.output_json)
+        except json.JSONDecodeError:
+            continue
+
+        if tool_call.name in _PHASE3_SEMANTIC_TOOLS:
+            for hit in output.get("hits", []):
+                text = hit.get("text")
+                if text:
+                    contexts.append(text)
+        elif tool_call.name in _PHASE3_POLICY_TOOLS:
+            for match in output.get("matches", []):
+                answer_text = match.get("answer")
+                if answer_text:
+                    contexts.append(answer_text)
+
+    normalised: dict[str, Any] = {
+        "answer": response.final_message,
+        "contexts": contexts,
+        "tools_used": tools_used,
+        "hop_count": response.hop_count,
+        "stop_reason": response.stop_reason,
+        "input_tokens": response.input_tokens,
+        "output_tokens": response.output_tokens,
+        "total_duration_ms": response.total_duration_ms,
+    }
+    return normalised, latency, None
 
 
 # Evaluation
@@ -177,13 +242,16 @@ def write_markdown_report(
     problems: list[dict[str, Any]],
     path: Path,
     thresholds: dict[str, float],
+    system: str = "pipelined-RAG",
 ) -> None:
     """Write the human-facing Markdown diagnostic report."""
     lines: list[str] = []
 
-    lines.append("# ELH RAG — Phase 4 light diagnostic report (custom metrics)")
+    system_label = "Pipeline RAG" if system == "pipelined-RAG" else "Agentic RAG"
+    lines.append(f"# ELH RAG — Custom evaluation report — {system_label}")
     lines.append("")
     lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    lines.append(f"**System under test:** `{system}`")
     n_ok = len([r for r in records if not r.get("error")])
     n_err = len(records) - n_ok
     lines.append(f"**Queries:** {len(records)} total · {n_ok} OK · {n_err} errored")
@@ -353,6 +421,18 @@ def main() -> None:
         default="",
         help="Optional suffix appended to output filenames",
     )
+    parser.add_argument(
+        "--system",
+        type=str,
+        choices=["phase2", "phase3"],
+        default="phase2",
+        help=(
+            "Which system to evaluate. 'pipelined-RAG' runs the legacy RAGPipeline "
+            "(default, preserves existing behaviour). 'phase3' runs the "
+            "Agentic RAG agent via run_agent_turn and extracts contexts "
+            "from the tool trace."
+        ),
+    )
     args = parser.parse_args()
 
     setup_logging()
@@ -365,19 +445,27 @@ def main() -> None:
 
     print("ELH RAG — light evaluation (custom evaluation)")
     print("=" * 60)
+    print(f"System:     {args.system}")
     print(f"Golden set: {args.golden_set}")
     queries = load_golden_set(args.golden_set)
     if args.limit:
         queries = queries[: args.limit]
     if not queries:
-        print("❌ No annotated queries found.")
+        print("No annotated queries found.")
         return
     print(f"Annotated queries to run: {len(queries)}")
     print()
 
-    print("Initialising pipeline (downloads models on first run)...")
-    pipeline = RAGPipeline()
     judge = EvaluationJudge()
+
+    pipeline: RAGPipeline | None = None
+    agent_ctx: AgentContext | None = None
+    if args.system == "pipelined-RAG":
+        print("Initialising Phase 2 pipeline (downloads models on first run)...")
+        pipeline = RAGPipeline()
+    else:
+        print("Initialising Phase 3 AgentContext (loads embedder, KB, stores)...")
+        agent_ctx = AgentContext.build()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -391,26 +479,52 @@ def main() -> None:
     for i, q in enumerate(queries, 1):
         print(f"  [{i}/{len(queries)}] {q['id']}: {q['question'][:60]}...")
 
-        response, latency, error = run_pipeline_on_query(pipeline, q["question"])
-        rec: dict[str, Any] = {**q, "latency_sec": round(latency, 3)}
+        rec: dict[str, Any] = {**q, "system": args.system}
 
-        if error or response is None:
-            rec["error"] = error or "unknown error"
-            rec["contexts"] = []
-            rec["answer"] = ""
-            records.append(rec)
-            append_jsonl_record(rec, jsonl_path)
-            print(f"      pipeline failed: {error}")
-            continue
+        if args.system == "pipelined_RAG":
+            assert pipeline is not None
+            response, latency, error = run_pipeline_on_query(pipeline, q["question"])
+            rec["latency_sec"] = round(latency, 3)
 
-        rec["contexts"] = extract_contexts(response)
-        rec["answer"] = response.answer
-        if response.routing:
-            rec["routing"] = {
-                "intent": response.routing.intent.value,
-                "confidence": response.routing.confidence,
-                "source": response.routing.source,
-            }
+            if error or response is None:
+                rec["error"] = error or "unknown error"
+                rec["contexts"] = []
+                rec["answer"] = ""
+                records.append(rec)
+                append_jsonl_record(rec, jsonl_path)
+                print(f"      pipeline failed: {error}")
+                continue
+
+            rec["contexts"] = extract_contexts(response)
+            rec["answer"] = response.answer
+            if response.routing:
+                rec["routing"] = {
+                    "intent": response.routing.intent.value,
+                    "confidence": response.routing.confidence,
+                    "source": response.routing.source,
+                }
+        else:
+            assert agent_ctx is not None
+            normalised, latency, error = run_phase3_on_query(agent_ctx, q["question"])
+            rec["latency_sec"] = round(latency, 3)
+
+            if error or normalised is None:
+                rec["error"] = error or "unknown error"
+                rec["contexts"] = []
+                rec["answer"] = ""
+                records.append(rec)
+                append_jsonl_record(rec, jsonl_path)
+                print(f"      agent failed: {error}")
+                continue
+
+            rec["contexts"] = normalised["contexts"]
+            rec["answer"] = normalised["answer"]
+            rec["tools_used"] = normalised["tools_used"]
+            rec["hop_count"] = normalised["hop_count"]
+            rec["stop_reason"] = normalised["stop_reason"]
+            rec["input_tokens"] = normalised["input_tokens"]
+            rec["output_tokens"] = normalised["output_tokens"]
+            rec["total_duration_ms"] = normalised["total_duration_ms"]
 
         # Evaluate immediately (3 judge calls)
         eval_start = time.perf_counter()
@@ -444,7 +558,7 @@ def main() -> None:
     # Step 3: identify problems, write the Markdown report.
     # The JSONL has been written incrementally already.
     problems = identify_problems(records, thresholds)
-    write_markdown_report(records, problems, md_path, thresholds)
+    write_markdown_report(records, problems, md_path, thresholds, system=args.system)
 
     # Console summary
     print()
