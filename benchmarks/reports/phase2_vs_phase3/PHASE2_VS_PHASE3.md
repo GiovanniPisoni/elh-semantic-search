@@ -40,6 +40,8 @@ Each query is scored by Claude Sonnet 4.5 acting as judge, with a deterministic 
 
 ### 1.3 Caveats
 
+**The Phase 2 golden set is design-biased toward Phase 2.** The 20 queries in `evaluation/golden_set.yaml` were authored during Phase 2.5 to exercise the pipeline RAG architecture (intent router → retrieve → rerank → generate). Every query has a non-empty `must_mention` list that assumes a retrieval path, and the pipeline was iteratively optimised against this set across multiple development cycles (routing fix, intent classifier tuning, reranker addition). Phase 3 sees this set for the first time during the evaluation, without any matching optimisation pass. The Cell 1 vs Cell 2 comparison should be read as "Phase 3 performance on queries optimised for the previous architecture" — not as a like-for-like quality measurement. The unified set (Cells 3 / 4) is the fairer ground because it was built specifically to balance the categories where each architecture has natural strengths.
+
 **Different golden sets exercise different capabilities.** The Phase 2 golden set is retrieval-shaped: every query is answerable from the descriptions/reviews corpora. The unified set explicitly stresses Phase 3's tool selection — 12/20 queries (4 structural + 4 policy + 4 cost) require a DB lookup, a KB lookup, or a cost compute. Phase 2 cannot execute those tools by design, so its answers on those rows are best-effort retrieval from the wrong corpora. We report Phase 2's numbers on those rows for completeness, but the **capability matrix** in §3 is the cleaner framing for that asymmetry.
 
 **Phase 3 faithfulness skips ~half the unified set.** When Phase 3 routes a query to `find_rooms`, `compute_total_cost`, or `answer_policy_question`-with-no-match, the tool returns no semantic chunks — there is nothing to verify the answer against. Faithfulness correctly opts out (returns None) rather than emitting a misleading 0.0. The consequence: Phase 3 faithfulness avg is computed over a smaller valid-N than Phase 2's (Cell 4: 8/20 vs Cell 3: 18/20). Read those numbers with that asymmetry in mind.
@@ -50,45 +52,23 @@ Each query is scored by Claude Sonnet 4.5 acting as judge, with a deterministic 
 
 ## 2. The 2x2 Matrix Results
 
-### Cell 1 — Phase 2 (Pipelined RAG) on the Phase 2 golden set
+Both systems × both golden sets, all four custom metrics + latency:
 
-| Metric | Value |
-|---|---|
-| Faithfulness | 0.937 (valid 17/20) |
-| Context recall | 0.889 (valid 18/20) |
-| Answer relevancy | 0.960 (valid 20/20) |
-| Task success | 0.950 (valid 20/20) |
-| Latency avg | 41.65s (median 19.53, p95 115.57) |
+|                              | **Phase 2 — Pipelined RAG**                                                                                                                                  | **Phase 3 — Agentic RAG**                                                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 2 golden set** (n=20) | **Metrics:**<br>Faithfulness · 0.937 (valid 17/20)<br>Context recall · 0.889 (valid 18/20)<br>Answer relevancy · 0.960 (valid 20/20)<br>Task success · 0.950 (valid 20/20)<br>Latency avg · 41.65s (p95 115.57s)¹ | **Metrics:**<br>Faithfulness · 0.622 (valid 10/20)<br>Context recall · 0.361 (valid 18/20)<br>Answer relevancy · 0.885 (valid 20/20)<br>Task success · 0.825 (valid 20/20)<br>Latency avg · 11.89s (p95 16.08s) |
+| **Unified set** (n=20)        | **Metrics:**<br>Faithfulness · 0.969 (valid 18/20)<br>Context recall · 0.485 (valid 20/20)<br>Answer relevancy · 0.940 (valid 20/20)<br>Task success · 0.725 (valid 20/20)<br>Latency avg · 20.08s (p95 30.10s) | **Metrics:**<br>Faithfulness · 0.879 (valid 8/20)²<br>Context recall · 0.293 (valid 20/20)<br>Answer relevancy · 0.935 (valid 20/20)<br>Task success · 0.900 (valid 20/20)<br>Latency avg · 10.66s (p95 14.69s) |
 
-### Cell 2 — Phase 3 (Agentic RAG) on the Phase 2 golden set
+¹ Cell 1 includes CrossEncoder reranker cold-start (~115s on q01). Steady-state Phase 2 latency is ~35.5s (see §5 for context).
+² Phase 3 routes 12/20 unified-set queries to non-retrieval tools (DB/cost compute), so faithfulness opts out for those (no contexts to verify). Valid-N reflects this architectural asymmetry.
 
-| Metric | Value |
-|---|---|
-| Faithfulness | 0.622 (valid 10/20) |
-| Context recall | 0.361 (valid 18/20) |
-| Answer relevancy | 0.885 (valid 20/20) |
-| Task success | 0.825 (valid 20/20) |
-| Latency avg | 11.89s (median 12.27, p95 16.08) |
+**Reading the matrix.**
 
-### Cell 3 — Phase 2 (Pipelined RAG) on the unified set
+- **Top-left vs top-right (Cells 1 / 2).** Same queries, different systems. Phase 2 was optimised against this set across multiple iterations and outperforms Phase 3 on all retrieval-shaped metrics. Phase 3 is ~3.5× faster but cannot equal Phase 2's faithfulness/recall here because the agent routes ~half the queries to DB tools that produce no contexts.
 
-| Metric | Value |
-|---|---|
-| Faithfulness | 0.969 (valid 18/20) |
-| Context recall | 0.485 (valid 20/20) |
-| Answer relevancy | 0.940 (valid 20/20) |
-| Task success | 0.725 (valid 20/20) |
-| Latency avg | 20.08s (median 17.42, p95 30.10) |
+- **Bottom-left vs bottom-right (Cells 3 / 4).** The fair head-to-head — both systems on a balanced 20-query set (4 per category). Phase 3 leads on **task_success (0.90 vs 0.72)** and on **latency (10.7s vs 20.1s)** — the two architecture-neutral metrics. Phase 2 retains an edge on faithfulness/context_recall by always producing contexts; Phase 3's faithfulness valid-N drops to 8/20 because DB tools have no semantic contexts to verify.
 
-### Cell 4 — Phase 3 (Agentic RAG) on the unified set
-
-| Metric | Value |
-|---|---|
-| Faithfulness | 0.879 (valid 8/20) |
-| Context recall | 0.293 (valid 20/20) |
-| Answer relevancy | 0.935 (valid 20/20) |
-| Task success | 0.900 (valid 20/20) |
-| Latency avg | 10.66s (median 10.85, p95 14.69) |
+- **Top vs bottom for each system.** Each system on each of the two golden sets. Phase 2 (left column) scores higher on its own design target (Phase 2 set). Phase 3 (right column) is much more consistent across the two sets — task_success 0.825 → 0.900, faithfulness 0.622 → 0.879. This reflects Phase 3's architectural diversity: tools cover a wider range of query types than the pipeline can address.
 
 ## 3. Capability Matrix
 
