@@ -6,8 +6,6 @@ from elh_rag.schemas import (
     Document,
     DocumentSource,
     HouseMetadata,
-    RAGResponse,
-    RetrievalResult,
     ReviewMetadata,
     RoomMetadata,
     metadata_from_pinecone_dict,
@@ -159,90 +157,6 @@ def test_document_accepts_all_three_metadata_types() -> None:
     assert review_doc.metadata.source == DocumentSource.REVIEW
     assert house_doc.metadata.source == DocumentSource.HOUSE
     assert room_doc.metadata.source == DocumentSource.ROOM
-
-
-def test_retrieval_result_accepts_all_three_metadata_types() -> None:
-    for meta in [
-        ReviewMetadata(id="r"),
-        HouseMetadata(id="h"),
-        RoomMetadata(id="rm"),
-    ]:
-        result = RetrievalResult(text="t", metadata=meta, vector_score=0.5)
-        assert result.score == 0.5
-
-
-# RetrievalResult
-
-
-def test_retrieval_result_distance_is_one_minus_vector_score() -> None:
-    meta = ReviewMetadata(id="x")
-    result = RetrievalResult(text="hello", metadata=meta, vector_score=0.8)
-
-    assert result.distance == 0.2
-
-
-def test_retrieval_result_score_prefers_rerank_when_present() -> None:
-    meta = ReviewMetadata(id="x")
-    vector_only = RetrievalResult(text="t", metadata=meta, vector_score=0.6)
-    reranked = RetrievalResult(text="t", metadata=meta, vector_score=0.6, rerank_score=0.92)
-
-    assert vector_only.score == 0.6
-    assert reranked.score == 0.92
-
-
-# RAGResponse
-
-
-def test_rag_response_to_dict_is_json_serialisable() -> None:
-    import json
-
-    meta = ReviewMetadata(id="x", city="Lisbon")
-    response = RAGResponse(
-        query="any question",
-        answer="any answer",
-        sources=[RetrievalResult(text="t", metadata=meta, vector_score=0.9)],
-    )
-
-    payload = response.to_dict()
-    json.dumps(payload)
-
-    assert payload["query"] == "any question"
-    assert payload["sources"][0]["metadata"]["city"] == "Lisbon"
-    assert payload["sources"][0]["vector_score"] == 0.9
-    assert payload["sources"][0]["rerank_score"] is None
-
-
-def test_rag_response_to_dict_exposes_both_scores_when_reranked() -> None:
-    meta = ReviewMetadata(id="x")
-    response = RAGResponse(
-        query="q",
-        answer="a",
-        sources=[RetrievalResult(text="t", metadata=meta, vector_score=0.7, rerank_score=0.95)],
-    )
-
-    src = response.to_dict()["sources"][0]
-    assert src["vector_score"] == 0.7
-    assert src["rerank_score"] == 0.95
-
-
-def test_rag_response_includes_rewritten_query_when_present() -> None:
-    response = RAGResponse(
-        query="original",
-        answer="answer",
-        sources=[],
-        rewritten_query="rewritten version",
-    )
-
-    payload = response.to_dict()
-
-    assert payload["rewritten_query"] == "rewritten version"
-
-
-def test_rag_response_rewritten_query_is_none_by_default() -> None:
-    response = RAGResponse(query="q", answer="a", sources=[])
-
-    assert response.rewritten_query is None
-    assert response.to_dict()["rewritten_query"] is None
 
 
 # Document

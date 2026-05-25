@@ -1,25 +1,30 @@
-"""ELH Semantic Search — RAG-based system for Erasmus Life Housing."""
+"""ELH RAG package — public API.
+
+Phase 3 (Agentic RAG) is the deployed system. The Phase 2 pipeline
+(pipelined-RAG) has been archived to branch ``v2-pipelined-RAG-archive``
+and is no longer part of the package public surface.
+"""
 
 from __future__ import annotations
 
-from elh_rag.config import settings
-from elh_rag.pipeline import RAGPipeline
-from elh_rag.schemas import (
-    Document,
-    DocumentSource,
-    RAGResponse,
-    RetrievalResult,
-    ReviewMetadata,
+from elh_rag.agent import (
+    AgentContext,
+    AgentResponse,
+    ConversationTurn,
+    InputValidationError,
+    ToolCall,
+    run_agent_turn,
 )
+from elh_rag.config import settings
 
 __all__ = [
-    "Document",
-    "DocumentSource",
-    "RAGPipeline",
-    "RAGResponse",
-    "RetrievalResult",
-    "ReviewMetadata",
+    "AgentContext",
+    "AgentResponse",
+    "ConversationTurn",
+    "InputValidationError",
+    "ToolCall",
+    "run_agent_turn",
     "settings",
 ]
 
-__version__ = "0.2.0"
+__version__ = "3.0.0"

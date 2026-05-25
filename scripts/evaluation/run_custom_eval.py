@@ -36,8 +36,6 @@ from elh_rag.evaluation.metrics import (
     task_success,
 )
 from elh_rag.logging_setup import setup_logging
-from elh_rag.pipeline import RAGPipeline
-from elh_rag.schemas import RAGResponse
 
 # Golden set loading
 
@@ -51,30 +49,6 @@ def load_golden_set(path: Path) -> list[dict[str, Any]]:
     if skipped:
         print(f"Skipped {skipped} unannotated stub(s)")
     return real
-
-
-# Pipeline runner
-
-
-def run_pipeline_on_query(
-    pipeline: RAGPipeline, question: str
-) -> tuple[RAGResponse | None, float, str | None]:
-    """Run a single query, return response + latency + optional error."""
-    start = time.perf_counter()
-    try:
-        response = pipeline.query(question)
-        elapsed = time.perf_counter() - start
-        return response, elapsed, None
-    except Exception as exc:
-        elapsed = time.perf_counter() - start
-        return None, elapsed, str(exc)
-
-
-def extract_contexts(response: RAGResponse) -> list[str]:
-    """Extract retrieved-document texts as a list of strings."""
-    if not response or not response.sources:
-        return []
-    return [src.text for src in response.sources if src.text]
 
 
 # Agent runner
@@ -246,15 +220,12 @@ def write_markdown_report(
     problems: list[dict[str, Any]],
     path: Path,
     thresholds: dict[str, float],
-    system: str = "pipelined-RAG",
+    system: str = "agentic-RAG",
 ) -> None:
     """Write the human-facing Markdown diagnostic report."""
     lines: list[str] = []
 
-    system_label = (
-        "Phase 2 — Pipelined RAG" if system == "pipelined-RAG" else "Phase 3 — Agentic RAG"
-    )
-    lines.append(f"# ELH RAG — Custom evaluation report — {system_label}")
+    lines.append("# ELH RAG — Custom evaluation report — Phase 3 — Agentic RAG")
     lines.append("")
     lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     lines.append(f"**System under test:** `{system}`")
@@ -420,7 +391,7 @@ def main() -> None:
     parser.add_argument(
         "--golden-set",
         type=Path,
-        default=Path("evaluation/golden_set.yaml"),
+        default=Path("evaluation/agent_queries_full_set.yaml"),
     )
     parser.add_argument(
         "--output-dir",
@@ -442,12 +413,13 @@ def main() -> None:
     parser.add_argument(
         "--system",
         type=str,
-        choices=["pipelined-RAG", "agentic-RAG"],
-        default="pipelined-RAG",
+        choices=["agentic-RAG"],
+        default="agentic-RAG",
         help=(
-            "Which system to evaluate. 'pipelined-RAG' (default) runs the "
-            "Phase 2 RAGPipeline. 'agentic-RAG' runs the Phase 3 agent via "
-            "run_agent_turn and extracts contexts from the tool trace."
+            "Which system to evaluate. Only 'agentic-RAG' (Phase 3) is "
+            "supported on develop. Phase 2 (pipelined-RAG) has been "
+            "archived to branch v2-pipelined-RAG-archive — checkout that "
+            "branch to run the legacy pipelined-RAG evaluation."
         ),
     )
     args = parser.parse_args()
@@ -476,14 +448,8 @@ def main() -> None:
 
     judge = EvaluationJudge()
 
-    pipeline: RAGPipeline | None = None
-    agent_ctx: AgentContext | None = None
-    if args.system == "pipelined-RAG":
-        print("Initialising Phase 2 pipeline (downloads models on first run)...")
-        pipeline = RAGPipeline()
-    else:
-        print("Initialising Phase 3 AgentContext (loads embedder, KB, stores)...")
-        agent_ctx = AgentContext.build()
+    print("Initialising Phase 3 AgentContext (loads embedder, KB, stores)...")
+    agent_ctx = AgentContext.build()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -499,50 +465,26 @@ def main() -> None:
 
         rec: dict[str, Any] = {**q, "system": args.system}
 
-        if args.system == "pipelined-RAG":
-            assert pipeline is not None
-            response, latency, error = run_pipeline_on_query(pipeline, q["question"])
-            rec["latency_sec"] = round(latency, 3)
+        normalised, latency, error = run_phase3_on_query(agent_ctx, q["question"])
+        rec["latency_sec"] = round(latency, 3)
 
-            if error or response is None:
-                rec["error"] = error or "unknown error"
-                rec["contexts"] = []
-                rec["answer"] = ""
-                records.append(rec)
-                append_jsonl_record(rec, jsonl_path)
-                print(f"      pipeline failed: {error}")
-                continue
+        if error or normalised is None:
+            rec["error"] = error or "unknown error"
+            rec["contexts"] = []
+            rec["answer"] = ""
+            records.append(rec)
+            append_jsonl_record(rec, jsonl_path)
+            print(f"      agent failed: {error}")
+            continue
 
-            rec["contexts"] = extract_contexts(response)
-            rec["answer"] = response.answer
-            if response.routing:
-                rec["routing"] = {
-                    "intent": response.routing.intent.value,
-                    "confidence": response.routing.confidence,
-                    "source": response.routing.source,
-                }
-        else:
-            assert agent_ctx is not None
-            normalised, latency, error = run_phase3_on_query(agent_ctx, q["question"])
-            rec["latency_sec"] = round(latency, 3)
-
-            if error or normalised is None:
-                rec["error"] = error or "unknown error"
-                rec["contexts"] = []
-                rec["answer"] = ""
-                records.append(rec)
-                append_jsonl_record(rec, jsonl_path)
-                print(f"      agent failed: {error}")
-                continue
-
-            rec["contexts"] = normalised["contexts"]
-            rec["answer"] = normalised["answer"]
-            rec["tools_used"] = normalised["tools_used"]
-            rec["hop_count"] = normalised["hop_count"]
-            rec["stop_reason"] = normalised["stop_reason"]
-            rec["input_tokens"] = normalised["input_tokens"]
-            rec["output_tokens"] = normalised["output_tokens"]
-            rec["total_duration_ms"] = normalised["total_duration_ms"]
+        rec["contexts"] = normalised["contexts"]
+        rec["answer"] = normalised["answer"]
+        rec["tools_used"] = normalised["tools_used"]
+        rec["hop_count"] = normalised["hop_count"]
+        rec["stop_reason"] = normalised["stop_reason"]
+        rec["input_tokens"] = normalised["input_tokens"]
+        rec["output_tokens"] = normalised["output_tokens"]
+        rec["total_duration_ms"] = normalised["total_duration_ms"]
 
         # Evaluate immediately (3 judge calls)
         eval_start = time.perf_counter()

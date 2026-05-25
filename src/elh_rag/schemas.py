@@ -17,37 +17,6 @@ class DocumentSource(StrEnum):
     ROOM = "room"
 
 
-class Intent(StrEnum):
-    """Which corpus the IntentRouter decide to target.
-
-    - REVIEWS: user asks about experience, atmosphere, landlord, issues
-    - DESCRIPTIONS: user asks about facts, amenities, prices, location
-    - BOTH: intent is ambiguous or multi-faceted, query both corpora
-    """
-
-    REVIEWS = "reviews"
-    DESCRIPTIONS = "descriptions"
-    BOTH = "both"
-
-
-@dataclass(frozen=True, slots=True)
-class RoutingDecision:
-    """The output of the IntentRouter."""
-
-    intent: Intent
-    confidence: float
-    reasoning: str = ""
-    source: str = "llm"
-
-
-@dataclass(frozen=True, slots=True)
-class ConversationTurn:
-    """A single (question, answer) pair in a conversation."""
-
-    question: str
-    answer: str
-
-
 # Metadata: one frozen dataclass per source
 
 
@@ -167,7 +136,7 @@ def metadata_from_pinecone_dict(data: dict[str, Any]) -> DocumentMetadata:
     return ReviewMetadata.from_pinecone_dict(data)
 
 
-# Document and retrievl wrappers
+# Document wrapper
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,84 +145,3 @@ class Document:
 
     text: str
     metadata: DocumentMetadata
-
-
-@dataclass(frozen=True, slots=True)
-class RetrievalResult:
-    """A single document returned by the retriever.
-
-    Carries both the original vector-similarity score and (optionally) the
-    cross-encoder rerank score.
-    """
-
-    text: str
-    metadata: DocumentMetadata
-    vector_score: float
-    rerank_score: float | None = None
-
-    @property
-    def score(self) -> float:
-        """
-        The score used for final ranking
-
-        Prefers the rerank score when available, falls back to the raw
-        vector score.
-        """
-        return self.rerank_score if self.rerank_score is not None else self.vector_score
-
-    @property
-    def distance(self) -> float:
-        """Cosine distance, derived from score."""
-        return round(1.0 - self.vector_score, 3)
-
-
-@dataclass(frozen=True, slots=True)
-class RAGResponse:
-    """The final response returned by the RAG pipeline."""
-
-    query: str
-    answer: str
-    sources: list[RetrievalResult]
-    mode: str = "naive-pinecone"
-    rewritten_query: str | None = None
-    sources_by_source: dict[str, list[RetrievalResult]] | None = None
-    routing: RoutingDecision | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """JSON-serialisable dict representation."""
-        payload: dict[str, Any] = {
-            "query": self.query,
-            "rewritten_query": self.rewritten_query,
-            "answer": self.answer,
-            "mode": self.mode,
-            "sources": [
-                {
-                    "text": s.text,
-                    "vector_score": s.vector_score,
-                    "rerank_score": s.rerank_score,
-                    "metadata": s.metadata.to_pinecone_dict(),
-                }
-                for s in self.sources
-            ],
-        }
-        if self.sources_by_source is not None:
-            payload["sources_by_source"] = {
-                source_name: [
-                    {
-                        "text": s.text,
-                        "vector_score": s.vector_score,
-                        "rerank_score": s.rerank_score,
-                        "metadata": s.metadata.to_pinecone_dict(),
-                    }
-                    for s in sources
-                ]
-                for source_name, sources in self.sources_by_source.items()
-            }
-        if self.routing is not None:
-            payload["routing"] = {
-                "intent": self.routing.intent.value,
-                "confidence": self.routing.confidence,
-                "reasoning": self.routing.reasoning,
-                "source": self.routing.source,
-            }
-        return payload
