@@ -35,9 +35,6 @@ pydantic~=2.0
 pydantic-settings~=2.0
 python-dotenv~=1.0
 
-# Demo UI (Phase 2 Streamlit; refactor for agent pending)
-streamlit~=1.35
-
 # Spreadsheet generation (human-eval Excels)
 openpyxl~=3.1
 
