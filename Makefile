@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format index app clean
+.PHONY: help install install-dev test test-cov lint format index clean
 
 help:
 	@echo "ELH Semantic Search — available commands"
@@ -10,8 +10,6 @@ help:
 	@echo "  make format        Auto-format the codebase with ruff"
 	@echo "  make index         Index reviews into Pinecone"
 	@echo "  make index-reset   Wipe the index and rebuild from scratch"
-	@echo "  make app           Launch the Streamlit app"
-	@echo "  make evaluate      Run evaluation suite to compare LLM performance"
 	@echo "  make clean         Remove caches and build artifacts"
 
 install:
@@ -36,12 +34,6 @@ index:
 
 index-reset:
 	python -m scripts.run_indexer --reset
-
-app:
-	streamlit run src/elh_rag/ui/app.py --server.fileWatcherType none
-
-evaluate:
-	python -m scripts.run_qualitative_benchmark
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage
