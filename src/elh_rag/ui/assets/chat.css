@@ -440,3 +440,50 @@ section.main,
   text-align: center;
   font-size: 0.9rem;
 }
+
+
+/* 13. NAV BUTTONS — HTML <form method="get"> inside the chat-col-left.
+   Each button is wrapped in a tiny form that submits "?action=…" to the
+   same page. The browser issues a real GET, Streamlit reruns from
+   scratch and main() handles the action atomically at the top. */
+
+.nav-buttons {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  display: flex;
+  gap: 6px;
+}
+
+.nav-buttons form {
+  display: inline-block;
+  margin: 0;
+}
+
+.nav-buttons button.nav-btn {
+  background: var(--white);
+  border: 1px solid var(--primary-light);
+  border-radius: 8px;
+  color: var(--primary);
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.nav-buttons button.nav-btn:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+/* Anchor the nav-buttons absolute positioning to the LEFT column. */
+.chat-col-left {
+  position: relative !important;
+}

@@ -26,6 +26,16 @@ def render(response: AgentResponse | None) -> tuple[bool, str]:
     layout_html = (
         '<div class="chat-grid">'
         '<div class="chat-col chat-col-left">'
+        '<div class="nav-buttons">'
+        '<form method="get" action="" style="display:inline; margin:0;">'
+        '<input type="hidden" name="action" value="home"/>'
+        '<button type="submit" class="nav-btn" title="Back to welcome">🏠</button>'
+        '</form>'
+        '<form method="get" action="" style="display:inline; margin:0;">'
+        '<input type="hidden" name="action" value="new_chat"/>'
+        '<button type="submit" class="nav-btn" title="New chat">➕</button>'
+        '</form>'
+        '</div>'
         f"{chat_panel.header_html()}"
         f"{chat_panel.bubbles_html()}"
         '<div class="form-slot"></div>'

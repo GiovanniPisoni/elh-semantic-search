@@ -30,14 +30,29 @@ _DEFAULTS: dict[str, object] = {
     "chat_history": [],
     "conversation_history": [],
     "scroll_to_latest": False,
+    "force_chat_view": False,
 }
 
 
 def init() -> None:
-    """Initialise session state with default values (idempotent)."""
+    """Initialise session state with default values (idempotent).
+
+    Mutable defaults (lists, dicts) are copied so every init() yields
+    a fresh instance — assigning the module-level ``_DEFAULTS["chat_history"]``
+    list directly would alias it into session_state, and subsequent
+    ``record_query`` ``.append`` calls would mutate the module-level
+    default. Then a Home-click → full-purge → init() cycle would assign
+    that already-populated list back into session_state, leaking the
+    prior conversation into what should be a fresh chat.
+    """
     for key, value in _DEFAULTS.items():
         if key not in st.session_state:
-            st.session_state[key] = value
+            if isinstance(value, list):
+                st.session_state[key] = list(value)
+            elif isinstance(value, dict):
+                st.session_state[key] = dict(value)
+            else:
+                st.session_state[key] = value
 
 
 def has_response() -> bool:
@@ -82,10 +97,37 @@ def record_query(question: str, response: AgentResponse) -> None:
 
 def clear_conversation() -> None:
     """Reset all conversation state — returns the user to the welcome view."""
+    import logging
+
+    log = logging.getLogger(__name__)
+    keys_before = {k: type(v).__name__ for k, v in st.session_state.items()}
+    log.warning("clear_conversation called. State keys before: %s", keys_before)
+
     st.session_state["chat_history"] = []
     st.session_state["conversation_history"] = []
     st.session_state["last_response"] = None
     st.session_state["scroll_to_latest"] = False
+    st.session_state["force_chat_view"] = False
+
+    keys_after = {
+        k: (len(v) if hasattr(v, "__len__") else str(v)[:50])
+        for k, v in st.session_state.items()
+    }
+    log.warning("clear_conversation done. State keys after: %s", keys_after)
+
+
+def start_new_chat() -> None:
+    """Clear the conversation but stay in the chat view with an empty form."""
+    st.session_state["chat_history"] = []
+    st.session_state["conversation_history"] = []
+    st.session_state["last_response"] = None
+    st.session_state["scroll_to_latest"] = False
+    st.session_state["force_chat_view"] = True
+
+
+def should_show_chat_view() -> bool:
+    """True if we have a response OR the user explicitly started a new chat."""
+    return has_response() or bool(st.session_state.get("force_chat_view", False))
 
 
 def request_scroll_to_latest() -> None:

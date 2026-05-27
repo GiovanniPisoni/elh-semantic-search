@@ -81,14 +81,40 @@ def _emit_scroll_to_latest() -> None:
 
 
 def main() -> None:
+    # Ensure session_state is initialised BEFORE we read st.query_params:
+    # form GETs from the nav buttons can land us on a fresh server-side
+    # session, in which case state.init() seeds the defaults so the
+    # subsequent action branch operates against a known shape.
     state.init()
+
+    action = st.query_params.get("action")
+    if action == "home":
+        log = logging.getLogger(__name__)
+        log.warning(
+            "Home action triggered. session_state keys: %s",
+            list(st.session_state.keys()),
+        )
+
+        # Full reset — purge EVERY key in session_state. This catches
+        # widget keys (e.g. the chat-input form's input value, the
+        # quick-question chip widgets) that survived clear_conversation
+        # and were re-populating chat_history on the next render.
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+
+        st.query_params.clear()
+        state.init()
+        st.rerun()
+    elif action == "new_chat":
+        state.start_new_chat()
+        st.query_params.clear()
+        st.rerun()
+
     styles.inject("base")
 
-    if state.has_response():
+    if state.should_show_chat_view():
         styles.inject("chat")
-        response = state.get_last_response()
-        assert response is not None
-        submitted, question = chat_view.render(response)
+        submitted, question = chat_view.render(state.get_last_response())
     else:
         styles.inject("welcome")
         submitted, question = welcome_view.render()
