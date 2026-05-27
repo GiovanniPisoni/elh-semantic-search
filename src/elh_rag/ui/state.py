@@ -89,26 +89,6 @@ def record_query(question: str, response: AgentResponse) -> None:
     st.session_state["conversation_history"] = convo
 
 
-def clear_conversation() -> None:
-    """Reset all conversation state — returns the user to the welcome view."""
-    import logging
-
-    log = logging.getLogger(__name__)
-    keys_before = {k: type(v).__name__ for k, v in st.session_state.items()}
-    log.warning("clear_conversation called. State keys before: %s", keys_before)
-
-    st.session_state["chat_history"] = []
-    st.session_state["conversation_history"] = []
-    st.session_state["last_response"] = None
-    st.session_state["scroll_to_latest"] = False
-    st.session_state["force_chat_view"] = False
-
-    keys_after = {
-        k: (len(v) if hasattr(v, "__len__") else str(v)[:50]) for k, v in st.session_state.items()
-    }
-    log.warning("clear_conversation done. State keys after: %s", keys_after)
-
-
 def start_new_chat() -> None:
     """Clear the conversation but stay in the chat view with an empty form."""
     st.session_state["chat_history"] = []

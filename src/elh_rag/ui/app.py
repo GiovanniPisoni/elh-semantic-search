@@ -15,7 +15,6 @@ from elh_rag.agent.context import AgentContext
 from elh_rag.agent.loop import InputValidationError, run_agent_turn
 from elh_rag.ui import state, styles
 from elh_rag.ui.components import chat_view, welcome_view
-from elh_rag.ui.mock_agent import mock_run_agent_turn
 
 # Page config
 
@@ -27,12 +26,10 @@ st.set_page_config(
 )
 
 
-# Toggle: skip real API calls in development / smoke tests
 USE_MOCK_AGENT = os.environ.get("ELH_USE_MOCK_AGENT", "false").lower() in ("1", "true", "yes")
 
 
 # Shared resources
-
 
 @st.cache_resource
 def get_agent_context() -> AgentContext:
@@ -47,8 +44,6 @@ def run_agent_query(question: str) -> AgentResponse | None:
     """
     history = state.get_conversation_history()
     try:
-        if USE_MOCK_AGENT:
-            return mock_run_agent_turn(question, conversation_history=history)
         ctx = get_agent_context()
         return run_agent_turn(question, ctx, conversation_history=history)
     except InputValidationError as e:
@@ -76,24 +71,10 @@ def _emit_scroll_to_latest() -> None:
 
 
 def main() -> None:
-    # Ensure session_state is initialised BEFORE we read st.query_params:
-    # form GETs from the nav buttons can land us on a fresh server-side
-    # session, in which case state.init() seeds the defaults so the
-    # subsequent action branch operates against a known shape.
     state.init()
 
     action = st.query_params.get("action")
     if action == "home":
-        log = logging.getLogger(__name__)
-        log.warning(
-            "Home action triggered. session_state keys: %s",
-            list(st.session_state.keys()),
-        )
-
-        # Full reset — purge EVERY key in session_state. This catches
-        # widget keys (e.g. the chat-input form's input value, the
-        # quick-question chip widgets) that survived clear_conversation
-        # and were re-populating chat_history on the next render.
         for key in list(st.session_state.keys()):
             del st.session_state[key]
 
