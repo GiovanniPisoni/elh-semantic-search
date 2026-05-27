@@ -29,6 +29,7 @@ Algorithm:
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import logging
 import time
@@ -337,9 +338,23 @@ def _dispatch_tool(
 
 
 def _serialise_tool_output(output: Any) -> str:
-    """JSON-serialise a tool output (Pydantic model or plain object)."""
+    """JSON-serialise a tool output.
+
+    Order of preference:
+      1. Pydantic v2 BaseModel — use ``model_dump_json``
+      2. Dataclass instance    — convert via ``dataclasses.asdict`` then
+         ``json.dumps`` so nested dataclasses are recursively unpacked
+         to dicts (raw repr would lose machine-readability for consumers
+         like the Phase 3 UI's results_panel).
+      3. Anything else         — fall back to ``json.dumps`` with
+         ``default=str`` for the long tail.
+    """
+    if output is None:
+        return "null"
     if hasattr(output, "model_dump_json"):
         return output.model_dump_json()
+    if dataclasses.is_dataclass(output) and not isinstance(output, type):
+        return json.dumps(dataclasses.asdict(output), default=str)
     return json.dumps(output, default=str)
 
 
