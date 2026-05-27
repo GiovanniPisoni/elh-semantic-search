@@ -181,12 +181,10 @@ def write_human_file(records: list[dict[str, Any]], output_path: Path) -> None:
     lines.append("=" * 78)
     lines.append("")
     lines.append(
-        "For each query below, decide which source_ids in the top-10 truly answer "
-        "the query."
+        "For each query below, decide which source_ids in the top-10 truly answer the query."
     )
     lines.append(
-        "Then open precision_at_k_queries.yaml and fill relevant_source_ids with "
-        "those IDs."
+        "Then open precision_at_k_queries.yaml and fill relevant_source_ids with those IDs."
     )
     lines.append("")
 

@@ -79,9 +79,7 @@ def load_gold(path: Path) -> dict[str, QueryGold]:
             query=q["query"],
             tool=q["tool"],
             top_k_evaluate=int(q.get("top_k_evaluate", 5)),
-            relevant_source_ids=[
-                str(rid).strip() for rid in (q.get("relevant_source_ids") or [])
-            ],
+            relevant_source_ids=[str(rid).strip() for rid in (q.get("relevant_source_ids") or [])],
         )
         out[gold.id] = gold
     return out
@@ -91,8 +89,7 @@ def load_candidates(path: Path) -> dict[str, dict[str, Any]]:
     """Load candidates JSONL and index by query id."""
     if not path.exists():
         raise FileNotFoundError(
-            f"Candidates file not found: {path}. "
-            "Run scripts/eval/precision_at_k_extract.py first."
+            f"Candidates file not found: {path}. Run scripts/eval/precision_at_k_extract.py first."
         )
     out: dict[str, dict[str, Any]] = {}
     with path.open("r", encoding="utf-8") as f:
@@ -166,9 +163,7 @@ def render_report(results: list[QueryResult]) -> str:
         return "# Precision@K — Semantic RAG\n\nNo results to report.\n"
 
     k_values = {r.k for r in results}
-    k_label = (
-        f"@{next(iter(k_values))}" if len(k_values) == 1 else "@K (varies; see per-query)"
-    )
+    k_label = f"@{next(iter(k_values))}" if len(k_values) == 1 else "@K (varies; see per-query)"
 
     by_corpus: dict[str, list[QueryResult]] = {}
     for r in results:
@@ -222,13 +217,9 @@ def render_report(results: list[QueryResult]) -> str:
     for corpus in sorted(by_corpus):
         group = by_corpus[corpus]
         p, r, f1 = _aggregate(group)
-        lines.append(
-            f"| corpus: {corpus} | {len(group)} | {p:.2f} | {r:.2f} | {f1:.2f} |"
-        )
+        lines.append(f"| corpus: {corpus} | {len(group)} | {p:.2f} | {r:.2f} | {f1:.2f} |")
     p_all, r_all, f1_all = _aggregate(results)
-    lines.append(
-        f"| overall | {len(results)} | {p_all:.2f} | {r_all:.2f} | {f1_all:.2f} |"
-    )
+    lines.append(f"| overall | {len(results)} | {p_all:.2f} | {r_all:.2f} | {f1_all:.2f} |")
     lines.append("")
 
     lines.append("## Caveats")
@@ -241,7 +232,7 @@ def render_report(results: list[QueryResult]) -> str:
     lines.append(
         "- **Single annotator.** Ground truth comes from one human (Giovanni). "
         "Inter-annotator agreement is not measured, and subjective queries "
-        "(\"quiet at night\", \"friendly housemates\") inherit the annotator's "
+        '("quiet at night", "friendly housemates") inherit the annotator\'s '
         "interpretation of relevance."
     )
     lines.append(
