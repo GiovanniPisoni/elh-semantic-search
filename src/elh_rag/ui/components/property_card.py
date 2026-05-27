@@ -1,18 +1,5 @@
 """
 Property card component.
-
-Two variants:
-  - ``render_property_card(data)``      — HTML card for property-tool outputs
-    (find_rooms / find_available_rooms / get_property_details).
-  - ``render_snippet_card(hit, corpus)`` — HTML card for RAG-search hits
-    (search_descriptions / search_reviews).
-
-Field lookups are defensive (``.get`` with fallbacks) so the same renderer
-works against canonical Phase 3 schemas AND the mock_agent's hand-built dicts.
-
-HTML is emitted as ONE concatenated string with NO embedded newlines —
-Streamlit's Markdown parser would otherwise treat blank lines inside the
-fragment as block terminators and break the card layout.
 """
 
 from __future__ import annotations
@@ -54,19 +41,12 @@ def _format_distance(meters: Any) -> str:
 def render_property_card(data: dict[str, Any]) -> str:
     """Render a property card. Returns the HTML fragment."""
     title_raw = (
-        data.get("room_name")
-        or data.get("house_name")
-        or data.get("flat_name")
-        or "ELH Property"
+        data.get("room_name") or data.get("house_name") or data.get("flat_name") or "ELH Property"
     )
     title = _html.escape(str(title_raw))
 
     subtitle_raw = data.get("flat_name") or data.get("house_name") or ""
-    subtitle = (
-        _html.escape(str(subtitle_raw))
-        if subtitle_raw and subtitle_raw != title_raw
-        else ""
-    )
+    subtitle = _html.escape(str(subtitle_raw)) if subtitle_raw and subtitle_raw != title_raw else ""
 
     loc_parts = [
         str(data.get("neighborhood") or ""),
@@ -76,10 +56,7 @@ def render_property_card(data: dict[str, Any]) -> str:
     location = _html.escape(", ".join(p for p in loc_parts if p)) or "Lisbon"
 
     description_raw = (
-        data.get("excerpt")
-        or data.get("description")
-        or data.get("full_description")
-        or ""
+        data.get("excerpt") or data.get("description") or data.get("full_description") or ""
     )
     description = _html.escape(_truncate(str(description_raw), 240))
 
@@ -102,9 +79,7 @@ def render_property_card(data: dict[str, Any]) -> str:
 
     subtitle_html = f'<div class="prop-subtitle">{subtitle}</div>' if subtitle else ""
     description_html = f'<div class="prop-desc">{description}</div>' if description else ""
-    price_label_html = (
-        f'<div class="prop-price-label">{price_label}</div>' if price_label else ""
-    )
+    price_label_html = f'<div class="prop-price-label">{price_label}</div>' if price_label else ""
     metro_html = (
         f'<span class="prop-meta-item"><span class="prop-icon">🚇</span>{metro_label}</span>'
         if metro_label
@@ -116,20 +91,20 @@ def render_property_card(data: dict[str, Any]) -> str:
         '<div class="prop-img-wrap">'
         '<div class="prop-img-placeholder"><span class="prop-img-emoji">🏠</span></div>'
         f'<div class="prop-price-badge">{price_str}</div>'
-        '</div>'
+        "</div>"
         '<div class="prop-body">'
         f'<div class="prop-title">{title}</div>'
-        f'{subtitle_html}'
+        f"{subtitle_html}"
         f'<div class="prop-loc"><span class="prop-icon">📍</span>{location}</div>'
-        f'{description_html}'
-        f'{price_label_html}'
+        f"{description_html}"
+        f"{price_label_html}"
         '<div class="prop-separator"></div>'
         '<div class="prop-meta">'
         f'<span class="prop-meta-item"><span class="prop-icon">🚿</span>{_html.escape(bath_label)}</span>'
-        f'{metro_html}'
-        '</div>'
-        '</div>'
-        '</div>'
+        f"{metro_html}"
+        "</div>"
+        "</div>"
+        "</div>"
     )
 
 
@@ -157,17 +132,15 @@ def render_snippet_card(hit: dict[str, Any], corpus: str) -> str:
 
     corpus_label = _html.escape(corpus.replace("_", " ").upper())
 
-    location_html = (
-        f'<span class="snippet-meta-item">📍 {location}</span>' if location else ""
-    )
+    location_html = f'<span class="snippet-meta-item">📍 {location}</span>' if location else ""
 
     return (
         '<div class="snippet-card">'
         f'<div class="snippet-corpus">{corpus_label}</div>'
         f'<div class="snippet-text">"{text}"</div>'
         '<div class="snippet-meta">'
-        f'{location_html}'
+        f"{location_html}"
         f'<span class="snippet-meta-item">Score {score_str}</span>'
-        '</div>'
-        '</div>'
+        "</div>"
+        "</div>"
     )

@@ -4,9 +4,6 @@ Canvas-based loading and completion animations.
 The loading animation shows a small character running left-to-right past a
 row of houses, painting each one as they pass. The completion animation
 freezes the runner at the last house with a celebration pose.
-
-Both animations render inside a fixed-height iframe, embedded via
-`streamlit.components.v1.html`.
 """
 
 from __future__ import annotations

@@ -1,10 +1,5 @@
 """
 ErASKmus — Streamlit entry point.
-
-Adapted for Phase 3 (Agentic RAG): drives ``run_agent_turn`` instead of
-the pipelined ``RAGPipeline``. Sidebar removed; loading shown via
-``st.spinner``; auto-scroll to the latest question handled via a small
-``components.html`` script (Bug 3 plumbing).
 """
 
 from __future__ import annotations
@@ -59,7 +54,7 @@ def run_agent_query(question: str) -> AgentResponse | None:
     except InputValidationError as e:
         st.error(f"Invalid input: {e}")
         return None
-    except Exception as e:  # noqa: BLE001 — Bug 1 fix: never crash the UI on agent failure
+    except Exception as e:
         st.error(f"Something went wrong. Please try again. (Details: {type(e).__name__})")
         logging.exception("Agent call failed")
         return None

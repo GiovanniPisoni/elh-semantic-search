@@ -1,13 +1,5 @@
 """
 Mock agent for UI smoke tests.
-
-Drop-in for ``run_agent_turn`` that returns a hardcoded ``AgentResponse``
-without hitting the Anthropic API. Toggled via the ``ELH_USE_MOCK_AGENT``
-env var (see :mod:`elh_rag.ui.app`).
-
-Four canonical questions are matched exactly (case- and whitespace-
-insensitive); everything else routes to a generic catch-all that returns
-two rooms via a synthetic ``find_rooms`` trace.
 """
 
 from __future__ import annotations

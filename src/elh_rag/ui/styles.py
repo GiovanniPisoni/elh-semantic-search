@@ -1,8 +1,5 @@
 """
 CSS loader for the Streamlit UI.
-
-Reads `.css` files from the `assets/` directory and injects them into the
-page via a single `<style>` block. This keeps Python code free of CSS.
 """
 
 from __future__ import annotations

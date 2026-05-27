@@ -24,10 +24,6 @@
   --radius-full: 999px;
 }
 
-/* Streamlit chrome reset — hide menu, header, footer, deploy badge, and
-   the persistent bottom container that 1.57 ships with. The bottom one
-   has shipped under several different testids and class names across
-   1.57.x patch releases, so the selector list is intentionally broad. */
 #MainMenu, footer, header,
 [data-testid="stHeader"],
 [data-testid="stToolbar"],
@@ -49,7 +45,6 @@ section[data-testid="stBottomBlockContainer"] {
   height: 0 !important;
 }
 
-/* Prevent .stApp from reserving space for the (now-hidden) bottom bar. */
 .stApp {
   bottom: 0 !important;
   padding-bottom: 0 !important;

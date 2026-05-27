@@ -49,9 +49,7 @@ def render() -> tuple[bool, str]:
                     label_visibility="collapsed",
                 )
             with btn_col:
-                submitted = st.form_submit_button(
-                    "➤", type="primary", use_container_width=True
-                )
+                submitted = st.form_submit_button("➤", type="primary", use_container_width=True)
 
         st.markdown(
             '<p class="welcome-chips-label">Or try one of these questions:</p>',

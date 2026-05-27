@@ -1,14 +1,5 @@
 """
 Results panel (right column of the chat view).
-
-Pure-HTML producers so chat_view can splice them into a single
-``st.markdown()`` call (no Streamlit widgets needed here).
-
-Functions:
-  - ``extract_cards(response)`` → ``list[str]`` of card HTML fragments
-  - ``header_html(n_cards)``    → header markup
-  - ``body_html(cards)``        → scrollable cards body
-  - ``footer_html()``           → empty white footer
 """
 
 from __future__ import annotations
@@ -29,11 +20,7 @@ _MAX_SNIPPETS_PER_CORPUS = 3
 
 
 def extract_cards(response: AgentResponse | None) -> list[str]:
-    """Walk ``response.tool_trace`` and produce ordered HTML cards.
-
-    Dedupes rooms by ``room_id`` across calls, and caps snippet cards
-    at ``_MAX_SNIPPETS_PER_CORPUS`` per corpus (cumulative across calls).
-    """
+    """Walk ``response.tool_trace`` and produce ordered HTML cards."""
     if response is None:
         return []
 
@@ -116,7 +103,7 @@ def header_html(n_cards: int) -> str:
         '<div class="col-header">'
         '<div class="col-header-title">Search results</div>'
         f'<div class="col-header-sub">{n_cards} result{suffix}</div>'
-        '</div>'
+        "</div>"
     )
 
 
@@ -126,7 +113,7 @@ def body_html(cards: list[str]) -> str:
         return (
             '<div class="col-scroll">'
             '<div class="results-empty">No properties to show for this query.</div>'
-            '</div>'
+            "</div>"
         )
     return '<div class="col-scroll">' + "".join(cards) + "</div>"
 

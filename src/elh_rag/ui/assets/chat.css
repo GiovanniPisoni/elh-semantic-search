@@ -1,14 +1,4 @@
-/* ============================================================
-   chat.css — Custom HTML grid layout
-   ============================================================
-   Bypasses Streamlit's st.columns() flex system entirely. The chat
-   view is rendered as a single st.markdown() with a CSS Grid layout.
-   The form (interactive widget) is position: fixed over a placeholder
-   slot inside the left column.
-   ============================================================ */
-
-
-/* 1. CONTAINER RESETS */
+/* 1. Container resets */
 html, body,
 .stApp,
 [data-testid="stAppViewContainer"],
@@ -28,7 +18,6 @@ section.main,
 }
 
 
-/* 2. stMain → flex column (anchors children to the top edge) */
 [data-testid="stMain"] {
   display: flex !important;
   flex-direction: column !important;
@@ -36,21 +25,16 @@ section.main,
   align-items: stretch !important;
 }
 
-/* Hide phantom empty containers Streamlit injects between widgets. */
 [data-testid="stMain"] [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:empty {
   display: none !important;
 }
 
-/* Collapse the components.html iframe used by the Bug 3 auto-scroll
-   script — Streamlit otherwise reserves ~24px of line-height for it. */
 [data-testid="stMain"] iframe[height="0"],
 [data-testid="stMain"] [data-testid="stElementContainer"]:has(iframe[height="0"]) {
   display: none !important;
   height: 0 !important;
 }
 
-/* Clamp the outer stVerticalBlock (inside stMainBlockContainer) to the
-   viewport and force its children to top-anchor. */
 [data-testid="stMain"] > [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
   height: 100vh !important;
   max-height: 100vh !important;
@@ -66,10 +50,7 @@ section.main,
 }
 
 
-/* 3. THE CHAT GRID — our custom 2-column layout
-   Defined on our own .chat-grid wrapper (which lives inside an
-   st.markdown). Streamlit's emotion-cache classes target stColumn,
-   which doesn't exist here — so layout is fully under our control. */
+/* Chat grid */
 .chat-grid {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
@@ -100,7 +81,7 @@ section.main,
 }
 
 
-/* 4. HEADERS (grid row 1) */
+/* Headers */
 .col-header {
   background: var(--primary-soft);
   border-bottom: 1px solid var(--primary-light);
@@ -126,7 +107,7 @@ section.main,
 }
 
 
-/* 5. SCROLLABLE BODIES (grid row 2) */
+/* Scrollable bodies */
 .col-scroll {
   overflow-y: auto !important;
   overflow-x: hidden !important;
@@ -136,26 +117,20 @@ section.main,
 }
 
 
-/* 6. FORM SLOT — placeholder in the left column's third grid row.
-   The real form widget is position: fixed over this area (§8). */
+/* Form slot */
 .form-slot {
   background: var(--white);
   border-top: 1px solid var(--border);
 }
 
 
-/* 7. RIGHT FOOTER (grid row 3 of the right column) */
+/* Right footer */
 .chat-footer-right {
   background: var(--white);
   border-top: 1px solid var(--border);
 }
 
 
-/* 8. STREAMLIT FORM POSITIONING
-   The form widget renders as a sibling of the chat-grid (the next
-   child of the outer stVerticalBlock). We pull its outer container
-   out of the document flow with position: fixed so it overlays the
-   .form-slot at the bottom of the left column. */
 [data-testid="stMain"] > [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:has([data-testid="stForm"]),
 [data-testid="stMain"] > [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stLayoutWrapper"]:has([data-testid="stForm"]) {
   position: fixed !important;
@@ -172,7 +147,6 @@ section.main,
   align-items: center !important;
 }
 
-/* The form pill */
 [data-testid="stForm"] {
   border: 2px solid var(--primary) !important;
   border-radius: var(--radius-lg) !important;
@@ -187,7 +161,6 @@ section.main,
   align-items: center !important;
 }
 
-/* Reset internal form layout for the wrapper chain */
 [data-testid="stForm"] [data-testid="stVerticalBlock"],
 [data-testid="stForm"] [data-testid="stLayoutWrapper"],
 [data-testid="stForm"] [data-testid="stHorizontalBlock"],
@@ -202,7 +175,6 @@ section.main,
   border: none !important;
 }
 
-/* The input + button row inside the form goes back to flex */
 [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
   display: flex !important;
   flex-direction: row !important;
@@ -236,7 +208,7 @@ section.main,
 }
 
 
-/* 9. CHAT BUBBLES */
+/* Chat bubbles */
 .bubble-row-user {
   display: flex;
   justify-content: flex-end;
@@ -291,7 +263,7 @@ section.main,
 .avatar-ai   { background: var(--avatar-ai); }
 
 
-/* 10. PROPERTY CARDS */
+/* Property cards */
 .prop-card {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -397,7 +369,7 @@ section.main,
 }
 
 
-/* 11. SNIPPET CARDS */
+/* Snippet cards */
 .snippet-card {
   border-left: 3px solid var(--primary);
   background: var(--bg-surface);
@@ -432,7 +404,6 @@ section.main,
 }
 
 
-/* 12. EMPTY STATE */
 .results-empty {
   color: var(--text-muted);
   font-style: italic;
@@ -442,11 +413,7 @@ section.main,
 }
 
 
-/* 13. NAV BUTTONS — HTML <form method="get"> inside the chat-col-left.
-   Each button is wrapped in a tiny form that submits "?action=…" to the
-   same page. The browser issues a real GET, Streamlit reruns from
-   scratch and main() handles the action atomically at the top. */
-
+/* Nav buttons */
 .nav-buttons {
   position: absolute;
   top: 12px;
@@ -483,7 +450,6 @@ section.main,
   border-color: var(--primary);
 }
 
-/* Anchor the nav-buttons absolute positioning to the LEFT column. */
 .chat-col-left {
   position: relative !important;
 }

@@ -1,9 +1,5 @@
 """
 Typed wrapper around Streamlit's `st.session_state`.
-
-Adapted for Phase 3 (Agentic RAG): the per-turn payload is now an
-``AgentResponse`` and conversation history is a flat ``list[ConversationTurn]``
-capped at ``settings.agent_max_history_turns`` (FIFO).
 """
 
 from __future__ import annotations
@@ -81,9 +77,7 @@ def record_query(question: str, response: AgentResponse) -> None:
 
     history: list[ChatMessage] = st.session_state.get("chat_history", [])
     history.append(ChatMessage(role="user", content=question))
-    history.append(
-        ChatMessage(role="assistant", content=response.final_message, response=response)
-    )
+    history.append(ChatMessage(role="assistant", content=response.final_message, response=response))
     st.session_state["chat_history"] = history
 
     convo: list[ConversationTurn] = st.session_state.get("conversation_history", [])
@@ -110,8 +104,7 @@ def clear_conversation() -> None:
     st.session_state["force_chat_view"] = False
 
     keys_after = {
-        k: (len(v) if hasattr(v, "__len__") else str(v)[:50])
-        for k, v in st.session_state.items()
+        k: (len(v) if hasattr(v, "__len__") else str(v)[:50]) for k, v in st.session_state.items()
     }
     log.warning("clear_conversation done. State keys after: %s", keys_after)
 
