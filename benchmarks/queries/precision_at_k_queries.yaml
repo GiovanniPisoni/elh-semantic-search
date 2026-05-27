@@ -1,0 +1,173 @@
+# Precision@K micro-benchmark queries for the two semantic RAG tools.
+#
+# Ten English queries split evenly across:
+#   - search_descriptions (factual property/room features, amenities, location)
+#   - search_reviews      (experiences, opinions, atmosphere, complaints)
+#
+# Workflow:
+#   1. Run scripts/eval/precision_at_k_extract.py to fetch top-10 candidates per query.
+#   2. Manually review benchmarks/runs/precision_at_k_candidates_human.txt and fill
+#      the relevant_source_ids list below with the chunk IDs that genuinely answer
+#      the query (only the IDs you consider truly relevant; the rest are non-relevant).
+#   3. Run scripts/eval/precision_at_k_compute.py to compute Precision@5, Recall@5,
+#      and F1@5 per query and aggregated by corpus.
+
+metadata:
+  version: 1
+  description: Precision@K micro-benchmark for search_descriptions and search_reviews.
+  total_queries: 10
+  top_k_evaluate_default: 5
+  notes: >
+    Ground truth annotated by the author with LLM-assisted initial labeling
+    based on strict relevance criteria (chunks must explicitly address the
+    query intent, not just share topical keywords). Small sample size (n=10) —
+    results are indicative, not statistically significant. Two queries
+    (descriptions_04, descriptions_05, reviews_01) have empty relevant sets
+    because the top-10 candidates did not contain explicitly relevant chunks
+    given the 200-char text preview available for annotation.
+
+queries:
+  # search_descriptions: factual property/room features, amenities, location.
+
+  - id: descriptions_01
+    query: "Room with a balcony or private outdoor space"
+    tool: search_descriptions
+    top_k_evaluate: 5
+    relevant_source_ids:
+      - "room:RM_HSE_1385A6B0_1"
+    notes: >
+      Tests amenity retrieval — concrete physical feature (balcony / terrace /
+      outdoor). Only one chunk explicitly mentions "Private balcony" in the
+      visible preview; others have "Garden View" as a room name but no
+      balcony/outdoor mention in the text.
+
+  - id: descriptions_02
+    query: "Room with a private bathroom for one person"
+    tool: search_descriptions
+    top_k_evaluate: 5
+    relevant_source_ids:
+      - "room:RM_HSE_7BA31D2C_1"
+    notes: >
+      Tests amenity retrieval — private bathroom for a single person. Only
+      one chunk in the top-10 explicitly mentions "private en-suite bathroom"
+      while being a single-person room; others have shared bathrooms.
+
+  - id: descriptions_03
+    query: "Bright room with lots of natural light and large windows"
+    tool: search_descriptions
+    top_k_evaluate: 5
+    relevant_source_ids:
+      - "room:RM_HSE_F8CEF376_3"
+      - "room:RM_HSE_72AE84FD_2"
+      - "room:RM_HSE_34AB64CB_4"
+      - "room:RM_HSE_34AB64CB_1"
+      - "room:RM_HSE_0D00CCC5_3"
+      - "room:RM_HSE_184D1DCA_2"
+    notes: >
+      Aesthetic/physical feature — chunks marked relevant either have "Bright"
+      in the room/flat name or explicitly mention "Window with natural light"
+      in the visible text preview.
+
+  - id: descriptions_04
+    query: "Apartment within walking distance of a metro station in Lisbon"
+    tool: search_descriptions
+    top_k_evaluate: 5
+    relevant_source_ids: []
+    notes: >
+      Skipped — the 200-char text previews do not explicitly mention metro/
+      transport proximity for any of the 10 Lisbon house candidates returned.
+      The query is location-specific and the chunks may contain the info
+      later in their text, but with only the visible preview, no chunk can
+      be confidently marked relevant.
+
+  - id: descriptions_05
+    query: "Fully equipped kitchen with washing machine and dishwasher"
+    tool: search_descriptions
+    top_k_evaluate: 5
+    relevant_source_ids: []
+    notes: >
+      Skipped — scores are low (0.34-0.39) and none of the visible previews
+      mention kitchen appliances. The corpus may not have well-indexed
+      kitchen-equipment descriptions, or this aspect is described later in
+      the full chunk text.
+
+  # search_reviews: experiences, opinions, atmosphere, complaints.
+
+  - id: reviews_01
+    query: "The neighborhood was quiet at night and I could sleep well"
+    tool: search_reviews
+    top_k_evaluate: 5
+    relevant_source_ids: []
+    notes: >
+      Skipped — none of the 10 retrieved reviews explicitly discuss
+      neighborhood noise/quietness at night in the visible 200-char preview.
+      Reviews focus on other aspects (heating, communication, WiFi). This
+      may reflect a gap in the review corpus or the visible portion.
+
+  - id: reviews_02
+    query: "The host was responsive and helpful when I had problems"
+    tool: search_reviews
+    top_k_evaluate: 5
+    relevant_source_ids:
+      - "RV_2017A70C54"
+      - "RV_CD22DC4324"
+      - "RV_AA0803C3FC"
+      - "RV_44356126BA"
+    notes: >
+      Subjective experience about host communication and support. Four
+      chunks explicitly describe a responsive/helpful host with phrases like
+      "incredibly responsive — always replied within a few hours" or
+      "landlord went above and beyond". Negative-host chunks (slow to
+      respond) are NOT marked relevant since the query asks for positive
+      responsiveness.
+
+  - id: reviews_03
+    query: "The flat was dirty and not well maintained"
+    tool: search_reviews
+    top_k_evaluate: 5
+    relevant_source_ids:
+      - "RV_D8C5B5AF42"
+      - "RV_054BD74237"
+      - "RV_9543D24DAD"
+      - "RV_19D5F14899"
+      - "RV_63F571FF4D"
+      - "RV_6E379C246C"
+      - "RV_215474FDA9"
+      - "RV_5CD8A9D308"
+      - "RV_F44FB3F750"
+    notes: >
+      Negative cleanliness/maintenance reviews. Nine of the 10 retrieved
+      chunks explicitly mention dirty conditions, grime, or persistent
+      maintenance issues. This is a topic the retrieval handles very well.
+
+  - id: reviews_04
+    query: "I made friends easily with my housemates and felt at home"
+    tool: search_reviews
+    top_k_evaluate: 5
+    relevant_source_ids:
+      - "RV_F2641FA8C4"
+      - "RV_0D060D87D5"
+      - "RV_87ABC9A090"
+      - "RV_AEE0377139"
+    notes: >
+      Subjective social atmosphere — friendly housemates / sense of community.
+      Four chunks explicitly mention "flatmates turned out to be a wonderful
+      international mix" and forming close friendships. Other chunks in the
+      top-10 are about different aspects (cleanliness, WiFi, location).
+
+  - id: reviews_05
+    query: "The apartment was much smaller than expected and felt cramped"
+    tool: search_reviews
+    top_k_evaluate: 5
+    relevant_source_ids:
+      - "RV_054BD74237"
+      - "RV_4BDA6BDBBE"
+      - "RV_1E554DFD28"
+      - "RV_4273AD5C91"
+      - "RV_28994456F5"
+      - "RV_F99BBA7AEF"
+      - "RV_92EBF14412"
+    notes: >
+      Negative opinion about size — "single bed felt cramped for a longer
+      stay" is a recurring phrase across multiple low-rated reviews. Seven
+      chunks marked relevant explicitly mention cramped conditions.
