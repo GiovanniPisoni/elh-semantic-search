@@ -1,0 +1,366 @@
+Precision@K candidates — manual annotation worksheet
+==============================================================================
+
+For each query below, decide which source_ids in the top-10 truly answer the query.
+Then open precision_at_k_queries.yaml and fill relevant_source_ids with those IDs.
+
+==============================================================================
+QUERY descriptions_01  (search_descriptions, corpus=descriptions)
+  text: "Room with a balcony or private outdoor space"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **room:RM_HSE_1886AA11_4**   score=0.731
+       meta: source=room, city=Lisbon, zone=Intendente, neighbourhood=Intendente, flatname=Residencia Intendente, roomname=Garden View Room
+       text: [ROOM — Garden View Room in Residencia Intendente] Location: Lisbon, Intendente, Intendente Your room is 26m² — generously sized and thoughtfully arranged around a sofa bed. In Intendente, you couldn'...
+  [ 2] **room:RM_HSE_A6A6FAA9_2**   score=0.707
+       meta: source=room, city=Porto, zone=Foz do Douro, neighbourhood=Miragaia, flatname=Residencia Miragaia, roomname=Room
+       text: [ROOM — Room in Residencia Miragaia] Location: Porto, Foz do Douro, Miragaia At 12m², this comfortable room feels like your own corner of Foz do Douro. The double bed is comfortable for a full academi...
+  [ 3] **room:RM_HSE_1385A6B0_1**   score=0.707
+       meta: source=room, city=Porto, zone=Boavista, neighbourhood=Nevogilde, flatname=Residencia Nevogilde, roomname=Garden View Room
+       text: [ROOM — Garden View Room in Residencia Nevogilde] Location: Porto, Boavista, Nevogilde Room: 21m². Bed: double. 1 shared bathroom. Desk and wardrobe included. Private balcony. Room heating included. B...
+  [ 4] **room:RM_HSE_B00A5707_2**   score=0.697
+       meta: source=room, city=Porto, zone=Paranhos, neighbourhood=Cedofeita, flatname=Residencia Cedofeita, roomname=Garden View Room
+       text: [ROOM — Garden View Room in Residencia Cedofeita] Location: Porto, Paranhos, Cedofeita A generously sized 27m² room with a double bed — honest and well-sized for the neighbourhood. Paranhos is the kin...
+  [ 5] **room:RM_HSE_7A5CD912_3**   score=0.697
+       meta: source=room, city=Porto, zone=Cedofeita, neighbourhood=Lordelo, flatname=Residencia Lordelo, roomname=Garden View Room
+       text: [ROOM — Garden View Room in Residencia Lordelo] Location: Porto, Cedofeita, Lordelo 21m², double bed. Cedofeita, Porto. Private en-suite bathroom. Desk and wardrobe included. Window with natural light...
+  [ 6] **room:RM_HSE_A6A6FAA9_4**   score=0.692
+       meta: source=room, city=Porto, zone=Foz do Douro, neighbourhood=Miragaia, flatname=Residencia Miragaia, roomname=Room
+       text: [ROOM — Room in Residencia Miragaia] Location: Porto, Foz do Douro, Miragaia Your room is 13m² — comfortable and thoughtfully arranged around a double bed. In Foz do Douro, you couldn't ask for a bett...
+  [ 7] **room:RM_HSE_B00A5707_1**   score=0.677
+       meta: source=room, city=Porto, zone=Paranhos, neighbourhood=Cedofeita, flatname=Residencia Cedofeita, roomname=Double Deluxe
+       text: [ROOM — Double Deluxe in Residencia Cedofeita] Location: Porto, Paranhos, Cedofeita A spacious 20m² room with a queen-size bed — honest and well-sized for the neighbourhood. Paranhos is the kind of pl...
+  [ 8] **room:RM_HSE_F8CEF376_1**   score=0.672
+       meta: source=room, city=Lisbon, zone=Estrela, neighbourhood=Campo de Ourique, flatname=Casa Verde, roomname=Studio Loft
+       text: [ROOM — Studio Loft in Casa Verde] Location: Lisbon, Estrela, Campo de Ourique At 9m², this compact room feels like your own corner of Estrela. The single bed is perfectly sized for focused student li...
+  [ 9] **room:RM_HSE_4C91CFB1_2**   score=0.672
+       meta: source=room, city=Lisbon, zone=Chiado, neighbourhood=Roma, flatname=Casa Azul, roomname=Room
+       text: [ROOM — Room in Casa Azul] Location: Lisbon, Chiado, Roma Your room is 16m² — comfortable and thoughtfully arranged around a single bed. In Chiado, you couldn't ask for a better address. One of the re...
+  [10] **room:RM_HSE_F11AB271_1**   score=0.672
+       meta: source=room, city=Lisbon, zone=Estrela, neighbourhood=Benfica, flatname=Cosy Home Lisbon, roomname=Garden View Room
+       text: [ROOM — Garden View Room in Cosy Home Lisbon] Location: Lisbon, Estrela, Benfica Private room of 20m² with a single bed in a shared flat in Estrela, Lisbon. The room has a private en-suite bathroom. T...
+
+==============================================================================
+QUERY descriptions_02  (search_descriptions, corpus=descriptions)
+  text: "Room with a private bathroom for one person"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **room:RM_HSE_9BA07C8C_2**   score=0.578
+       meta: source=room, city=Porto, zone=Boavista, neighbourhood=Miragaia, flatname=Residencia Miragaia, roomname=Cosy Double
+       text: [ROOM — Cosy Double in Residencia Miragaia] Location: Porto, Boavista, Miragaia 27m² room with double bed. Located in Boavista. 3 shared bathrooms available in the property. The room includes a study...
+  [ 2] **room:RM_HSE_5980129E_2**   score=0.564
+       meta: source=room, city=Lisbon, zone=Graca, neighbourhood=Alcantara, flatname=Casa da Saudade, roomname=Double Deluxe
+       text: [ROOM — Double Deluxe in Casa da Saudade] Location: Lisbon, Graca, Alcantara At 10m², this compact room feels like your own corner of Graca. The single bed is perfectly sized for focused student life....
+  [ 3] **room:RM_HSE_D841DB09_1**   score=0.556
+       meta: source=room, city=Lisbon, zone=Anjos, neighbourhood=Graca, flatname=Residencia Graca, roomname=Single Standard
+       text: [ROOM — Single Standard in Residencia Graca] Location: Lisbon, Anjos, Graca At 9m², this compact room feels like your own corner of Anjos. The single bed is perfectly sized for focused student life. O...
+  [ 4] **room:RM_HSE_7BA31D2C_1**   score=0.550
+       meta: source=room, city=Lisbon, zone=Principe Real, neighbourhood=Bairro Alto, flatname=Principe Real Student Flat, roomname=Bright Single
+       text: [ROOM — Bright Single in Principe Real Student Flat] Location: Lisbon, Principe Real, Bairro Alto 16m² room with double bed. Located in Principe Real. The room has a private en-suite bathroom. The roo...
+  [ 5] **room:RM_HSE_2130ED0C_3**   score=0.547
+       meta: source=room, city=Porto, zone=Massarelos, neighbourhood=Paranhos, flatname=Bright Apartment Massarelos, roomname=Single Standard
+       text: [ROOM — Single Standard in Bright Apartment Massarelos] Location: Porto, Massarelos, Paranhos At 20m², this spacious room feels like your own corner of Massarelos. The single bed is perfectly sized fo...
+  [ 6] **room:RM_HSE_1886AA11_1**   score=0.547
+       meta: source=room, city=Lisbon, zone=Intendente, neighbourhood=Intendente, flatname=Residencia Intendente, roomname=Single Standard
+       text: [ROOM — Single Standard in Residencia Intendente] Location: Lisbon, Intendente, Intendente 28m², double bed. Intendente, Lisbon. 1 shared bathroom. Desk and wardrobe included. Window with natural ligh...
+  [ 7] **room:RM_HSE_A6A6FAA9_2**   score=0.547
+       meta: source=room, city=Porto, zone=Foz do Douro, neighbourhood=Miragaia, flatname=Residencia Miragaia, roomname=Room
+       text: [ROOM — Room in Residencia Miragaia] Location: Porto, Foz do Douro, Miragaia At 12m², this comfortable room feels like your own corner of Foz do Douro. The double bed is comfortable for a full academi...
+  [ 8] **room:RM_HSE_7A5CD912_2**   score=0.546
+       meta: source=room, city=Porto, zone=Cedofeita, neighbourhood=Lordelo, flatname=Residencia Lordelo, roomname=Double Deluxe
+       text: [ROOM — Double Deluxe in Residencia Lordelo] Location: Porto, Cedofeita, Lordelo Your room is 10m² — compact and thoughtfully arranged around a king-size bed. In Cedofeita, you couldn't ask for a bett...
+  [ 9] **room:RM_HSE_7BA31D2C_3**   score=0.545
+       meta: source=room, city=Lisbon, zone=Principe Real, neighbourhood=Bairro Alto, flatname=Principe Real Student Flat, roomname=Superior Room
+       text: [ROOM — Superior Room in Principe Real Student Flat] Location: Lisbon, Principe Real, Bairro Alto 13m² room with single bed. Located in Principe Real. 3 shared bathrooms available in the property. The...
+  [10] **room:RM_HSE_B00A5707_1**   score=0.545
+       meta: source=room, city=Porto, zone=Paranhos, neighbourhood=Cedofeita, flatname=Residencia Cedofeita, roomname=Double Deluxe
+       text: [ROOM — Double Deluxe in Residencia Cedofeita] Location: Porto, Paranhos, Cedofeita A spacious 20m² room with a queen-size bed — honest and well-sized for the neighbourhood. Paranhos is the kind of pl...
+
+==============================================================================
+QUERY descriptions_03  (search_descriptions, corpus=descriptions)
+  text: "Bright room with lots of natural light and large windows"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **room:RM_HSE_F8CEF376_3**   score=0.640
+       meta: source=room, city=Lisbon, zone=Estrela, neighbourhood=Campo de Ourique, flatname=Casa Verde, roomname=Bright Single
+       text: [ROOM — Bright Single in Casa Verde] Location: Lisbon, Estrela, Campo de Ourique At 11m², this compact room feels like your own corner of Estrela. The queen-size bed is a generous sleeping surface ide...
+  [ 2] **room:RM_HSE_72AE84FD_2**   score=0.631
+       meta: source=room, city=Lisbon, zone=Estrela, neighbourhood=Alvalade, flatname=Bright Apartment Estrela, roomname=Room
+       text: [ROOM — Room in Bright Apartment Estrela] Location: Lisbon, Estrela, Alvalade Your room is 27m² — generously sized and thoughtfully arranged around a single bed. In Estrela, you couldn't ask for a bet...
+  [ 3] **room:RM_HSE_34AB64CB_4**   score=0.626
+       meta: source=room, city=Lisbon, zone=Graca, neighbourhood=Campo de Ourique, flatname=Bright Apartment Graca, roomname=Bright Single
+       text: [ROOM — Bright Single in Bright Apartment Graca] Location: Lisbon, Graca, Campo de Ourique This compact 12m² room features a queen-size bed — a generous sleeping surface ideal for longer stays. A bril...
+  [ 4] **room:RM_HSE_34AB64CB_1**   score=0.623
+       meta: source=room, city=Lisbon, zone=Graca, neighbourhood=Campo de Ourique, flatname=Bright Apartment Graca, roomname=Superior Room
+       text: [ROOM — Superior Room in Bright Apartment Graca] Location: Lisbon, Graca, Campo de Ourique At 13m², this comfortable room feels like your own corner of Graca. The single bed is perfectly sized for foc...
+  [ 5] **room:RM_HSE_0D00CCC5_3**   score=0.616
+       meta: source=room, city=Lisbon, zone=Parque das Nacoes, neighbourhood=Mouraria, flatname=Cosy Home Lisbon, roomname=Bright Single
+       text: [ROOM — Bright Single in Cosy Home Lisbon] Location: Lisbon, Parque das Nacoes, Mouraria This comfortable 16m² room features a double bed — comfortable for a full academic year. A brilliant home base...
+  [ 6] **room:RM_HSE_A6A6FAA9_2**   score=0.613
+       meta: source=room, city=Porto, zone=Foz do Douro, neighbourhood=Miragaia, flatname=Residencia Miragaia, roomname=Room
+       text: [ROOM — Room in Residencia Miragaia] Location: Porto, Foz do Douro, Miragaia At 12m², this comfortable room feels like your own corner of Foz do Douro. The double bed is comfortable for a full academi...
+  [ 7] **room:RM_HSE_8D3B6278_2**   score=0.613
+       meta: source=room, city=Lisbon, zone=Alfama, neighbourhood=Chiado, flatname=Bright Apartment Alfama, roomname=Studio Loft
+       text: [ROOM — Studio Loft in Bright Apartment Alfama] Location: Lisbon, Alfama, Chiado At 16m², this comfortable room feels like your own corner of Alfama. The double bed is comfortable for a full academic...
+  [ 8] **room:RM_HSE_184D1DCA_2**   score=0.610
+       meta: source=room, city=Porto, zone=Cedofeita, neighbourhood=Bonfim, flatname=Bright Apartment Cedofeita, roomname=Bright Single
+       text: [ROOM — Bright Single in Bright Apartment Cedofeita] Location: Porto, Cedofeita, Bonfim Room: 13m². Bed: queen-size. 2 shared bathrooms. Desk and wardrobe included. Window with natural light. Room hea...
+  [ 9] **room:RM_HSE_48583F8A_1**   score=0.609
+       meta: source=room, city=Porto, zone=Ramalde, neighbourhood=Ribeira, flatname=Cosy Home Porto, roomname=Garden View Room
+       text: [ROOM — Garden View Room in Cosy Home Porto] Location: Porto, Ramalde, Ribeira Your room is 12m² — compact and thoughtfully arranged around a single bed. In Ramalde, you couldn't ask for a better addr...
+  [10] **room:RM_HSE_72AE84FD_1**   score=0.608
+       meta: source=room, city=Lisbon, zone=Estrela, neighbourhood=Alvalade, flatname=Bright Apartment Estrela, roomname=Room
+       text: [ROOM — Room in Bright Apartment Estrela] Location: Lisbon, Estrela, Alvalade Room: 14m². Bed: queen-size. 2 shared bathrooms. Desk and wardrobe included. Window with natural light. A/C and heating in...
+
+==============================================================================
+QUERY descriptions_04  (search_descriptions, corpus=descriptions)
+  text: "Apartment within walking distance of a metro station in Lisbon"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **house:HSE_00F7359B**   score=0.740
+       meta: source=house, city=Lisbon, zone=Intendente, neighbourhood=Alcantara, flatname=Cosy Home Lisbon
+       text: [HOUSE — Cosy Home Lisbon] Location: Lisbon, Intendente, Alcantara Intendente, Lisbon. 114m². One of lisbon's most dynamic up-and-coming neighbourhoods. Nearby: Intendente Square fountain. A Minipreço...
+  [ 2] **house:HSE_21ADCB9D**   score=0.729
+       meta: source=house, city=Lisbon, zone=Belem, neighbourhood=Mouraria, flatname=Casa da Paz
+       text: [HOUSE — Casa da Paz] Location: Lisbon, Belem, Mouraria 226m² apartment in Belem — one of Lisbon's most photogenic and historically rich areas. Nearby: Mosteiro dos Jerónimos. A Lidl easily reachable...
+  [ 3] **house:HSE_3FDDB3BA**   score=0.725
+       meta: source=house, city=Lisbon, zone=Parque das Nacoes, neighbourhood=Alvalade, flatname=Cosy Home Lisbon
+       text: [HOUSE — Cosy Home Lisbon] Location: Lisbon, Parque das Nacoes, Alvalade Parque das Nacoes, Lisbon. 231m². One of the most liveable and well-connected areas of the city. Nearby: Parque do Tejo riversi...
+  [ 4] **house:HSE_4F940EAF**   score=0.725
+       meta: source=house, city=Lisbon, zone=Santos, neighbourhood=Campo de Ourique, flatname=Bright Apartment Santos
+       text: [HOUSE — Bright Apartment Santos] Location: Lisbon, Santos, Campo de Ourique Step out of the front door and you are in Santos — Lisbon's creative Design District, relaxed and unpretentious. The flat i...
+  [ 5] **house:HSE_34AB64CB**   score=0.712
+       meta: source=house, city=Lisbon, zone=Graca, neighbourhood=Campo de Ourique, flatname=Bright Apartment Graca
+       text: [HOUSE — Bright Apartment Graca] Location: Lisbon, Graca, Campo de Ourique Imagine waking up in Graca. The neighbourhood where old lisbon actually lives, away from the tourist trail. Your 213m² apartm...
+  [ 6] **house:HSE_018695B0**   score=0.710
+       meta: source=house, city=Lisbon, zone=Graca, neighbourhood=Alvalade, flatname=Cosy Home Lisbon
+       text: [HOUSE — Cosy Home Lisbon] Location: Lisbon, Graca, Alvalade Graca, Lisbon. 100m². The neighbourhood where old lisbon actually lives, away from the tourist trail. Nearby: Igreja da Graça. A small loca...
+  [ 7] **house:HSE_1886AA11**   score=0.707
+       meta: source=house, city=Lisbon, zone=Intendente, neighbourhood=Intendente, flatname=Residencia Intendente
+       text: [HOUSE — Residencia Intendente] Location: Lisbon, Intendente, Intendente Flat in Intendente, Lisbon. 261m², well maintained. Nearby: Intendente Square fountain. A Lidl in nearby Martim Moniz. 1 shared...
+  [ 8] **house:HSE_4C91CFB1**   score=0.704
+       meta: source=house, city=Lisbon, zone=Chiado, neighbourhood=Roma, flatname=Casa Azul
+       text: [HOUSE — Casa Azul] Location: Lisbon, Chiado, Roma Chiado, Lisbon. 244m². Lisbon's most elegant and culturally refined neighbourhood. Nearby: Praça de Camões. A well-stocked Pingo Doce in Cais do Sodr...
+  [ 9] **house:HSE_D841DB09**   score=0.699
+       meta: source=house, city=Lisbon, zone=Anjos, neighbourhood=Graca, flatname=Residencia Graca
+       text: [HOUSE — Residencia Graca] Location: Lisbon, Anjos, Graca Flat in Anjos, Lisbon. 276m², well maintained. Nearby: Jardim do Torel just uphill. A Minipreço just around the corner. 2 bathrooms. Kitchen:...
+  [10] **house:HSE_0D00CCC5**   score=0.695
+       meta: source=house, city=Lisbon, zone=Parque das Nacoes, neighbourhood=Mouraria, flatname=Cosy Home Lisbon
+       text: [HOUSE — Cosy Home Lisbon] Location: Lisbon, Parque das Nacoes, Mouraria Imagine waking up in Parque das Nacoes. One of the most liveable and well-connected areas of the city. Your 265m² apartment is...
+
+==============================================================================
+QUERY descriptions_05  (search_descriptions, corpus=descriptions)
+  text: "Fully equipped kitchen with washing machine and dishwasher"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **house:HSE_54B9EC30**   score=0.392
+       meta: source=house, city=Porto, zone=Foz do Douro, neighbourhood=Nevogilde, flatname=Casa Nova
+       text: [HOUSE — Casa Nova] Location: Porto, Foz do Douro, Nevogilde Well-maintained 197m² apartment situated in Foz do Douro, Porto's most upscale and sought-after neighbourhood, where river meets sea. The n...
+  [ 2] **room:RM_HSE_54B9EC30_1**   score=0.381
+       meta: source=room, city=Porto, zone=Foz do Douro, neighbourhood=Nevogilde, flatname=Casa Nova, roomname=Studio Loft
+       text: [ROOM — Studio Loft in Casa Nova] Location: Porto, Foz do Douro, Nevogilde At 23m², this spacious room feels like your own corner of Foz do Douro. The double bed is comfortable for a full academic yea...
+  [ 3] **house:HSE_57DCCC3F**   score=0.370
+       meta: source=house, city=Porto, zone=Massarelos, neighbourhood=Nevogilde, flatname=Residencia Nevogilde
+       text: [HOUSE — Residencia Nevogilde] Location: Porto, Massarelos, Nevogilde Massarelos, Porto. 107m². A quiet riverside neighbourhood tucked between the douro and the crystal palace. Nearby: Jardim do Carre...
+  [ 4] **room:RM_HSE_8D3B6278_2**   score=0.358
+       meta: source=room, city=Lisbon, zone=Alfama, neighbourhood=Chiado, flatname=Bright Apartment Alfama, roomname=Studio Loft
+       text: [ROOM — Studio Loft in Bright Apartment Alfama] Location: Lisbon, Alfama, Chiado At 16m², this comfortable room feels like your own corner of Alfama. The double bed is comfortable for a full academic...
+  [ 5] **room:RM_HSE_D0FD144B_2**   score=0.357
+       meta: source=room, city=Porto, zone=Bonfim, neighbourhood=Paranhos, flatname=Bonfim Student Flat, roomname=Studio Loft
+       text: [ROOM — Studio Loft in Bonfim Student Flat] Location: Porto, Bonfim, Paranhos This generously sized 26m² room features a single bed — perfectly sized for focused student life. A brilliant home base in...
+  [ 6] **room:RM_HSE_57DCCC3F_1**   score=0.355
+       meta: source=room, city=Porto, zone=Massarelos, neighbourhood=Nevogilde, flatname=Residencia Nevogilde, roomname=Double Deluxe
+       text: [ROOM — Double Deluxe in Residencia Nevogilde] Location: Porto, Massarelos, Nevogilde At 10m², this compact room feels like your own corner of Massarelos. The double bed is comfortable for a full acad...
+  [ 7] **room:RM_HSE_54B9EC30_3**   score=0.350
+       meta: source=room, city=Porto, zone=Foz do Douro, neighbourhood=Nevogilde, flatname=Casa Nova, roomname=Studio Loft
+       text: [ROOM — Studio Loft in Casa Nova] Location: Porto, Foz do Douro, Nevogilde Private room of 19m² with a single bed in a shared flat in Foz do Douro, Porto. The room has a private en-suite bathroom. Bui...
+  [ 8] **room:RM_HSE_3F5C27B1_1**   score=0.347
+       meta: source=room, city=Porto, zone=Ramalde, neighbourhood=Nevogilde, flatname=Residencia Nevogilde, roomname=Room
+       text: [ROOM — Room in Residencia Nevogilde] Location: Porto, Ramalde, Nevogilde This spacious 22m² room features a sofa bed — a practical and flexible sleeping arrangement. A brilliant home base in Ramalde....
+  [ 9] **house:HSE_31AF803C**   score=0.346
+       meta: source=house, city=Porto, zone=Paranhos, neighbourhood=Miragaia, flatname=Casa do Sol
+       text: [HOUSE — Casa do Sol] Location: Porto, Paranhos, Miragaia Welcome to Paranhos, practical, affordable and buzzing with student energy year-round! This bright 64m² apartment puts you right in the middle...
+  [10] **room:RM_HSE_57DCCC3F_4**   score=0.344
+       meta: source=room, city=Porto, zone=Massarelos, neighbourhood=Nevogilde, flatname=Residencia Nevogilde, roomname=Single Standard
+       text: [ROOM — Single Standard in Residencia Nevogilde] Location: Porto, Massarelos, Nevogilde Your room is 15m² — comfortable and thoughtfully arranged around a double bed. In Massarelos, you couldn't ask f...
+
+==============================================================================
+QUERY reviews_01  (search_reviews, corpus=reviews)
+  text: "The neighborhood was quiet at night and I could sleep well"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **RV_AB13AE0715                                                                                       **   score=0.497
+       meta: city=Lisbon, neighbourhood=Bairro Alto, flatname=Cosy Home Lisbon, overall_rating=4.0, cleaning_rating=4.0, communication_rating=4.0, location_rating=2.0, review_title=Comfortable and well-located
+       text: Lisbon, Santos. Cosy Home Lisbon — Garden View Room. Review: Comfortable and well-located. The apartment was impeccably clean on arrival and well maintained throughout. The heating kept the room warm...
+  [ 2] **RV_FC2218E4BA                                                                                       **   score=0.480
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Cosy Home Lisbon, overall_rating=4.0, cleaning_rating=3.0, communication_rating=4.0, location_rating=4.0, review_title=Comfortable and well-located
+       text: Lisbon, Parque das Nacoes. Cosy Home Lisbon — Room. Review: Comfortable and well-located. The kitchen was well equipped with a washing machine and full cooking setup, making daily life very comfortabl...
+  [ 3] **RV_DE243B3D78                                                                                       **   score=0.464
+       meta: city=Porto, neighbourhood=Bonfim, flatname=Bright Apartment Cedofeita, overall_rating=4.0, cleaning_rating=3.0, communication_rating=5.0, location_rating=4.0, review_title=Muito boa experiencia
+       text: Porto, Cedofeita. Bright Apartment Cedofeita — Double Deluxe. Review: Muito boa experiencia. The CCTV and secure digital entry gave me complete peace of mind about safety. The room had excellent natur...
+  [ 4] **RV_A2A2F68544                                                                                       **   score=0.462
+       meta: city=Lisbon, neighbourhood=Roma, flatname=Casa Azul, overall_rating=4.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=3.0, review_title=Comfortable and well-located
+       text: Lisbon, Chiado. Casa Azul — Room. Review: Comfortable and well-located. The lift made moving in with all my luggage completely effortless. The heating kept the room warm even during the coldest winter...
+  [ 5] **RV_37DC3A637C                                                                                       **   score=0.453
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Cosy Home Lisbon, overall_rating=4.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=2.0, review_title=Would recommend
+       text: Lisbon, Alvalade. Cosy Home Lisbon — Garden View Room. Review: Would recommend. The heating kept the room warm even during the coldest winter nights — never felt cold once. The dedicated study desk wa...
+  [ 6] **RV_0E72B1A507                                                                                       **   score=0.453
+       meta: city=Lisbon, neighbourhood=Bairro Alto, flatname=Cosy Home Lisbon, overall_rating=5.0, cleaning_rating=4.0, communication_rating=5.0, location_rating=5.0, review_title=Perfect stay!
+       text: Lisbon, Santos. Cosy Home Lisbon — Garden View Room. Review: Perfect stay!. The landlord went above and beyond — helped me settle in and was always just a message away. Living in Santos was fantastic...
+  [ 7] **RV_475798CD6D                                                                                       **   score=0.451
+       meta: city=Porto, neighbourhood=Ribeira, flatname=Cedofeita Student Flat, overall_rating=4.0, cleaning_rating=4.0, communication_rating=3.0, location_rating=4.0, review_title=Comfortable and well-located
+       text: Porto, Cedofeita. Cedofeita Student Flat — Studio Loft. Review: Comfortable and well-located. The double bed was really comfortable and the mattress was in excellent condition. The WiFi was outstandin...
+  [ 8] **RV_038B211A0A                                                                                       **   score=0.448
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Cosy Home Lisbon, overall_rating=4.0, cleaning_rating=3.0, communication_rating=4.0, location_rating=3.0, review_title=Really enjoyed my stay
+       text: Lisbon, Parque das Nacoes. Cosy Home Lisbon — Room. Review: Really enjoyed my stay. The double bed was really comfortable and the mattress was in excellent condition. The room had excellent natural li...
+  [ 9] **RV_7F91743FDF                                                                                       **   score=0.448
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Residencia Alvalade, overall_rating=4.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=5.0, review_title=Would recommend
+       text: Lisbon, Alfama. Residencia Alvalade — Economy Room. Review: Would recommend. One of the cleanest apartments I have lived in — kitchen, bathroom and floors all spotless. The kitchen was well equipped w...
+  [10] **RV_D711DC9938                                                                                       **   score=0.446
+       meta: city=Lisbon, neighbourhood=Roma, flatname=Casa Azul, overall_rating=4.0, cleaning_rating=4.0, communication_rating=4.0, location_rating=3.0, review_title=Comfortable and well-located
+       text: Lisbon, Chiado. Casa Azul — Single Standard. Review: Comfortable and well-located. The WiFi was outstanding — 1000 Mbps made video calls and online studying completely effortless. The landlord went ab...
+
+==============================================================================
+QUERY reviews_02  (search_reviews, corpus=reviews)
+  text: "The host was responsive and helpful when I had problems"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **RV_7D0351455B                                                                                       **   score=0.403
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Cosy Home Lisbon, overall_rating=2.0, cleaning_rating=1.0, communication_rating=2.0, location_rating=1.0, review_title=Alguns problemas a resolver
+       text: Lisbon, Parque das Nacoes. Cosy Home Lisbon — Cosy Double. Review: Alguns problemas a resolver. The landlord was very slow to respond — sometimes days passed without a reply to urgent messages. The cl...
+  [ 2] **RV_D8C5B5AF42                                                                                       **   score=0.388
+       meta: city=Porto, neighbourhood=Miragaia, flatname=Residencia Miragaia, overall_rating=1.0, cleaning_rating=1.0, communication_rating=1.0, location_rating=1.0, review_title=Would not recommend
+       text: Porto, Foz do Douro. Residencia Miragaia — Room. Review: Would not recommend. Communication was the weakest point. The landlord was difficult to reach when maintenance issues arose. I found grime in t...
+  [ 3] **RV_2017A70C54                                                                                       **   score=0.378
+       meta: city=Porto, neighbourhood=Paranhos, flatname=Residencia Paranhos, overall_rating=4.0, cleaning_rating=3.0, communication_rating=5.0, location_rating=3.0, review_title=Really enjoyed my stay
+       text: Porto, Massarelos. Residencia Paranhos — Master Suite. Review: Really enjoyed my stay. The landlord was incredibly responsive — always replied within a few hours and resolved every issue quickly. The...
+  [ 4] **RV_F44FB3F750                                                                                       **   score=0.375
+       meta: city=Porto, neighbourhood=Ramalde, flatname=Casa Verde, overall_rating=1.0, cleaning_rating=1.0, communication_rating=2.0, location_rating=3.0, review_title=Nao recomendo
+       text: Porto, Campanha. Casa Verde — Garden View Room. Review: Nao recomendo. The landlord was very slow to respond — sometimes days passed without a reply to urgent messages. The private bathroom had persis...
+  [ 5] **RV_CD22DC4324                                                                                       **   score=0.374
+       meta: city=Porto, neighbourhood=Miragaia, flatname=Residencia Miragaia, overall_rating=5.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=5.0, review_title=Perfeito!
+       text: Porto, Foz do Douro. Residencia Miragaia — Room. Review: Perfeito!. The landlord was incredibly responsive — always replied within a few hours and resolved every issue quickly. Living in Foz do Douro...
+  [ 6] **RV_366FA56E33                                                                                       **   score=0.361
+       meta: city=Porto, neighbourhood=Bonfim, flatname=Residencia Bonfim, overall_rating=4.0, cleaning_rating=4.0, communication_rating=3.0, location_rating=2.0, review_title=Recomendo vivamente
+       text: Porto, Boavista. Residencia Bonfim — Superior Room. Review: Recomendo vivamente. My flatmates turned out to be a wonderful international mix — we explored the city together and became close friends. T...
+  [ 7] **RV_105CC52E6F                                                                                       **   score=0.356
+       meta: city=Lisbon, neighbourhood=Telheiras, flatname=Residencia Telheiras, overall_rating=3.0, cleaning_rating=2.0, communication_rating=4.0, location_rating=3.0, review_title=Acceptable for the price
+       text: Lisbon, Belem. Residencia Telheiras — Bright Single. Review: Acceptable for the price. The WiFi was decent — fast enough for browsing and occasional video calls. The cleanliness was disappointing — th...
+  [ 8] **RV_AA0803C3FC                                                                                       **   score=0.352
+       meta: city=Lisbon, neighbourhood=Telheiras, flatname=Residencia Telheiras, overall_rating=4.0, cleaning_rating=3.0, communication_rating=4.0, location_rating=3.0, review_title=Confortavel e bem localizado
+       text: Lisbon, Belem. Residencia Telheiras — Double Deluxe. Review: Confortavel e bem localizado. The 3 shared bathrooms were always clean and there was never a long wait. My landlord was always available an...
+  [ 9] **RV_96E8CEB245                                                                                       **   score=0.351
+       meta: city=Porto, neighbourhood=Nevogilde, flatname=Residencia Nevogilde, overall_rating=4.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=3.0, review_title=Confortavel e bem localizado
+       text: Porto, Boavista. Residencia Nevogilde — Superior Room. Review: Confortavel e bem localizado. The air conditioning was a lifesaver during the hot summer months — always worked perfectly. The heating ke...
+  [10] **RV_44356126BA                                                                                       **   score=0.349
+       meta: city=Lisbon, neighbourhood=Chiado, flatname=Residencia Chiado, overall_rating=4.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=2.0, review_title=Really enjoyed my stay
+       text: Lisbon, Chiado. Residencia Chiado — Room. Review: Really enjoyed my stay. The landlord went above and beyond — helped me settle in and was always just a message away. The air conditioning was a lifesa...
+
+==============================================================================
+QUERY reviews_03  (search_reviews, corpus=reviews)
+  text: "The flat was dirty and not well maintained"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **RV_D8C5B5AF42                                                                                       **   score=0.541
+       meta: city=Porto, neighbourhood=Miragaia, flatname=Residencia Miragaia, overall_rating=1.0, cleaning_rating=1.0, communication_rating=1.0, location_rating=1.0, review_title=Would not recommend
+       text: Porto, Foz do Douro. Residencia Miragaia — Room. Review: Would not recommend. Communication was the weakest point. The landlord was difficult to reach when maintenance issues arose. I found grime in t...
+  [ 2] **RV_054BD74237                                                                                       **   score=0.539
+       meta: city=Porto, neighbourhood=Miragaia, flatname=Residencia Miragaia, overall_rating=2.0, cleaning_rating=1.0, communication_rating=1.0, location_rating=3.0, review_title=Not as described
+       text: Porto, Foz do Douro. Residencia Miragaia — Room. Review: Not as described. The single bed felt cramped for a longer stay and the mattress needed replacing. I found grime in the bathroom and a dirty ov...
+  [ 3] **RV_9543D24DAD                                                                                       **   score=0.537
+       meta: city=Lisbon, neighbourhood=Chiado, flatname=Santos Student Flat, overall_rating=1.0, cleaning_rating=2.0, communication_rating=2.0, location_rating=1.0, review_title=Problemas serios
+       text: Lisbon, Santos. Santos Student Flat — Garden View Room. Review: Problemas serios. The cleanliness was disappointing — the kitchen and bathroom needed serious attention when I arrived. The private bath...
+  [ 4] **RV_19D5F14899                                                                                       **   score=0.534
+       meta: city=Lisbon, neighbourhood=Mouraria, flatname=Casa da Paz, overall_rating=1.0, cleaning_rating=1.0, communication_rating=2.0, location_rating=2.0, review_title=Major issues not resolved
+       text: Lisbon, Belem. Casa da Paz — Double Deluxe. Review: Major issues not resolved. The cleanliness was disappointing — the kitchen and bathroom needed serious attention when I arrived. I felt the rent was...
+  [ 5] **RV_63F571FF4D                                                                                       **   score=0.521
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Residencia Alvalade, overall_rating=1.0, cleaning_rating=2.0, communication_rating=1.0, location_rating=1.0, review_title=Major issues not resolved
+       text: Lisbon, Alfama. Residencia Alvalade — Bright Single. Review: Major issues not resolved. I found grime in the bathroom and a dirty oven on arrival — not the standard I expected. I felt the rent was too...
+  [ 6] **RV_6E379C246C                                                                                       **   score=0.520
+       meta: city=Lisbon, neighbourhood=Mouraria, flatname=Cosy Home Lisbon, overall_rating=1.0, cleaning_rating=1.0, communication_rating=1.0, location_rating=3.0, review_title=Poor experience
+       text: Lisbon, Parque das Nacoes. Cosy Home Lisbon — Garden View Room. Review: Poor experience. The cleanliness was disappointing — the kitchen and bathroom needed serious attention when I arrived. The landl...
+  [ 7] **RV_215474FDA9                                                                                       **   score=0.517
+       meta: city=Porto, neighbourhood=Ramalde, flatname=Casa Verde, overall_rating=2.0, cleaning_rating=2.0, communication_rating=3.0, location_rating=1.0, review_title=Disappointing experience
+       text: Porto, Campanha. Casa Verde — Garden View Room. Review: Disappointing experience. The private bathroom had persistent mould that was never properly fixed despite repeated requests. The location in Cam...
+  [ 8] **RV_5CD8A9D308                                                                                       **   score=0.501
+       meta: city=Lisbon, neighbourhood=Mouraria, flatname=Bright Apartment Principe Real, overall_rating=1.0, cleaning_rating=1.0, communication_rating=1.0, location_rating=3.0, review_title=Very disappointing
+       text: Lisbon, Principe Real. Bright Apartment Principe Real — Bright Single. Review: Very disappointing. The cleanliness was disappointing — the kitchen and bathroom needed serious attention when I arrived....
+  [ 9] **RV_F44FB3F750                                                                                       **   score=0.500
+       meta: city=Porto, neighbourhood=Ramalde, flatname=Casa Verde, overall_rating=1.0, cleaning_rating=1.0, communication_rating=2.0, location_rating=3.0, review_title=Nao recomendo
+       text: Porto, Campanha. Casa Verde — Garden View Room. Review: Nao recomendo. The landlord was very slow to respond — sometimes days passed without a reply to urgent messages. The private bathroom had persis...
+  [10] **RV_8EA9FC4D12                                                                                       **   score=0.496
+       meta: city=Lisbon, neighbourhood=Telheiras, flatname=Residencia Telheiras, overall_rating=2.0, cleaning_rating=2.0, communication_rating=1.0, location_rating=1.0, review_title=Not as described
+       text: Lisbon, Belem. Residencia Telheiras — Bright Single. Review: Not as described. Communication was the weakest point. The landlord was difficult to reach when maintenance issues arose. The double bed ma...
+
+==============================================================================
+QUERY reviews_04  (search_reviews, corpus=reviews)
+  text: "I made friends easily with my housemates and felt at home"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **RV_F2641FA8C4                                                                                       **   score=0.449
+       meta: city=Lisbon, neighbourhood=Benfica, flatname=Santos Student Flat, overall_rating=5.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=5.0, review_title=Absolutamente recomendo
+       text: Lisbon, Santos. Santos Student Flat — Studio Loft. Review: Absolutamente recomendo. My flatmates turned out to be a wonderful international mix — we explored the city together and became close friends...
+  [ 2] **RV_0D060D87D5                                                                                       **   score=0.438
+       meta: city=Lisbon, neighbourhood=Telheiras, flatname=Residencia Telheiras, overall_rating=5.0, cleaning_rating=5.0, communication_rating=4.0, location_rating=4.0, review_title=Could not be happier
+       text: Lisbon, Arroios. Residencia Telheiras — Bright Single. Review: Could not be happier. My flatmates turned out to be a wonderful international mix — we explored the city together and became close friend...
+  [ 3] **RV_87ABC9A090                                                                                       **   score=0.429
+       meta: city=Lisbon, neighbourhood=Alfama, flatname=Casa do Sol, overall_rating=5.0, cleaning_rating=5.0, communication_rating=4.0, location_rating=5.0, review_title=Best Erasmus accommodation
+       text: Lisbon, Chiado. Casa do Sol — Studio Loft. Review: Best Erasmus accommodation. The kitchen was well equipped with a washing machine and full cooking setup, making daily life very comfortable. My flatm...
+  [ 4] **RV_AEE0377139                                                                                       **   score=0.419
+       meta: city=Porto, neighbourhood=Miragaia, flatname=Residencia Miragaia, overall_rating=4.0, cleaning_rating=5.0, communication_rating=3.0, location_rating=5.0, review_title=Would recommend
+       text: Porto, Boavista. Residencia Miragaia — Economy Room. Review: Would recommend. My flatmates turned out to be a wonderful international mix — we explored the city together and became close friends. The...
+  [ 5] **RV_2EBF5AC7D3                                                                                       **   score=0.418
+       meta: city=Porto, neighbourhood=Cedofeita, flatname=Cosy Home Porto, overall_rating=5.0, cleaning_rating=4.0, communication_rating=4.0, location_rating=5.0, review_title=Could not be happier
+       text: Porto, Ramalde. Cosy Home Porto — Bright Single. Review: Could not be happier. The 4 shared bathrooms were always clean and there was never a long wait. The internet connection was fast and reliable t...
+  [ 6] **RV_FC2218E4BA                                                                                       **   score=0.414
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Cosy Home Lisbon, overall_rating=4.0, cleaning_rating=3.0, communication_rating=4.0, location_rating=4.0, review_title=Comfortable and well-located
+       text: Lisbon, Parque das Nacoes. Cosy Home Lisbon — Room. Review: Comfortable and well-located. The kitchen was well equipped with a washing machine and full cooking setup, making daily life very comfortabl...
+  [ 7] **RV_863CA45490                                                                                       **   score=0.403
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Cosy Home Lisbon, overall_rating=5.0, cleaning_rating=4.0, communication_rating=5.0, location_rating=5.0, review_title=Melhor alojamento Erasmus
+       text: Lisbon, Parque das Nacoes. Cosy Home Lisbon — Room. Review: Melhor alojamento Erasmus. The WiFi was outstanding — 1000 Mbps made video calls and online studying completely effortless. Living in Parque...
+  [ 8] **RV_AA0803C3FC                                                                                       **   score=0.402
+       meta: city=Lisbon, neighbourhood=Telheiras, flatname=Residencia Telheiras, overall_rating=4.0, cleaning_rating=3.0, communication_rating=4.0, location_rating=3.0, review_title=Confortavel e bem localizado
+       text: Lisbon, Belem. Residencia Telheiras — Double Deluxe. Review: Confortavel e bem localizado. The 3 shared bathrooms were always clean and there was never a long wait. My landlord was always available an...
+  [ 9] **RV_BF0B2DEB73                                                                                       **   score=0.399
+       meta: city=Lisbon, neighbourhood=Bairro Alto, flatname=Cosy Home Lisbon, overall_rating=4.0, cleaning_rating=5.0, communication_rating=5.0, location_rating=5.0, review_title=Muito boa experiencia
+       text: Lisbon, Santos. Cosy Home Lisbon — Garden View Room. Review: Muito boa experiencia. The dedicated study desk was perfect for long university work sessions — exactly what an Erasmus student needs. The...
+  [10] **RV_B359E915B8                                                                                       **   score=0.397
+       meta: city=Lisbon, neighbourhood=Bairro Alto, flatname=Cosy Home Lisbon, overall_rating=5.0, cleaning_rating=4.0, communication_rating=4.0, location_rating=5.0, review_title=Absolutely loved it
+       text: Lisbon, Santos. Cosy Home Lisbon — Master Suite. Review: Absolutely loved it. One of the cleanest apartments I have lived in — kitchen, bathroom and floors all spotless. The dedicated study desk was p...
+
+==============================================================================
+QUERY reviews_05  (search_reviews, corpus=reviews)
+  text: "The apartment was much smaller than expected and felt cramped"
+  top_k_evaluate (P@K cutoff): 5
+------------------------------------------------------------------------------
+  [ 1] **RV_054BD74237                                                                                       **   score=0.582
+       meta: city=Porto, neighbourhood=Miragaia, flatname=Residencia Miragaia, overall_rating=2.0, cleaning_rating=1.0, communication_rating=1.0, location_rating=3.0, review_title=Not as described
+       text: Porto, Foz do Douro. Residencia Miragaia — Room. Review: Not as described. The single bed felt cramped for a longer stay and the mattress needed replacing. I found grime in the bathroom and a dirty ov...
+  [ 2] **RV_4BDA6BDBBE                                                                                       **   score=0.566
+       meta: city=Lisbon, neighbourhood=Campo de Ourique, flatname=Casa Verde, overall_rating=3.0, cleaning_rating=3.0, communication_rating=3.0, location_rating=4.0, review_title=Mixed experience
+       text: Lisbon, Estrela. Casa Verde — Studio Loft. Review: Mixed experience. The single bed felt cramped for a longer stay and the mattress needed replacing. I felt the rent was too high for what was actually...
+  [ 3] **RV_1E554DFD28                                                                                       **   score=0.563
+       meta: city=Lisbon, neighbourhood=Chiado, flatname=Casa do Sol, overall_rating=1.0, cleaning_rating=1.0, communication_rating=2.0, location_rating=3.0, review_title=Very disappointing
+       text: Lisbon, Intendente. Casa do Sol — Cosy Double. Review: Very disappointing. The single bed felt cramped for a longer stay and the mattress needed replacing. I felt the rent was too high for what was ac...
+  [ 4] **RV_4273AD5C91                                                                                       **   score=0.544
+       meta: city=Lisbon, neighbourhood=Alvalade, flatname=Cosy Home Lisbon, overall_rating=3.0, cleaning_rating=3.0, communication_rating=2.0, location_rating=3.0, review_title=Good but could be better
+       text: Lisbon, Alvalade. Cosy Home Lisbon — Garden View Room. Review: Good but could be better. Sharing the bathroom with multiple flatmates was difficult, especially during busy mornings. The single bed fel...
+  [ 5] **RV_28994456F5                                                                                       **   score=0.544
+       meta: city=Lisbon, neighbourhood=Roma, flatname=Casa Azul, overall_rating=1.0, cleaning_rating=2.0, communication_rating=2.0, location_rating=3.0, review_title=Very disappointing
+       text: Lisbon, Chiado. Casa Azul — Cosy Double. Review: Very disappointing. The single bed felt cramped for a longer stay and the mattress needed replacing. The private bathroom had persistent mould that was...
+  [ 6] **RV_F99BBA7AEF                                                                                       **   score=0.543
+       meta: city=Lisbon, neighbourhood=Intendente, flatname=Residencia Intendente, overall_rating=3.0, cleaning_rating=2.0, communication_rating=3.0, location_rating=1.0, review_title=Bom mas pode melhorar
+       text: Lisbon, Intendente. Residencia Intendente — Double Deluxe. Review: Bom mas pode melhorar. The single bed felt cramped for a longer stay and the mattress needed replacing. The cleanliness was disappoin...
+  [ 7] **RV_2DD21AC8B9                                                                                       **   score=0.542
+       meta: city=Porto, neighbourhood=Ribeira, flatname=Residencia Ribeira, overall_rating=2.0, cleaning_rating=2.0, communication_rating=1.0, location_rating=4.0, review_title=Not as described
+       text: Porto, Campanha. Residencia Ribeira — Room. Review: Not as described. The double bed mattress was lumpy and unsupportive — a real disappointment for a longer stay. I felt the rent was too high for wha...
+  [ 8] **RV_B61F061E71                                                                                       **   score=0.533
+       meta: city=Lisbon, neighbourhood=Benfica, flatname=Cosy Home Lisbon, overall_rating=1.0, cleaning_rating=2.0, communication_rating=1.0, location_rating=2.0, review_title=Problemas serios
+       text: Lisbon, Estrela. Cosy Home Lisbon — Superior Room. Review: Problemas serios. I felt the rent was too high for what was actually offered, particularly compared to similar listings nearby. Sharing the b...
+  [ 9] **RV_92EBF14412                                                                                       **   score=0.522
+       meta: city=Lisbon, neighbourhood=Graca, flatname=Residencia Graca, overall_rating=2.0, cleaning_rating=1.0, communication_rating=3.0, location_rating=1.0, review_title=Not as described
+       text: Lisbon, Anjos. Residencia Graca — Economy Room. Review: Not as described. The WiFi was very slow and dropped frequently in the evenings when I needed it most. The single bed felt cramped for a longer...
+  [10] **RV_B7B5BD3B5F                                                                                       **   score=0.521
+       meta: city=Porto, neighbourhood=Nevogilde, flatname=Residencia Nevogilde, overall_rating=3.0, cleaning_rating=2.0, communication_rating=4.0, location_rating=3.0, review_title=Aceitavel pelo preco
+       text: Porto, Boavista. Residencia Nevogilde — Superior Room. Review: Aceitavel pelo preco. Sharing the bathroom with multiple flatmates was difficult, especially during busy mornings. The WiFi was decent —...
+
