@@ -31,6 +31,7 @@ USE_MOCK_AGENT = os.environ.get("ELH_USE_MOCK_AGENT", "false").lower() in ("1", 
 
 # Shared resources
 
+
 @st.cache_resource
 def get_agent_context() -> AgentContext:
     """Cached AgentContext — survives across Streamlit reruns."""
