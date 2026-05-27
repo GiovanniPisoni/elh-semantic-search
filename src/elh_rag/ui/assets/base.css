@@ -1,0 +1,148 @@
+/* Design tokens */
+:root {
+  --primary: #1D4ED8;
+  --primary-hover: #2563EB;
+  --primary-light: #DBEAFE;
+  --primary-soft: #EFF6FF;
+  --accent: #16A34A;
+  --success: #16A34A;
+  --user-bubble: #1D4ED8;
+  --ai-bubble: #F1F5F9;
+  --avatar-user: #16A34A;
+  --avatar-ai: #1D4ED8;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-faded: #94A3B8;
+  --border: #E2E8F0;
+  --bg-surface: #F8FAFC;
+  --bg-subtle: #F1F5F9;
+  --white: #FFFFFF;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+}
+
+/* Streamlit chrome reset — hide menu, header, footer, deploy badge, and
+   the persistent bottom container that 1.57 ships with. The bottom one
+   has shipped under several different testids and class names across
+   1.57.x patch releases, so the selector list is intentionally broad. */
+#MainMenu, footer, header,
+[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stFooter"],
+[data-testid="stStatusWidget"],
+[data-testid="stDecoration"],
+[data-testid="stBottom"],
+[data-testid="stBottomBlockContainer"],
+[data-testid="stBottomBlock"],
+[data-testid="stAppDeployButton"],
+.stDeployButton,
+.stChatFloatingInputContainer,
+[class*="viewerBadge"],
+[class*="stBottom"],
+[class*="StyledBottomContainer"],
+section[data-testid="stBottomBlockContainer"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+
+/* Prevent .stApp from reserving space for the (now-hidden) bottom bar. */
+.stApp {
+  bottom: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stAppViewBlockContainer"] {
+  background: var(--white) !important;
+}
+
+[data-testid="stAppViewBlockContainer"] {
+  padding: 0 !important;
+  max-width: 100% !important;
+}
+
+[data-testid="stAppViewContainer"] > section[data-testid="stMain"],
+[data-testid="stMain"] > div.block-container,
+.main .block-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: 100% !important;
+}
+
+[data-testid="stMain"],
+.block-container,
+[data-testid="stVerticalBlock"],
+[data-testid="stVerticalBlockBorderWrapper"],
+div.stMarkdown,
+div.element-container {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+  background: var(--white) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+[data-testid="stSidebar"] .stSlider > label,
+[data-testid="stSidebar"] .stSelectbox > label,
+[data-testid="stSidebar"] .stSelectSlider > label {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+[data-testid="stSidebar"] button {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.83rem !important;
+}
+
+[data-testid="stSidebar"] button:hover {
+  background: var(--primary-soft) !important;
+  border-color: #93C5FD !important;
+  color: var(--primary) !important;
+}
+
+[data-testid="stSidebar"] hr {
+  border-color: var(--border) !important;
+}
+
+/* Shared input form (welcome + chat bottom) */
+[data-testid="stTextInput"] input {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  font-size: 1rem !important;
+  padding: 0.5rem 0 !important;
+}
+
+[data-testid="stTextInput"] input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+[data-testid="stTextInput"] input::placeholder {
+  color: var(--text-faded) !important;
+}
+
+[data-testid="stTextInput"] > div,
+[data-testid="stTextInput"] > div:focus-within {
+  border: none !important;
+  box-shadow: none !important;
+}
