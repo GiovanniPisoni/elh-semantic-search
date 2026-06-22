@@ -1,0 +1,286 @@
+# eval-v2 golden set — cassette "subjective_descriptions" (10 queries)
+#
+# Two query types:
+#   in_corpus --> qualitative theme IS in description text; answer grounded
+#   gap       --> theme NOT reliably in descriptions; honest weak-match required.
+
+# IN-CORPUS (6)
+
+- id: subjective_descriptions_01
+  category: subjective_descriptions
+  language: en
+  difficulty: easy
+  hop_count: 1
+  description_query_type: in_corpus
+  query: "are the rooms pretty spacious or are they on the small side? what do the listings say about room size?"
+  notes: >
+    Theme: room spaciousness / size (§G in-corpus; §C.2 — area m² present in
+    room rows and included in description prose). Tests that the agent retrieves
+    description text and summarises size information rather than answering from
+    priors. Tool choice (search_descriptions or find_rooms with size filter) is
+    not scored — only grounding.
+  expected_answer_type: text
+  ground_truth: |
+    Room size / area (m²) is described in the description corpus (§C.2). A
+    correct answer must:
+    (a) summarise what the listings say about room dimensions or spaciousness
+        as found in retrieved description text (e.g. specific m² figures,
+        qualitative descriptors like "spacious double room" or "compact single");
+    (b) be grounded in retrieved description content, not in generic housing
+        knowledge;
+    (c) NOT claim the corpus has no size information — it does.
+    A weak-match refusal ("descriptions don't mention size") is a false negative.
+    Invented dimensions not backed by retrieved text are a grounding failure.
+
+- id: subjective_descriptions_02
+  category: subjective_descriptions
+  language: en
+  difficulty: easy
+  hop_count: 1
+  description_query_type: in_corpus
+  query: "does the room have a proper desk? I need somewhere to actually study and work from"
+  notes: >
+    Theme: study setup / desk presence (§G in-corpus). Desks and study
+    suitability are mentioned in ELH room descriptions and are a high-priority
+    concern for Erasmus students. Tests semantic retrieval of a lifestyle-fit
+    theme rather than a structured boolean filter.
+  expected_answer_type: text
+  ground_truth: |
+    Desk / study setup is described in the description corpus. A correct answer
+    must:
+    (a) summarise what listings say about desk presence and study suitability
+        based on retrieved description text;
+    (b) be grounded — only claim what was retrieved, not assumed;
+    (c) NOT refuse on grounds of missing information when descriptions cover it.
+    It is acceptable to note that availability varies by listing as long as
+    that reflects the retrieved evidence. A confident blanket claim ("all rooms
+    have desks") without retrieved backing is a grounding failure.
+
+- id: subjective_descriptions_03
+  category: subjective_descriptions
+  language: en
+  difficulty: easy
+  hop_count: 1
+  description_query_type: in_corpus
+  query: "is the bathroom in the room itself or do you share it with everyone in the flat?"
+  notes: >
+    Theme: private vs shared bathroom / en-suite (§G in-corpus; also a
+    structured field privatebathroom=Y/N, but the query is qualitative and
+    may hit the description corpus). Tests grounded retrieval on a high-salience
+    privacy concern. Either tool path (search_descriptions or find_rooms filter)
+    is acceptable — only grounding is scored.
+  expected_answer_type: text
+  ground_truth: |
+    Private vs shared bathroom is described in listings (structured field +
+    description prose). A correct answer must:
+    (a) state what the listing / description says about bathroom arrangement
+        (en-suite vs shared), grounded in retrieved content;
+    (b) note that this varies by listing if the query is general (not about a
+        specific room);
+    (c) NOT fabricate a bathroom arrangement not backed by retrieved data.
+    If the agent uses the structured privatebathroom field (a valid shortcut),
+    the answer must still correctly describe the options rather than returning
+    a raw boolean.
+
+- id: subjective_descriptions_04
+  category: subjective_descriptions
+  language: en
+  difficulty: medium
+  hop_count: 1
+  description_query_type: in_corpus
+  query: "I'd love somewhere with a balcony or at least a bit of outdoor space — do any listings mention that?"
+  notes: >
+    Theme: balcony / outdoor space (§G in-corpus). Balconies and terraces are
+    mentioned in ELH house/room descriptions. Medium difficulty because the
+    user frames it as a search ("do any listings mention") and the agent needs
+    to retrieve descriptions and report what is found, possibly across multiple
+    properties.
+  expected_answer_type: text
+  ground_truth: |
+    Balcony / outdoor space is described in the description corpus. A correct
+    answer must:
+    (a) confirm that some listings do mention balconies or terraces and
+        summarise what the retrieved descriptions say about outdoor space;
+    (b) be grounded in retrieved text, not in assumed amenity counts;
+    (c) NOT say the corpus has no information on outdoor space.
+    If balcony is also a structured filter (amenity field), either retrieval
+    path is fine — grounding and correctness are what is scored. An answer
+    that fabricates specific balcony details not in retrieved text is a
+    grounding failure.
+
+- id: subjective_descriptions_05
+  category: subjective_descriptions
+  language: en
+  difficulty: medium
+  hop_count: 1
+  description_query_type: in_corpus
+  query: "I'm coming from abroad and can't bring furniture — do the listings say if the rooms are fully furnished with a wardrobe and everything?"
+  notes: >
+    Theme: furnished / move-in ready / wardrobe and storage (§G in-corpus).
+    ELH room descriptions describe furnishing level (bed, desk, wardrobe,
+    storage) as they are intended for Erasmus students who arrive without
+    household goods. Tests retrieval of furnishing detail from prose.
+  expected_answer_type: text
+  ground_truth: |
+    Furnishing level (including wardrobes, bed, desk, storage) is described in
+    the description corpus. A correct answer must:
+    (a) summarise what descriptions say about furnishing completeness —
+        whether rooms are described as fully furnished, what specific items are
+        listed (wardrobe, desk, bed type, etc.);
+    (b) be grounded in retrieved description content;
+    (c) NOT claim rooms are unfurnished when descriptions indicate otherwise,
+        and NOT inflate furnishing claims beyond what the retrieved text says.
+    Honest variation ("most listings describe fully furnished rooms; check
+    individual listings for specifics") grounded in retrieved evidence is
+    correct. A weak-match refusal is a false negative.
+
+- id: subjective_descriptions_06
+  category: subjective_descriptions
+  language: it
+  difficulty: medium
+  hop_count: 1
+  description_query_type: in_corpus
+  query: "c'è il riscaldamento in camera? o magari anche l'aria condizionata? le descrizioni degli appartamenti lo specificano?"
+  notes: >
+    Non-English (Italian). Theme: in-room heating / air conditioning (§G
+    in-corpus). Heating and A/C presence are mentioned in ELH room/house
+    descriptions. Response must be IN ITALIAN even though description text
+    may be in English. Tests cross-lingual grounded retrieval. Medium difficulty
+    because the user asks about two systems (heating AND A/C) and the agent
+    must handle both.
+  expected_answer_type: text
+  ground_truth: |
+    In-room heating and air conditioning are described in the description
+    corpus. A correct answer, DELIVERED IN ITALIAN, must:
+    (a) summarise what listings say about the presence of heating and/or A/C
+        in rooms, based on retrieved description text;
+    (b) handle both sub-topics if the corpus covers both;
+    (c) be grounded in retrieved content — not assumed from building type or
+        city climate;
+    (d) NOT refuse or claim the corpus has no HVAC information.
+    An answer in English only is a localisation failure. A fabricated "all
+    rooms have A/C" not backed by retrieved descriptions is a grounding
+    failure. Honest variation ("some listings mention heating; fewer mention
+    A/C") grounded in retrieved text is correct.
+
+# GAP (4)
+
+- id: subjective_descriptions_07
+  category: subjective_descriptions
+  language: en
+  difficulty: medium
+  hop_count: 1
+  description_query_type: gap
+  query: "do the listings say which compass direction the windows face — like north-facing or south-facing? I'm planning where to put my desk for the light."
+  notes: >
+    Gap: window COMPASS orientation (§G GAPS; §C.2 — no orientation field). ELH
+    descriptions mention natural light qualitatively but never give a cardinal
+    bearing (N/S/E/W). Query is sharpened to the orientation gap specifically, to
+    avoid colliding with the reviews-cassette in-corpus "natural light" item:
+    talking about qualitative light here is ACCEPTABLE context, but the compass
+    orientation itself is the unconfirmed gap. The agent must not invent a bearing.
+  expected_answer_type: weak_match
+  ground_truth: |
+    Window compass orientation (which cardinal direction windows face) is NOT in
+    the description corpus (§C.2, §G). A correct answer must:
+    (a) state that property descriptions do not specify the compass direction
+        windows face;
+    (b) NOT fabricate a cardinal direction (e.g. "south-facing") for any listing;
+    (c) ACCEPTABLE as helpful context (not penalised, not required): noting that
+        descriptions do mention natural light qualitatively (bright room / good
+        light / large windows), explicitly framed as NOT the same as verified
+        orientation;
+    (d) suggest a viewing or contacting ELH to confirm orientation.
+    Inventing a compass direction is a hard grounding failure. Answering only
+    about qualitative light WITHOUT making clear the orientation is unconfirmed
+    is a partial failure (it dodges the actual question). The target behavior:
+    "descriptions don't state orientation; some do mention good natural light,
+    but that's not the same as direction — best to check via a viewing."
+
+- id: subjective_descriptions_08
+  category: subjective_descriptions
+  language: en
+  difficulty: medium
+  hop_count: 1
+  description_query_type: gap
+  query: "I've had bad experiences with damp and musty smells before — is there any way to tell from the listings if a place has that problem?"
+  notes: >
+    Gap: smell / odour / damp condition (§G GAPS). Odour, mustiness, and damp
+    are not documented in ELH description prose. The agent must give an honest
+    weak-match and redirect to a viewing as the legitimate path for this check.
+  expected_answer_type: weak_match
+  ground_truth: |
+    Smell, odour, and damp condition are NOT described in the listing corpus.
+    A correct answer must:
+    (a) honestly state that property descriptions do not address smell or damp;
+    (b) NOT fabricate a "no damp issues" claim on the basis that descriptions
+        don't mention it (absence of a complaint ≠ confirmed absence of problem);
+    (c) redirect the user to the legitimate path: arrange an in-person viewing
+        (or video call) before booking so they can assess the flat themselves;
+    (d) optionally note that ELH verifies every listing in person, which
+        provides some baseline quality assurance, while acknowledging this does
+        not specifically address odour.
+    Claiming the corpus confirms no odour problems is a grounding failure.
+
+- id: subjective_descriptions_09
+  category: subjective_descriptions
+  language: en
+  difficulty: medium
+  hop_count: 1
+  description_query_type: gap
+  query: "when the listing says 'furnished', does that mean modern stuff or is it all old and worn out? can you tell from the description?"
+  notes: >
+    Gap: furniture condition / age / wear (§G GAPS). Descriptions confirm
+    furnishing presence but do not reliably grade the condition or age of
+    furniture (new vs worn). Distinct from in-corpus entry #05 which tests
+    furnishing completeness (what items are present); this tests the qualitative
+    condition signal that the corpus does not carry.
+  expected_answer_type: weak_match
+  ground_truth: |
+    Furniture condition / age / newness is NOT reliably described in the listing
+    corpus. A correct answer must:
+    (a) acknowledge that descriptions confirm furnishing presence but do not
+        typically grade furniture condition or age;
+    (b) NOT fabricate a condition assessment ("furniture is brand new" or
+        "furniture is worn") without direct description evidence;
+    (c) suggest a viewing as the reliable way to assess furniture condition
+        before booking;
+    (d) optionally note that ELH conducts in-person property visits as part of
+        its verification process, which provides some baseline assurance.
+    An answer that equates "furnished" with "good condition" without retrieved
+    evidence is a grounding failure.
+
+- id: subjective_descriptions_10
+  category: subjective_descriptions
+  language: en
+  difficulty: hard
+  hop_count: 1
+  description_query_type: gap
+  query: "how far is it from Nova SBE in Carcavelos? I need to get there every day and commute time matters a lot to me"
+  notes: >
+    Gap: distance to a specific named university (§G GAPS; §C.2 — no measured
+    distance field). Hard difficulty: the agent must recognise that no verified
+    distance is stored, but the BEST behavior is to attempt a near_landmark
+    fuzzy text match on "Nova SBE" / "Carcavelos" while clearly flagging it is
+    a fuzzy match, not a measured distance — never fabricating "X minutes walk".
+    This tests tool-awareness nuance: knowing what the tools CAN approximate
+    (near_landmark ILIKE) vs what they CANNOT verify (actual travel time/distance).
+  expected_answer_type: weak_match
+  ground_truth: |
+    Verified travel distance or commute time to Nova SBE (or any specific
+    university) is NOT a measured field in the ELH catalogue (§C.2, §G). A
+    correct answer must:
+    (a) state clearly that ELH listings do not store measured distances to
+        specific universities;
+    (b) NOT fabricate a commute time or distance in minutes/km;
+    (c) BEST behavior (reward at least as highly as a plain hedge): attempt a
+        near_landmark fuzzy text search for "Nova SBE" or "Carcavelos" to
+        surface listings whose description or zone mentions the university or
+        neighbourhood, while explicitly flagging that this is a text match, not
+        a verified distance — the user should verify the actual commute;
+    (d) optionally note that Porto/Lisbon listings also have a
+        distancepublictransport field which gives transport proximity as a
+        partial proxy for commute planning.
+    Fabricating a commute time ("about 20 minutes by train") without verified
+    data is a hard grounding failure. A plain "I don't know" without attempting
+    the near_landmark tool path is a missed opportunity but not a failure.
