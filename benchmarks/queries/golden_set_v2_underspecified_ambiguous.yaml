@@ -1,0 +1,344 @@
+# eval-v2 golden set — cassette "underspecified_ambiguous" (12 queries)
+#
+# hop_count=0: a correct clarification requires no tool call. This cassette is
+# excluded from hop-count analysis.
+#
+# Two subsets:
+#   novel            --> ambiguities the system prompt has NO worked example for
+#   entity_reference --> ELH-team-vs-landlord ambiguity on topics distinct from
+#                      the system prompt's canonical "host responsiveness" example
+
+# NOVEL AMBIGUITIES (9)
+
+- id: ambiguous_01
+  category: underspecified_ambiguous
+  language: en
+  difficulty: hard
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: location_city
+  query: "I'm looking for a room right in the city centre — good transport links and close to everything"
+  notes: >
+    Two valid readings: (A) "city centre" = Lisbon city centre (Baixa, Chiado,
+    Avenida area); (B) "city centre" = Porto city centre (Aliados, Ribeira,
+    Bolhão area). ELH operates in exactly two cities (§A: Lisbon|Porto); both
+    have a defined "centre". No city was mentioned. Proceeding to search
+    Lisbon or Porto without asking risks returning irrelevant results for the
+    user's intended city. Hard: city is the primary filter; a wrong assumption
+    returns an entirely wrong result set.
+  expected_answer_type: clarification
+  ground_truth: |
+    The query is ambiguous between Lisbon city centre and Porto city centre.
+    Correct behavior (full score): ask "which city — Lisbon or Porto?", OR
+    state "I'll assume Lisbon for now — let me know if you meant Porto" and
+    proceed with that city filter.
+    Failure (zero score): silently search only one city without naming the
+    assumption, or refuse to help because the city is unspecified.
+    Note: the response must acknowledge there are two cities; simply asking
+    "what neighbourhood?" without resolving the city is insufficient.
+
+- id: ambiguous_02
+  category: underspecified_ambiguous
+  language: en
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: location_university
+  query: "can you find me a room close to the university? I need to be able to get there quickly every day"
+  notes: >
+    Two (or more) valid readings: (A) a university in Lisbon — e.g. Universidade
+    de Lisboa, NOVA, IST Técnico, ISCTE; (B) a university in Porto — e.g.
+    Universidade do Porto, Católica Porto; (C) city itself is unresolved (same
+    ambiguity as location_city, compounding). Neither "the university" nor the
+    city was specified. The near_landmark filter can only help once the target
+    is named. Medium: even within a city the right institution matters for the
+    near_landmark match.
+  expected_answer_type: clarification
+  ground_truth: |
+    The query is ambiguous: "the university" could refer to any of several
+    institutions in Lisbon or Porto. Correct behavior (full score): ask which
+    city AND which university (or institution name) the user attends, OR
+    state an explicit assumption ("I'll search for rooms near NOVA in Lisbon —
+    which university and city is yours?") before searching.
+    Failure: silently running near_landmark='university' as a generic term
+    without asking, or picking one city/institution without stating it.
+
+- id: ambiguous_03
+  category: underspecified_ambiguous
+  language: en
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: time_semester
+  query: "I need a room available for next semester — when would I move in, and what can you show me?"
+  notes: >
+    Two valid readings: (A) "next semester" = spring/2nd semester, typically
+    starting February (check-in late January / early February, running to
+    June); (B) "next semester" = autumn/1st semester, starting September
+    (check-in late August / September, running to January). The correct answer
+    depends on the time of year the query is sent AND the user's academic
+    calendar. The interpretation also affects seasonal pricing (spring rate
+    vs autumn rate, §B). Medium: common Erasmus vocabulary but genuinely
+    two-way ambiguous.
+  expected_answer_type: clarification
+  ground_truth: |
+    "Next semester" is ambiguous: it could mean the spring semester (starting
+    ~February) or the autumn semester (starting ~September). Correct behavior
+    (full score): ask which semester or which start month the user needs, OR
+    state "I'll assume autumn semester — move-in around September — let me know
+    if you mean the spring one" and proceed with that date.
+    Failure: silently assume one semester without naming it, or return results
+    with no date filter applied. The answer must also acknowledge the pricing
+    implication if it proceeds with an assumption (spring price vs autumn price).
+
+- id: ambiguous_04
+  category: underspecified_ambiguous
+  language: de
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: time_duration
+  query: "ich suche eine Unterkunft für ein paar Monate in Lissabon — gibt es da was Passendes?"
+  notes: >
+    Non-English (German). Two valid readings of "ein paar Monate" (a few months):
+    (A) short stay = 2–3 months (summer internship or partial semester);
+    (B) semester stay = 4–6 months (full Erasmus semester). The number of months
+    affects: which min_reserve_months filter to apply, which calendar months are
+    covered (and therefore which seasonal prices apply, §B), and total cost.
+    Response must be IN GERMAN.
+  expected_answer_type: clarification
+  ground_truth: |
+    "Ein paar Monate" is not a precise duration; it is ambiguous between a
+    short (2–3 month) stay and a semester-length (4–6 month) stay.
+    Correct behavior (full score), DELIVERED IN GERMAN: ask exactly how many
+    months the user needs, OR state "Ich gehe von 3 Monaten aus — bitte
+    korrigieren Sie mich, falls Sie länger bleiben möchten" and search with
+    that assumption. Must name the duration assumed if proceeding.
+    Failure: silently search without specifying duration, or return results
+    without acknowledging the ambiguity. An answer in English only is a
+    localisation failure.
+
+- id: ambiguous_05
+  category: underspecified_ambiguous
+  language: en
+  difficulty: easy
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: threshold_price
+  query: "I'm on a pretty tight budget — can you find me something cheap in Porto?"
+  notes: >
+    Two (or more) valid readings of "cheap": (A) cheap relative to the Porto
+    median autumn price (~€895, §B) → under €700–750; (B) cheap by student
+    expectations from Northern Europe → under €900–950; (C) cheap = the
+    absolute lowest available in catalogue. Without a number the max_price_eur
+    filter cannot be set, and searching "cheap" may return nothing useful or
+    everything. Easy: one clarifying question ("what's your monthly budget?")
+    resolves it cleanly.
+  expected_answer_type: clarification
+  ground_truth: |
+    "Cheap" has no fixed threshold in the catalogue. Correct behavior (full
+    score): ask "what's your monthly budget ceiling?" OR state "I'll search
+    up to €750/month — let me know your actual limit" and proceed.
+    Failure: silently applying an arbitrary threshold without naming it, or
+    returning the full Porto catalogue with no price filter at all.
+    Note: Porto's catalogue median is ~€895 autumn; any assumed threshold must
+    be plausible relative to actual prices in the catalogue.
+
+- id: ambiguous_06
+  category: underspecified_ambiguous
+  language: en
+  difficulty: easy
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: threshold_size
+  query: "I really want a good-sized room — I hate feeling cramped. any large rooms available?"
+  notes: >
+    Two valid readings of "large": (A) large relative to ELH stock (e.g. top
+    quartile by m², roughly 18+ m²); (B) large as an absolute standard (20+ m²
+    double room). Compounding caveat: room area (m²) is NOT a filterable field
+    in find_rooms (§C.2) — only described in prose. An ideal answer both asks
+    for the user's threshold AND explains that size cannot be filtered
+    structurally, offering a description-based search instead. Easy: a single
+    question resolves the threshold, even if the corpus caveat makes it medium
+    in execution.
+  expected_answer_type: clarification
+  ground_truth: |
+    "Large" has no fixed definition; room size is also not a structured filter
+    in the catalogue (§C.2 — m² appears in description prose only).
+    Correct behavior (full score): ask what the user considers large (m²
+    threshold or type: single / double / suite), AND/OR note that room size
+    cannot be filtered precisely — offering to search descriptions for
+    spacious rooms instead.
+    Failure: silently applying an unstated size heuristic as if it were a
+    reliable filter, or returning results without addressing the size ambiguity.
+    A response that explains the prose-only caveat and offers the description
+    search is the strongest answer.
+
+- id: ambiguous_07
+  category: underspecified_ambiguous
+  language: en
+  difficulty: hard
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: referent_missing
+  query: "how much is the deposit for the room?"
+  notes: >
+    Two valid readings: (A) asking about a specific room the user has in mind
+    (but no room was mentioned in this turn or any prior context — the referent
+    "the room" is dangling); (B) asking about the general deposit policy
+    (§F: typically one month's rent, but varies by listing and landlord). Without
+    knowing which room, compute_total_cost cannot return a specific figure, and
+    get_property_details cannot retrieve a specific listing. Hard: the question
+    seems concrete but is unresolvable without the room identifier.
+  expected_answer_type: clarification
+  ground_truth: |
+    "The room" has no referent — no room was identified in the conversation.
+    Two interpretations: a specific room's deposit (requires a room ID) or the
+    general deposit policy (varies by listing, typically one month's rent).
+    Correct behavior (full score): ask which room the user is interested in
+    (share a room ID or listing) to get the exact figure, OR state the general
+    policy ("the deposit is typically one month's rent, but the exact amount
+    varies by listing — which room are you looking at?").
+    If the response cites the "one month's rent" default, it MUST also flag that
+    the actual deposit varies significantly by listing (real values range from a
+    flat amount well below one month's rent to well above it), so quoting the
+    default alone as if it were the figure for "the room" is misleading.
+    Failure: silently computing or inventing a deposit amount without knowing
+    the room, or returning a hard number as if it were universal.
+
+- id: ambiguous_08
+  category: underspecified_ambiguous
+  language: es
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: quantity_group
+  query: "somos un grupo de Erasmus que llegamos a Lisboa en septiembre, ¿podéis buscarnos habitaciones?"
+  notes: >
+    Non-English (Spanish). Two valid readings: (A) small group = 2-3 people
+    (needing 2-3 individual rooms, possibly in the same flat); (B) larger group
+    = 4-6+ people (may not fit in a single flat, requires coordinating multiple
+    listings). The number of people/rooms is unspecified. Without it the agent
+    cannot set num_rooms_needed or determine whether to search one flat or
+    multiple. Response must be IN SPANISH.
+  expected_answer_type: clarification
+  ground_truth: |
+    The number of people (and therefore rooms needed) is unspecified.
+    Correct behavior (full score), DELIVERED IN SPANISH: ask "¿cuántas personas
+    sois y cuántas habitaciones necesitáis?", OR state "Voy a buscar habitaciones
+    para 2-3 personas en Lisboa en septiembre — confirmadme el número exacto"
+    and proceed with that assumption.
+    Failure: silently searching without specifying the count, returning results
+    calibrated to one person, or refusing because the number is unknown. An
+    answer in English only is a localisation failure.
+
+- id: ambiguous_09
+  category: underspecified_ambiguous
+  language: en
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: novel
+  ambiguity_subtype: criteria_conflict
+  query: "I need somewhere really central, modern and nice — but also affordable. can you help with that?"
+  notes: >
+    Three criteria that frequently conflict: (A) "really central" → prime
+    locations in Lisbon/Porto skew expensive and are often housed in older
+    buildings; (B) "modern and nice" → newer builds or renovated flats tend to
+    carry a price premium; (C) "affordable" → lower price typically means less
+    central or less recently renovated. All three cannot be fully satisfied
+    simultaneously; the agent must surface the tradeoff and ask which criterion
+    is most important, or state a prioritisation. Also: city is unresolved
+    (Lisbon or Porto), compounding the ambiguity.
+  expected_answer_type: clarification
+  ground_truth: |
+    The three criteria — central location, modern quality, and affordability —
+    typically conflict in the ELH catalogue. Correct behavior (full score):
+    surface the tradeoff and ask which criterion the user prioritises (location
+    first? budget cap first?), OR state an explicit priority order ("I'll
+    prioritise central location and filter by affordability next — what's your
+    budget?") and proceed. Should also clarify city (Lisbon or Porto).
+    Failure: silently running a search that honours only one criterion without
+    acknowledging the conflict, or returning results that implicitly sacrifice
+    one goal without telling the user. Refusing because the criteria conflict
+    is wrong — the query is answerable once priorities are set.
+
+# ENTITY-REFERENCE (3)
+
+- id: ambiguous_10
+  category: underspecified_ambiguous
+  language: en
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: entity_reference
+  ambiguity_subtype: entity_reference
+  query: "are the staff generally helpful and easy to deal with if you have a problem during the stay?"
+  notes: >
+    Entity-reference ambiguity (§I.7: rule 12). Two valid readings: (A) "staff"
+    = ELH support team (customer-service dimension: the platform team's
+    helpfulness); (B) "staff" = the individual landlords or property managers
+    (landlord-helpfulness dimension: varies per property). The helpfulness topic
+    differs from the canonical "host responsiveness" example in the system prompt.
+    Reviews and policy answers diverge depending on which entity is meant.
+  expected_answer_type: clarification
+  ground_truth: |
+    "Staff" is ambiguous: it could mean the ELH support team or the individual
+    landlords. Correct behavior (full score): ask whether the user means the ELH
+    team or their landlord, OR state "I'll interpret this as the ELH support team
+    — if you mean your landlord, that varies by property" and answer accordingly.
+    Failure: silently answering for one entity (ELH team or landlord) without
+    naming which was assumed, or conflating the two as if they were the same.
+
+- id: ambiguous_11
+  category: underspecified_ambiguous
+  language: en
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: entity_reference
+  ambiguity_subtype: entity_reference
+  query: "who do I contact if something breaks in my flat — like if the boiler stops working?"
+  notes: >
+    Entity-reference ambiguity (§I.7: rule 12). Two valid readings: (A) contact
+    the ELH team (platform / booking support escalation path); (B) contact the
+    landlord directly (property maintenance is the landlord's responsibility).
+    In practice BOTH may be involved (landlord for repairs, ELH for escalation),
+    but the primary path is not obvious from the question alone. The topic
+    (maintenance / repairs) is distinct from the canonical responsiveness example.
+  expected_answer_type: clarification
+  ground_truth: |
+    "Something breaks in my flat" raises an entity ambiguity: the user may be
+    asking about the landlord's direct maintenance responsibility OR about the
+    ELH escalation path — and which one is "primary" depends on context the
+    query doesn't give (e.g. whether the landlord has already been tried).
+    Correct behavior (full score): clarify which the user needs — "have you
+    already contacted your landlord, or are you looking for ELH's escalation
+    route?" — OR state the assumption and the two-tier structure explicitly
+    ("typically the landlord handles in-flat repairs first; if unresolved, ELH
+    is the escalation point — which situation are you in?").
+    Failure: naming only one party with no acknowledgement that two are
+    involved, or answering as if there were a single obvious contact.
+
+- id: ambiguous_12
+  category: underspecified_ambiguous
+  language: en
+  difficulty: medium
+  hop_count: 0
+  ambiguity_type: entity_reference
+  ambiguity_subtype: entity_reference
+  query: "are they pretty strict about the house rules, or does it vary a lot from place to place?"
+  notes: >
+    Entity-reference ambiguity (§I.7: rule 12). Two valid readings: (A) "they"
+    = ELH (platform-level rules and policies, which are consistent across
+    listings); (B) "they" = the individual landlords (house rules are set
+    per-landlord and arrive with the booking contract, so they vary by
+    property). The strictness topic is distinct from the canonical example.
+  expected_answer_type: clarification
+  ground_truth: |
+    "They" is ambiguous: could mean ELH (consistent platform policies) or the
+    individual landlords (whose house rules vary by property).
+    Correct behavior (full score): ask whether the user means ELH's platform
+    rules or the landlord-specific house rules, OR answer both: "ELH's
+    platform policies are consistent across all bookings; individual house
+    rules are set by each landlord and provided with the booking — strictness
+    varies from property to property."
+    Failure: answering only for ELH or only for landlords without flagging
+    which was meant, or collapsing both into a single undifferentiated answer.
