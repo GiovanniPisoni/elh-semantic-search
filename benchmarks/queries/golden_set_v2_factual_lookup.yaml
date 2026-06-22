@@ -1,0 +1,283 @@
+# eval-v2 golden set — cassette "factual_lookup" (12 queries)
+#
+# expected_answer_type: list  — a filtered result set (N rooms meeting criteria)
+#                      text  — a single looked-up fact / count / zero-result reply
+
+- id: factual_lookup_01
+  category: factual_lookup
+  language: en
+  difficulty: easy
+  hop_count: 1
+  factual_type: count
+  query: "how many rooms do you have available in Lisbon?"
+  notes: >
+    City-level inventory count (§A). Tests that find_rooms is called with
+    city='Lisbon' and the agent reports total_matches from the tool output
+    using the row-count lens (not distinct). SQL: SELECT COUNT(*) FROM room r
+    JOIN house h ON h.idhouse=r.loc_idhouse AND h.dateupdate=r.loc_dateupdate
+    WHERE r.status='Available' AND h.city='Lisbon'.
+  expected_answer_type: text
+  ground_truth: |
+    556 available room rows in Lisbon (row lens, DB 2026-06-22). A correct
+    answer must state the count clearly (≈556; small tolerance acceptable if
+    the agent caveats data currency). It must NOT report the distinct-room
+    count (435) as the answer to a plain "how many" question, since
+    find_rooms total_matches uses the row lens. Inventing a different number
+    is a hard factual failure.
+
+- id: factual_lookup_02
+  category: factual_lookup
+  language: en
+  difficulty: easy
+  hop_count: 1
+  factual_type: zone_list
+  query: "what different areas or zones do you have rooms in in Porto?"
+  notes: >
+    Zone enumeration for Porto (§A). Tests that the agent retrieves and lists
+    all Porto zones rather than inventing or truncating them. Ground truth from
+    §A [DB 2026-06-19]: 9 distinct zones. The correct tool path is find_rooms
+    with city='Porto' (possibly zone-browsing), or the agent may recall/state
+    the zone list if well-grounded.
+  expected_answer_type: list
+  ground_truth: |
+    Porto has 9 zones with available rooms (§A, DB 2026-06-19):
+    Boavista (77 rows), Ramalde (55), Ribeira (52), Paranhos (46),
+    Foz do Douro (45), Bonfim (43), Cedofeita (22), Massarelos (18),
+    Campanhã (18).
+    A correct answer must list all 9 zone names; omitting any zone or inventing
+    a zone not in this list is a failure. Exact row counts are not required
+    in the answer — the zone names are what matter. The answer may note that
+    the actual room count per zone varies.
+
+- id: factual_lookup_03
+  category: factual_lookup
+  language: en
+  difficulty: easy
+  hop_count: 1
+  factual_type: price_filter
+  query: "show me rooms in Porto that cost less than €450 a month"
+  notes: >
+    Price-filtered list (§B). Tests max_price_eur filter via autumnprice (the
+    default when no date is given). Excludes autumnprice<=0 per §B dirty-data
+    note. SQL: SELECT COUNT(*) FROM room r JOIN house h ... WHERE
+    r.status='Available' AND h.city='Porto' AND r.autumnprice < 450
+    AND r.autumnprice > 0. Count verified DB 2026-06-22.
+  expected_answer_type: list
+  ground_truth: |
+    ~20 Porto room rows satisfy autumnprice < €450 AND autumnprice > 0 (row
+    lens, DB 2026-06-22). A correct answer returns a list of rooms at that
+    price point (up to max_results, default 10) and mentions total_matches ≈20.
+    It must NOT include the one dirty room with autumnprice=−€20 (the filter
+    autumnprice > 0 must be applied). Inventing rooms not in the catalogue is
+    a grounding failure. Reporting 21 (including the dirty room) is wrong.
+
+- id: factual_lookup_04
+  category: factual_lookup
+  language: en
+  difficulty: easy
+  hop_count: 1
+  factual_type: amenity_filter
+  query: "I really want my own bathroom — which rooms in Lisbon have a private en-suite?"
+  notes: >
+    Amenity-filtered list (§C.1: room.privatebathroom='Y'). Tests
+    must_have_private_bathroom=True filter. Non-trivial set confirmed by SQL:
+    SELECT COUNT(*) FROM room r JOIN house h ... WHERE r.status='Available'
+    AND h.city='Lisbon' AND r.privatebathroom='Y'. Verified DB 2026-06-22.
+  expected_answer_type: list
+  ground_truth: |
+    ~188 Lisbon room rows have privatebathroom='Y' (row lens, DB 2026-06-22).
+    A correct answer returns a list of rooms with private bathrooms and should
+    report total_matches ≈188. Must NOT omit the privatebathroom='Y' filter
+    and return the full Lisbon catalogue; must NOT report en-suite rooms from
+    Porto as if they were Lisbon. Returning a partial list up to max_results
+    is correct provided total_matches is stated.
+
+- id: factual_lookup_05
+  category: factual_lookup
+  language: en
+  difficulty: medium
+  hop_count: 1
+  factual_type: metro_filter
+  query: "which rooms in Lisbon are on the blue metro line?"
+  notes: >
+    Metro-line filter (§C.1, §C.3: static metro_lines.py map). The blue line
+    (Linha Azul) serves zones Alfama, Bairro Alto, Chiado and neighborhood
+    Benfica (metro_lines.py: LISBON_ZONE_TO_LINES + LISBON_NEIGHBORHOOD_TO_LINES).
+    The tool translates metro_line='blue' to SQL: zone IN ('Alfama','Bairro Alto',
+    'Chiado') OR neighboorhood IN ('Benfica'). Medium: tests correct routing to
+    the metro_line parameter (not near_landmark). SQL verified DB 2026-06-22:
+    SELECT COUNT(*) ... WHERE city='Lisbon' AND (zone IN ('Alfama','Bairro Alto',
+    'Chiado') OR neighboorhood IN ('Benfica')) → 142 rows (112 zone-match +
+    30 neighborhood-match where zone is outside the three blue-zone names).
+  expected_answer_type: list
+  ground_truth: |
+    ~142 Lisbon room rows lie in blue-line zones or neighborhoods (Alfama,
+    Bairro Alto, Chiado as zones; Benfica as neighborhood — OR across both
+    columns; DB 2026-06-22, row lens). A correct answer passes metro_line='blue'
+    (or 'Linha Azul' or equivalent) to find_rooms and reports total_matches ≈142.
+    Must NOT confuse the blue line with yellow/green/red. Must NOT filter by
+    near_landmark='blue line' (that would ILIKE on descriptions, not the static
+    map). Returning max_results (default 10) rooms with total_matches stated
+    is the expected output shape.
+
+- id: factual_lookup_06
+  category: factual_lookup
+  language: en
+  difficulty: medium
+  hop_count: 1
+  factual_type: attribute_lookup
+  query: "I found a room with ID HSE_E6069573|RM_HSE_E6069573_4|2020-11-18 in Mouraria — does it allow a second person moving in, and what's the extra monthly cost?"
+  notes: >
+    Single attribute lookup on anchor A3 (§J, Lisbon/Mouraria). Encoded id
+    corrected from the data-reference typo: the actual house id is HSE_E6069573
+    (confirmed DB 2026-06-22 — HSE_78101504 does not exist; the room matching
+    all A3 attributes, autumn=980/depositval=1140/extracost=95/dateupdate=2020-11-18
+    in zone=Mouraria, has loc_idhouse='HSE_E6069573'). Tests get_property_details
+    with the encoded room id; reads extrapersonallowed + extrapersoncost from
+    the room block. Medium: requires the agent to call get_property_details rather
+    than fabricating the answer.
+  expected_answer_type: text
+  ground_truth: |
+    Anchor A3 (DB 2026-06-22): extrapersonallowed='Y', extrapersoncost=€95/month.
+    A correct answer must state: (a) yes, an extra person is allowed; (b) the
+    surcharge is €95 per month. Must NOT invent a different cost or say extra
+    persons are not allowed. If the agent states €95/month per retrieved property
+    details, that is correct. Fabricating "€50/month" or "no extra persons
+    allowed" without calling get_property_details is a hard grounding failure.
+
+- id: factual_lookup_07
+  category: factual_lookup
+  language: en
+  difficulty: easy
+  hop_count: 1
+  factual_type: amenity_filter
+  query: "are there female-only rooms available in Lisbon?"
+  notes: >
+    Gender-preference filter (§C.1: house.femalepreferred='Y'). Tests
+    gender_preference='female_only' routing in find_rooms. SQL verified:
+    SELECT COUNT(*) ... WHERE r.status='Available' AND h.city='Lisbon'
+    AND h.femalepreferred='Y'. DB 2026-06-22.
+  expected_answer_type: list
+  ground_truth: |
+    ~92 Lisbon room rows are in female-preferred houses (DB 2026-06-22, row
+    lens). A correct answer returns a list of female-only rooms and reports
+    total_matches ≈92. Must NOT omit the filter and return the full Lisbon
+    catalogue, and must NOT claim there are no female-only rooms in Lisbon.
+    Returning max_results rooms plus the total_matches count is the expected
+    output.
+
+- id: factual_lookup_08
+  category: factual_lookup
+  language: en
+  difficulty: easy
+  hop_count: 1
+  factual_type: amenity_filter
+  query: "do you have any rooms in Porto that are pet-friendly?"
+  notes: >
+    Pets filter (§C.1: house.allowpets='Y', city='Porto'). Zero-result case:
+    SQL verified DB 2026-06-22 — allowpets='Y' is not set on ANY Porto house
+    row (count=0); same for Lisbon (count=0). Tests that the agent returns an
+    honest zero-result response rather than fabricating pet-friendly listings.
+  expected_answer_type: text
+  ground_truth: |
+    0 Porto rooms have allowpets='Y' (DB 2026-06-22). A correct answer honestly
+    reports that no pet-friendly rooms are currently available in Porto (and
+    if the agent also checks Lisbon, none there either). It must NOT fabricate
+    a list of pet-friendly rooms, and must NOT say "yes, we have some" without
+    tool evidence. An honest "none available in Porto currently" response, with
+    an offer to broaden the search or suggest ELH contact, is the correct
+    behaviour. Inventing pet-friendly listings is a hard grounding failure.
+
+- id: factual_lookup_09
+  category: factual_lookup
+  language: en
+  difficulty: hard
+  hop_count: 1
+  factual_type: non_filterable
+  query: "show me rooms bigger than 20 square metres in Lisbon"
+  notes: >
+    Non-filterable attribute gap (§C.2). Room area (m²) is stored in room.area
+    but is NOT exposed as a filter parameter in find_rooms / find_available_rooms
+    (§C.2 explicitly: "NOT filterable"). The agent cannot return a filtered list;
+    the honest correct answer explains this, then offers the closest available
+    path (e.g. searching descriptions for spacious rooms, or checking individual
+    listings via get_property_details). Hard: tests tool-capability awareness.
+  expected_answer_type: text
+  ground_truth: |
+    Room area (m²) is NOT a filterable field in find_rooms (§C.2). A correct
+    answer must:
+    (a) explain that size/area cannot be used as a search filter directly;
+    (b) NOT fabricate a filtered list of "rooms > 20 m²" — no tool returns
+        this;
+    (c) offer an honest alternative: search description corpus for "spacious"
+        / "large" rooms (search_descriptions), or retrieve individual room
+        details via get_property_details to read the area_sqm field.
+    An answer that silently applies a non-existent filter and returns a
+    confident list of "20+ m² rooms" is a hard grounding failure. A response
+    that explains the limitation and pivots to a description search is the
+    target behaviour.
+
+- id: factual_lookup_10
+  category: factual_lookup
+  language: en
+  difficulty: easy
+  hop_count: 1
+  factual_type: distance_filter
+  query: "are there rooms in Porto close to public transport — ideally within 500 metres?"
+  notes: >
+    Distance-to-transport filter (§C.1: house.distancepublictransport<=500).
+    Tests max_distance_to_transport_m=500 routing. SQL verified:
+    SELECT COUNT(*) ... WHERE r.status='Available' AND h.city='Porto'
+    AND h.distancepublictransport <= 500. DB 2026-06-22.
+  expected_answer_type: list
+  ground_truth: |
+    ~170 Porto room rows are within 500m of public transport (DB 2026-06-22,
+    row lens). A correct answer applies max_distance_to_transport_m=500 and
+    city='Porto', returns a list of rooms (up to max_results), and reports
+    total_matches ≈170. Must NOT return rooms from Lisbon. Must NOT omit the
+    distance filter and return the full Porto catalogue. Stating "within 500
+    metres of public transport" or equivalent in the response (confirming the
+    filter was applied) is expected. Note: distancepublictransport is a
+    house-level field in meters, not metro-specific.
+
+- id: factual_lookup_11
+  category: factual_lookup
+  language: it
+  difficulty: easy
+  hop_count: 1
+  factual_type: count
+  query: "quante stanze avete disponibili a Porto?"
+  notes: >
+    Non-English (Italian). City-level count for Porto (§A row lens = 376).
+    Tests that the agent handles an Italian query, calls find_rooms with
+    city='Porto', and returns total_matches in Italian. Mirrors query #01 but
+    for Porto and in Italian.
+  expected_answer_type: text
+  ground_truth: |
+    376 available room rows in Porto (row lens, DB 2026-06-22; §A). A correct
+    answer, DELIVERED IN ITALIAN, states the count ≈376. It must NOT report
+    the distinct-room count (295) or any other number. An answer in English
+    only is a localisation failure. Inventing a count is a hard factual failure.
+
+- id: factual_lookup_12
+  category: factual_lookup
+  language: fr
+  difficulty: easy
+  hop_count: 1
+  factual_type: amenity_filter
+  query: "avez-vous des chambres meublées à Lisbonne ?"
+  notes: >
+    Non-English (French). Furnished-amenity filter (§C.1: house.furnished='Y',
+    other_amenity 'furnished'). Tests multilingual routing to the furnished
+    filter in find_rooms (required_other_amenities=['furnished']). SQL verified:
+    SELECT COUNT(*) ... WHERE r.status='Available' AND h.city='Lisbon'
+    AND h.furnished='Y'. DB 2026-06-22. Response must be IN FRENCH.
+  expected_answer_type: list
+  ground_truth: |
+    ~532 Lisbon room rows are in furnished houses (house.furnished='Y';
+    DB 2026-06-22, row lens). A correct answer, DELIVERED IN FRENCH, confirms
+    furnished rooms are available in Lisbon, returns a list (up to max_results),
+    and reports total_matches ≈532. Must NOT claim no furnished rooms exist.
+    An answer in English only is a localisation failure. The very high count
+    (532/556 = ~96% of Lisbon rooms) is correct — furnished is nearly universal
+    in the catalogue; reporting a much lower count is wrong.
