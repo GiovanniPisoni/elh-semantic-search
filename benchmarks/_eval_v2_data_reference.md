@@ -473,7 +473,7 @@ current tenants**; demographic is Erasmus students / interns / young professiona
 only ID + IBAN required; conflict mediation is binding if direct resolution fails.
 
 **Contact** (`contact_info`): hello@erasmuslifehousing.com · +351 932 483 834 ·
-Travessa da Cara 14, Lisbon. **Promotions** (note: marketing, time-bound, not cost
+Travessa da Cara 14, Lisbon · Facebook "Erasmus Life Housing" · Instagram @erasmuslifehousing **Promotions** (note: marketing, time-bound, not cost
 rules): `PROMO25` = 25% off service fee + €25 events voucher; an alternate entry
 mentions €10 events credit + 50% off service fee — promotions overlap/change, so a
 golden set should treat promo specifics as volatile.
