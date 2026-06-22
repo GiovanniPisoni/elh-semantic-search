@@ -1,0 +1,296 @@
+# eval-v2 golden set — cassette "policy_rules" (12 queries)
+#
+# Tests M1 (task_success) and M6 (answer_groundedness). Every entry is
+# answerable from the answer_policy_question KB (policies.yaml, 27 entries,
+# 10 categories). hop_count=1 — a single answer_policy_question lookup.
+#
+# Ground-truth facts sourced from §F of
+# benchmarks/queries/_eval_v2_data_reference.md (leakage-clean: no TASK-17
+# queries, no human_eval_2026-05-* entries, no demo_meeting.py Q3 wording).
+# Non-English entries: ES (#04) and DE (#08).
+
+- id: policy_rules_01
+  category: policy_rules
+  language: en
+  difficulty: easy
+  hop_count: 1
+  policy_category: cancellation_and_refunds
+  query: "if I book a room but then need to cancel, do I get my money back?"
+  notes: >
+    General cancellation / refund overview (§F: cancellation_and_refunds).
+    Tests that the agent returns all three tiers — ≥60 days, 30–59 days,
+    <30 days — and flags the non-refundable reservation fee.
+  expected_answer_type: text
+  ground_truth: |
+    Three-tier cancellation policy from §F must be stated in full:
+    - ≥60 days before check-in: full refund (minus any applicable fees already
+      incurred).
+    - 30-59 days before check-in: 50% refund of amounts paid.
+    - <30 days before check-in: no refund.
+    In all standard cancellation cases the 9% reservation/service fee is
+    non-refundable. The reservation fee is refunded only in exceptional cases
+    (landlord cancellation, or a verified room-mismatch complaint within 24h).
+    A correct answer must state all three thresholds and note the
+    non-refundable service fee; vague answers that omit any tier are wrong.
+
+- id: policy_rules_02
+  category: policy_rules
+  language: en
+  difficulty: hard
+  hop_count: 1
+  policy_category: cancellation_and_refunds
+  query: "I have to cancel — my check-in is roughly 45 days away. how much of what I paid will I get back?"
+  notes: >
+    Boundary cancellation case (§F / KB id cancellation_policy, lines 198-201).
+    45 days falls in the 30-59 day band → 50% refund. Tests that the agent maps
+    the day count to the correct tier (not "full refund" which needs ≥60 days,
+    not "no refund" which needs <30). The KB states "50% refund" without
+    specifying the calculation base, so the ground truth must NOT over-specify it.
+  expected_answer_type: text
+  ground_truth: |
+    At 45 days before check-in the 30-59 day tier applies: a 50% refund (KB:
+    cancellation_policy). The KB states "50% refund" without defining the exact
+    base amount, so a correct answer is NOT required to specify what the 50% is
+    computed on — and must NOT invent a base. The 9% reservation/service fee is
+    non-refundable in standard cancellations.
+    A correct answer MUST: (a) identify the 30-59 day tier and state 50% refund;
+    (b) note the service fee is non-refundable. It must NOT say "full refund" or
+    "no refund". Adding an unsupported calculation base (e.g. "50% of rent only")
+    is a grounding error, not a bonus.
+
+- id: policy_rules_03
+  category: policy_rules
+  language: en
+  difficulty: easy
+  hop_count: 1
+  policy_category: payments_and_fees
+  query: "what exactly do I have to pay when I book a room through ELH?"
+  notes: >
+    At-booking payment breakdown (§F: payments_and_fees). Tests the two
+    components paid to ELH at booking (first month's rent + 9% reservation
+    fee) vs. what is paid later at check-in to the landlord (deposit, admin
+    tax, last-month advance). Common confusion point.
+  expected_answer_type: text
+  ground_truth: |
+    At booking (paid to ELH): first month's rent + a 9% non-refundable
+    reservation/service fee.
+    At check-in (paid to the landlord): refundable security deposit (standard
+    = one month's rent, but exact amount varies by listing) + last-month rent
+    advance if applicable + administrative tax if applicable.
+    Monthly rents continue during the stay.
+    A correct answer must distinguish what is paid at booking from what is paid
+    at check-in, quote the 9% fee rate, and note the security deposit is
+    refundable. Omitting the at-check-in breakdown is a partial answer only.
+
+- id: policy_rules_04
+  category: policy_rules
+  language: es
+  difficulty: medium
+  hop_count: 1
+  policy_category: payments_and_fees
+  query: "¿la comisión de reserva que cobran me la devuelven si al final cancelo?"
+  notes: >
+    Non-English (Spanish). Reservation-fee refundability (§F). Tests whether
+    the agent correctly states the fee is non-refundable in standard
+    cancellations and returns the response IN SPANISH. The two exceptional
+    cases (landlord cancellation; verified room-mismatch within 24h) must also
+    be acknowledged.
+  expected_answer_type: text
+  ground_truth: |
+    The 9% reservation/service fee is non-refundable in standard cancellations.
+    It is only refunded in two exceptional cases:
+    (1) the landlord cancels the booking; or
+    (2) a verified room-mismatch complaint is filed with evidence within 24
+        hours of check-in and deemed valid.
+    A correct answer, DELIVERED IN SPANISH, must state the non-refundable
+    default and acknowledge the two exceptional scenarios. An answer in English
+    only is a localisation failure; an answer that says the fee is always
+    non-refundable without mentioning the exceptions is incomplete.
+
+- id: policy_rules_05
+  category: policy_rules
+  language: en
+  difficulty: easy
+  hop_count: 1
+  policy_category: booking_flow
+  query: "can you walk me through how the whole booking process works, from start to finish?"
+  notes: >
+    End-to-end booking flow (§F: booking_flow). Tests the four-step sequence:
+    reserve on platform → landlord accepts → confirmation email → payment
+    finalises (2–3 days). Simple factual retrieval.
+  expected_answer_type: text
+  ground_truth: |
+    Booking flow from §F:
+    1. Tenant reserves a room on the ELH platform.
+    2. The landlord reviews and accepts the request.
+    3. A booking confirmation email is sent.
+    4. The booking is finalised once payment is processed (typically 2–3 days,
+       depending on payment method).
+    A correct answer must cover all four steps in order. Stopping at step 2
+    ("landlord accepts") without mentioning payment processing is incomplete.
+
+- id: policy_rules_06
+  category: policy_rules
+  language: en
+  difficulty: medium
+  hop_count: 1
+  policy_category: booking_flow
+  query: "is it possible to visit the apartment or do a video call before I actually book it?"
+  notes: >
+    Pre-booking viewings (§F: booking_flow). Tests that the agent confirms
+    in-person and video viewings are possible before booking, subject to
+    landlord availability, and that the ELH team is the point of contact to
+    arrange them.
+  expected_answer_type: text
+  ground_truth: |
+    Yes, in-person visits and video calls can both be arranged before booking,
+    subject to the landlord's availability. The ELH team facilitates these
+    requests — tenants should contact ELH to set up a viewing.
+    A correct answer must confirm both viewing modes, note landlord-availability
+    as the limiting condition, and point to ELH (not the landlord directly) as
+    the contact for arranging it. An answer that says viewings are impossible
+    is wrong; one that gives only the landlord's contact directly (bypassing
+    ELH) contradicts the policy.
+
+- id: policy_rules_07
+  category: policy_rules
+  language: en
+  difficulty: easy
+  hop_count: 1
+  policy_category: room_quality_and_verification
+  query: "how do I know the listings on your platform are legitimate and not fake?"
+  notes: >
+    Listing verification / scam protection (§F: room_quality_and_verification).
+    Tests that the agent cites ELH's personal verification: direct landlord
+    contact + in-person or virtual apartment visit; no landlord accepted without
+    ELH approval.
+  expected_answer_type: text
+  ground_truth: |
+    Every listing on ELH is personally verified: ELH contacts each landlord
+    directly and conducts an in-person or virtual apartment visit. No landlord
+    is accepted onto the platform without ELH's approval. Caveat: "images shown
+    may not be an exact representation of the final product."
+    A correct answer must describe the personal-verification process (direct
+    contact + in-person/virtual visit) and the landlord-approval gate. It may
+    also note the image disclaimer. An answer that only says "we verify listings"
+    without describing the mechanism is vague and insufficient.
+
+- id: policy_rules_08
+  category: policy_rules
+  language: de
+  difficulty: hard
+  hop_count: 1
+  policy_category: room_quality_and_verification
+  query: "Das Zimmer sieht völlig anders aus als auf den Fotos in der Anzeige — was kann ich tun?"
+  notes: >
+    Non-English (German). Room mismatch / 24h evidence window (§F) — hard
+    boundary case. Tests that the agent correctly cites the 24-hour reporting
+    deadline with evidence (photos/videos), and the refund consequence for a
+    validated complaint. Response must be IN GERMAN.
+  expected_answer_type: text
+  ground_truth: |
+    A room-mismatch complaint must be reported to ELH within exactly 24 hours
+    of check-in and must include evidence (photos and/or videos documenting the
+    discrepancy). If the complaint is reviewed and deemed valid, the refund
+    covers: first month's rent + security deposit + service fee.
+    Reports filed after the 24-hour window are harder to process and may not
+    qualify for a refund.
+    A correct answer, DELIVERED IN GERMAN, must state:
+    - the 24-hour hard deadline (not "as soon as possible" or "within a few
+      days");
+    - the evidence requirement (photos/videos);
+    - the refund entitlement if valid (first rent + deposit + service fee).
+    An answer in English only is a localisation failure. An answer that omits
+    the evidence requirement or softens the deadline is wrong.
+
+- id: policy_rules_09
+  category: policy_rules
+  language: en
+  difficulty: medium
+  hop_count: 1
+  policy_category: deposit_refund
+  query: "when do I get my security deposit back after I leave, and is there anything that could reduce it?"
+  notes: >
+    Deposit refund timing and conditions (§F: deposit_refund). Tests the
+    check-out timing, the damage-deduction logic, and the full-return condition.
+  expected_answer_type: text
+  ground_truth: |
+    The security deposit is returned at check-out. The landlord assesses the
+    condition of the room and shared spaces: if no damage is found the full
+    deposit is returned; deductions are made for any damage to the room or
+    shared areas. A correct answer must state: (a) returned at check-out;
+    (b) full return if no damage; (c) deductions for damage; (d) landlord
+    conducts the assessment. Answers that give a fixed number of days for
+    return (not mentioned in the policy) should not be penalised but must not
+    contradict the above.
+
+- id: policy_rules_10
+  category: policy_rules
+  language: en
+  difficulty: medium
+  hop_count: 1
+  policy_category: rent_inclusions
+  query: "are utilities like electricity, gas, and internet already included in the monthly rent, or do I pay those on top?"
+  notes: >
+    Rent inclusions / utility cap structure (§F). Query rephrased from the
+    demo_meeting.py Q3 wording. Tests that the agent returns the cap-based
+    model (utilities included up to per-room monthly caps; overages paid
+    directly to provider) rather than a flat "included" or "not included"
+    answer.
+  expected_answer_type: text
+  ground_truth: |
+    Utilities are included in the monthly rent only up to per-room monthly caps
+    (example: "Gas up to €25/month"). Any consumption above the cap is paid
+    directly to the utility provider by the tenant — it is NOT covered by the
+    rent. The exact cap amounts are specified in the house rules and contract,
+    which are provided by the landlord when the booking is confirmed.
+    A correct answer must convey the cap structure (partial inclusion, not
+    blanket inclusion or blanket exclusion). An answer that says utilities are
+    fully included, or fully excluded, is wrong. An answer that mentions caps
+    but fails to note the overage is the tenant's responsibility is incomplete.
+
+- id: policy_rules_11
+  category: policy_rules
+  language: en
+  difficulty: medium
+  hop_count: 1
+  policy_category: landlord_onboarding
+  query: "I have a spare room in my flat in Porto and I want to list it — how does it work and what do you charge?"
+  notes: >
+    Landlord-audience onboarding (§F: landlord_onboarding). Tests that the
+    agent correctly states: listings are free; payment is transferred 48h after
+    reservation start (ELH holds funds in custody until then); only ID + IBAN
+    required.
+  expected_answer_type: text
+  ground_truth: |
+    Listing a room on ELH is free of charge. To receive rental payments the
+    landlord needs only a national ID and a bank IBAN. ELH holds the
+    reservation funds in custody and transfers them to the landlord 48 hours
+    after the reservation start date. A correct answer must state:
+    (a) free to list;
+    (b) ID + IBAN are the only requirements to receive payment;
+    (c) 48-hour payment-release timeline after reservation start.
+    An answer that invents a listing fee or gives a different payment-release
+    timeline is wrong.
+
+- id: policy_rules_12
+  category: policy_rules
+  language: en
+  difficulty: easy
+  hop_count: 1
+  policy_category: contact_and_support
+  query: "how can I get in touch with your team if I have a problem or a question?"
+  notes: >
+    Contact and support channels (§F: contact_and_support). Tests retrieval
+    of ELH's contact details — email, phone, address, and/or social channels.
+  expected_answer_type: text
+  ground_truth: |
+    ELH contact details from §F:
+    - Email: hello@erasmuslifehousing.com
+    - Phone: +351 932 483 834
+    - Address: Travessa da Cara 14, Lisbon
+    - Facebook: Erasmus Life Housing
+    - Instagram: @erasmuslifehousing
+    A correct answer must include at least the email and phone number. Providing
+    only the social channels without the direct contact details is insufficient.
+    Invented contact information (wrong email or phone) is a hard failure.
