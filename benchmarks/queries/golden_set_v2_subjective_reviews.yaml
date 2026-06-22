@@ -1,0 +1,289 @@
+# eval-v2 golden set — cassette "subjective_reviews" (10 queries)
+
+# IN-CORPUS (5)
+
+- id: subjective_reviews_01
+  category: subjective_reviews
+  language: en
+  difficulty: easy
+  hop_count: 1
+  review_query_type: in_corpus
+  query: "is the place actually clean? what do past tenants say about cleanliness?"
+  notes: >
+    Theme: cleanliness (§G in-corpus). Cleanliness is one of the explicitly
+    rated dimensions in the review schema (cleaning_rating) and appears
+    frequently in free-text reviews. Tests that the agent retrieves and
+    summarises review sentiment rather than answering from priors. A correct
+    answer cites review evidence; a "corpus doesn't confirm this" response
+    here is a false negative.
+  expected_answer_type: text
+  ground_truth: |
+    Cleanliness is covered in the review corpus (cleaning_rating field +
+    free-text mentions). A correct answer must:
+    (a) summarise overall sentiment on cleanliness as expressed by past tenants
+        (e.g. generally positive / mixed / room-by-room variation);
+    (b) be grounded in retrieved review content, not invented;
+    (c) NOT say the reviews don't cover cleanliness — they do.
+    Answering with a fabricated "always spotless" or "always dirty" without
+    citing retrieved evidence is a grounding failure. A weak-match refusal
+    ("reviews don't confirm this") is a false-negative failure.
+
+- id: subjective_reviews_02
+  category: subjective_reviews
+  language: en
+  difficulty: easy
+  hop_count: 1
+  review_query_type: in_corpus
+  query: "how's the wifi? I need a solid connection for uni — do past students mention whether it's reliable?"
+  notes: >
+    Theme: wifi / internet reliability (§G in-corpus). Internet connectivity
+    appears in ELH review free-text and is a high-salience topic for Erasmus
+    students. Tests grounded retrieval on a utility theme vs. fabrication.
+  expected_answer_type: text
+  ground_truth: |
+    Wifi / internet reliability is mentioned in the review corpus. A correct
+    answer must:
+    (a) report what past tenants actually wrote about internet quality —
+        whether reviews are broadly positive, mixed, or highlight specific
+        issues (speed, stability, dead spots);
+    (b) be grounded in retrieved reviews, not generically invented;
+    (c) NOT refuse or claim the corpus has no information on this.
+    A confident "wifi is always great" or "always terrible" without review
+    backing is a grounding failure. Honest hedging ("most reviews say X, but
+    a few mention Y") when the data supports it is correct.
+
+- id: subjective_reviews_03
+  category: subjective_reviews
+  language: en
+  difficulty: medium
+  hop_count: 1
+  review_query_type: in_corpus
+  query: "are these apartments safe? do any reviews talk about secure entry or cameras in the building?"
+  notes: >
+    Theme: safety / CCTV / digital entry (§G in-corpus). Security features
+    such as coded locks, CCTV, and secure building entry appear in ELH review
+    and description text. Medium difficulty because the user's phrasing is more
+    indirect (mentions cameras/secure entry rather than just "safe") and the
+    agent must map the intent to the right corpus signals.
+  expected_answer_type: text
+  ground_truth: |
+    Safety features (secure entry, CCTV, digital locks) are mentioned in the
+    review corpus. A correct answer must:
+    (a) summarise what past tenants say about building security as found in
+        retrieved reviews (e.g. presence of coded entry, cameras, general
+        feeling of safety in the building);
+    (b) stay grounded — only cite what retrieved reviews actually mention;
+    (c) NOT fabricate specific security details not in the corpus.
+    A weak-match refusal on this theme is a false negative. The agent should
+    distinguish between what is in the reviews (building-level security
+    features) and what is not (neighbourhood crime statistics, which are
+    out of scope for this corpus).
+    (d) BEST behavior (reward at least as highly): note that reviews don't cover
+        this, but that ELH listings carry a structured 'wheelchair_accessible'
+        attribute the agent can filter on — offering to search by it. Recognizing
+        the corpus gap AND redirecting to the structured tool is the ideal answer,
+        not just a hedge-and-defer.
+
+- id: subjective_reviews_04
+  category: subjective_reviews
+  language: pt
+  difficulty: easy
+  hop_count: 1
+  review_query_type: in_corpus
+  query: "os quartos têm boa luz natural? o que dizem os antigos inquilinos sobre isso?"
+  notes: >
+    Non-English (Portuguese). Theme: natural light in the room (§G in-corpus).
+    Natural light / window quality is mentioned in ELH reviews and is a common
+    student concern. Response must be IN PORTUGUESE. Tests in-corpus retrieval
+    AND multilingual response.
+  expected_answer_type: text
+  ground_truth: |
+    Natural light / windows is covered in the review corpus. A correct answer,
+    DELIVERED IN PORTUGUESE, must:
+    (a) summarise what past tenants write about natural light in the rooms
+        (e.g. positive mentions of windows / good light, or complaints about
+        dark / basement-level rooms where applicable);
+    (b) be grounded in retrieved review content;
+    (c) NOT refuse or say the corpus lacks this information.
+    An answer in English only is a localisation failure. A fabricated opinion
+    not backed by retrieved reviews is a grounding failure. Honest polarity
+    (some rooms are bright, others less so) grounded in reviews is correct.
+
+- id: subjective_reviews_05
+  category: subjective_reviews
+  language: en
+  difficulty: medium
+  hop_count: 1
+  review_query_type: in_corpus
+  query: "do the reviews say anything about kitchen facilities — like whether there's a washing machine or decent cooking equipment?"
+  notes: >
+    Theme: kitchen equipment / washing machine (§G in-corpus). Appliance
+    quality (washing machine, cooking equipment, fridge) is mentioned in ELH
+    reviews. Medium difficulty because the query bundles two sub-topics
+    (kitchen equipment AND laundry) that the agent must retrieve together.
+  expected_answer_type: text
+  ground_truth: |
+    Kitchen facilities and washing machine access are covered in the review
+    corpus. A correct answer must:
+    (a) report what past tenants say about kitchen equipment and/or laundry
+        facilities (e.g. well-equipped kitchen, shared washing machine,
+        occasional complaints about specific appliances);
+    (b) handle both sub-topics if review evidence is available for both;
+    (c) be grounded in retrieved reviews — not invented from generic Erasmus
+        housing knowledge;
+    (d) NOT refuse on either sub-topic when evidence exists.
+    It is acceptable to note one sub-topic is better covered than the other
+    if that reflects the retrieved evidence honestly.
+
+# GAP (4)
+
+- id: subjective_reviews_06
+  category: subjective_reviews
+  language: en
+  difficulty: medium
+  hop_count: 1
+  review_query_type: gap
+  query: "I use a wheelchair — can I tell from past reviews whether any of the flats are accessible?"
+  notes: >
+    Gap: wheelchair / mobility accessibility (§G GAPS). Accessibility features
+    (ramps, step-free entry, lift requirements) are not reliably documented in
+    the review corpus. The correct behavior is an honest weak-match: the agent
+    should state the reviews don't cover accessibility, offer the nearest
+    available context if any (e.g. distance to transport), and direct the user
+    to contact ELH directly. Fabricating "yes, flat X is wheelchair accessible"
+    is a hard grounding failure.
+  expected_answer_type: weak_match
+  ground_truth: |
+    Wheelchair / mobility accessibility is NOT reliably covered in the review
+    corpus. A correct answer must:
+    (a) honestly state that the review corpus does not confirm accessibility
+        information for specific listings;
+    (b) NOT fabricate a confident answer naming accessible flats;
+    (c) optionally offer the nearest available context (e.g. distance to
+        public transport as a partial proxy) while clearly flagging it is not
+        the same as accessibility data;
+    (d) redirect the user to contact ELH directly for accurate accessibility
+        information.
+    (e) BEST behavior (reward at least as highly): note that reviews don't cover
+        this, but that ELH listings carry a structured 'wheelchair_accessible'
+        attribute the agent can filter on — offering to search by it. Recognizing
+        the corpus gap AND redirecting to the structured tool is the ideal answer,
+        not just a hedge-and-defer.
+    A confident grounded answer ("yes, reviews confirm flat X is wheelchair
+    accessible") is a hard grounding failure. A correct weak-match response
+    that hedges and redirects is the target behavior.
+
+- id: subjective_reviews_07
+  category: subjective_reviews
+  language: en
+  difficulty: medium
+  hop_count: 1
+  review_query_type: gap
+  query: "I'd rather not climb loads of stairs every day — do the reviews mention what floor the rooms are on or whether there's a lift?"
+  notes: >
+    Gap: floor level / lift availability (§G GAPS). Floor number and lift
+    presence are not reliably mentioned in ELH reviews. The agent should give
+    an honest weak-match response rather than inventing floor data. Redirecting
+    to get_property_details or contacting ELH is appropriate.
+  expected_answer_type: weak_match
+  ground_truth: |
+    Floor level and lift availability are NOT reliably covered in the review
+    corpus. A correct answer must:
+    (a) state that past reviews do not reliably confirm which floor rooms are
+        on or whether a specific property has a lift;
+    (b) NOT fabricate a confident floor or lift claim;
+    (c) optionally suggest that the user check individual property details
+        (via the property details tool or ELH directly) for this information;
+    (d) not present this absence as a definitive "no lifts anywhere" — the
+        corpus simply doesn't confirm it either way.
+    Inventing a floor number or lift status from review context is a grounding
+    failure.
+
+- id: subjective_reviews_08
+  category: subjective_reviews
+  language: en
+  difficulty: medium
+  hop_count: 1
+  review_query_type: gap
+  query: "I want a sociable flat where I can have friends over and maybe throw a small party — do any reviews mention that kind of vibe?"
+  notes: >
+    Gap: party / nightlife / social vibe suitability (§G GAPS). Reviews do not
+    reliably document party-friendliness or social atmosphere in terms of
+    explicit "party allowed / not allowed" signals. The agent must avoid
+    fabricating a recommendation. It may note general social atmosphere if
+    reviews mention it, but should not claim to confirm party suitability.
+  expected_answer_type: weak_match
+  ground_truth: |
+    Whether a flat is suitable for hosting parties or has an active social vibe
+    is NOT reliably documented in the review corpus. A correct answer must:
+    (a) state that past reviews do not explicitly confirm party-suitability or
+        social-atmosphere scores for specific listings;
+    (b) NOT fabricate a "perfect party flat" recommendation from review data;
+    (c) optionally note if reviews mention communal living or shared social
+        spaces in passing, clearly framed as partial and unconfirmed;
+    (d) redirect to house rules (provided at booking) as the authoritative
+        source on whether guests / parties are permitted.
+    A confident recommendation ("flat X is great for parties, reviews confirm
+    it") without direct review evidence is a grounding failure.
+
+- id: subjective_reviews_09
+  category: subjective_reviews
+  language: en
+  difficulty: medium
+  hop_count: 1
+  review_query_type: gap
+  query: "are these buildings modern or are they old and maybe a bit run-down? do former tenants say anything about the state of the building?"
+  notes: >
+    Gap: building age / structural condition (§G GAPS). Structural condition,
+    renovation status, and building age are not reliably covered in the ELH
+    review corpus. The agent must give an honest weak-match and not invent
+    construction details.
+  expected_answer_type: weak_match
+  ground_truth: |
+    Building age and structural condition are NOT reliably covered in the review
+    corpus. A correct answer must:
+    (a) state that past reviews do not systematically document building age,
+        renovation status, or structural condition;
+    (b) NOT invent confident claims about whether buildings are modern or old;
+    (c) optionally note that individual property descriptions (accessible via
+        get_property_details or search_descriptions) may provide more context
+        on building character or refurbishment;
+    (d) not generalize across all ELH properties (e.g. "all ELH flats are
+        renovated") without evidence.
+    Fabricating a confident building-condition claim is a grounding failure.
+
+# POLARITY (1)
+
+- id: subjective_reviews_10
+  category: subjective_reviews
+  language: en
+  difficulty: hard
+  hop_count: 1
+  review_query_type: polarity
+  query: "will I freeze in winter? do students say the heating works properly, or do some people complain it stays cold?"
+  notes: >
+    Polarity: heating / warmth in winter (§G polarity-sensitive case). Reviews
+    on heating are mixed — some tenants praise it, others complain about cold
+    rooms — making this a hard retrieval case where polarity-sensitive
+    embeddings may not surface all sides equally. The agent must reflect BOTH
+    positive and negative sentiment found in the corpus. A one-sided answer
+    (only praise or only complaints) is a grounding failure even if each
+    individual claim is true. Query kept on the heating theme to avoid
+    triggering entity-disambiguation rule 12 (staff responsiveness). Hard
+    difficulty because the model must balance mixed evidence.
+  expected_answer_type: text
+  ground_truth: |
+    Heating / warmth in winter is covered in the review corpus but with mixed
+    polarity — some reviews are positive (adequate heating, comfortable in
+    winter) and others negative (cold rooms, insufficient heating). A correct
+    answer must:
+    (a) reflect BOTH the positive and negative sentiment on heating as found in
+        retrieved reviews — not collapse to one side only;
+    (b) be grounded in retrieved review evidence, not in generic Erasmus
+        housing knowledge;
+    (c) acknowledge the variation honestly ("some tenants say X, others report Y");
+    (d) NOT declare a single verdict ("heating is fine" or "heating is always
+        bad") without acknowledging the mixed picture.
+    A one-sided answer that ignores the contrary polarity is a partial grounding
+    failure. A weak-match refusal ("reviews don't mention heating") is a false
+    negative — this theme IS in the corpus, just mixed.
