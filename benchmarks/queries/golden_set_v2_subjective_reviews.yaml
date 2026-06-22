@@ -189,8 +189,10 @@
   ground_truth: |
     Floor level and lift availability are NOT reliably covered in the review
     corpus. A correct answer must:
-    (a) state that past reviews do not reliably confirm which floor rooms are
-        on or whether a specific property has a lift;
+    (a) state that floor level and lift availability are not SYSTEMATICALLY
+        documented across the review corpus — a few reviews may mention a lift
+        for a specific property, but this does not support a reliable answer for
+        an arbitrary room, and floor number is essentially absent;
     (b) NOT fabricate a confident floor or lift claim;
     (c) optionally suggest that the user check individual property details
         (via the property details tool or ELH directly) for this information;
@@ -216,8 +218,10 @@
   ground_truth: |
     Whether a flat is suitable for hosting parties or has an active social vibe
     is NOT reliably documented in the review corpus. A correct answer must:
-    (a) state that past reviews do not explicitly confirm party-suitability or
-        social-atmosphere scores for specific listings;
+    (a) state that party-suitability is not reliably documented; some reviews
+        mention a sociable atmosphere or friendly flatmates for specific
+        properties, but the corpus does not confirm party-friendliness or a
+        "social vibe" score for an arbitrary listing;
     (b) NOT fabricate a "perfect party flat" recommendation from review data;
     (c) optionally note if reviews mention communal living or shared social
         spaces in passing, clearly framed as partial and unconfirmed;
