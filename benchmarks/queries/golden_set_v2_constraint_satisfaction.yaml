@@ -1,0 +1,471 @@
+# eval-v2 golden set — cassette "constraint_satisfaction" (14 queries)
+
+- id: constraint_satisfaction_01
+  category: constraint_satisfaction
+  language: en
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, max_price, private_bathroom]
+  availability_window: none
+  query: "I'm looking for a room in Lisbon with a private en-suite bathroom,
+    max budget €1,000 per month. What do you have?"
+  notes: >
+    Three-filter search: city='Lisbon', must_have_private_bathroom=True,
+    max_price_eur=1000. Price column: autumnprice (default, no date given).
+    SQL verified: SELECT COUNT(*) FROM room r JOIN house h ON
+    h.idhouse=r.loc_idhouse AND h.dateupdate=r.loc_dateupdate WHERE
+    r.status='Available' AND h.city='Lisbon' AND r.privatebathroom='Y'
+    AND r.autumnprice<=1000 → 35 rows (DB 2026-06-22). Private bathrooms
+    are uncommon in the sub-€1,000 range (§B: only 25 Lisbon rooms under
+    €500 in total), so the three-way combination is meaningful but
+    non-trivial.
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 35 rows (DB 2026-06-22).
+    Filters: city='Lisbon', must_have_private_bathroom=True (→ room.privatebathroom='Y'),
+    max_price_eur=1000 (→ autumnprice <= 1000, default season).
+    A correct answer must: (1) call find_rooms with these three filters;
+    (2) report total_matches ≈ 35; (3) label prices as the autumn/default
+    rate and offer to refine with check-in dates for a seasonal quote.
+    Reporting any number significantly outside ≈35 (±5 tolerance for
+    catalogue updates) or omitting either the price or private-bathroom
+    constraint is a factual failure.
+
+- id: constraint_satisfaction_02
+  category: constraint_satisfaction
+  language: en
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, balcony, washing_machine]
+  availability_window: none
+  query: "Find me rooms in Porto that have both a private balcony and
+    a washing machine."
+  notes: >
+    Two-amenity filter: city='Porto', must_have_balcony=True,
+    must_have_washing_machine=True. Maps to r.balcony='Y' (room-level)
+    AND h.washerdrier='Y' (house-level). No price filter applied.
+    SQL verified: ... WHERE r.status='Available' AND h.city='Porto'
+    AND r.balcony='Y' AND h.washerdrier='Y' → 47 rows (DB 2026-06-22).
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 47 rows (DB 2026-06-22).
+    Filters: city='Porto', must_have_balcony=True (→ room.balcony='Y'),
+    must_have_washing_machine=True (→ house.washerdrier='Y').
+    A correct answer must: (1) call find_rooms with both amenity flags set;
+    (2) report total_matches ≈ 47; (3) not add a price filter that was not
+    requested. Reporting only one of the two amenities, or inverting
+    them (balcony=house-level, washing machine=room-level), is an error —
+    these are distinct fields (balcony is on room, washerdrier on house).
+
+- id: constraint_satisfaction_03
+  category: constraint_satisfaction
+  language: en
+  difficulty: easy
+  hop_count: 1
+  constraint_set: [city, near_landmark, max_price]
+  availability_window: none
+  query: "I want to live in the Chiado neighbourhood in Lisbon. My budget
+    is €1,100 per month maximum. What's available?"
+  notes: >
+    Zone + price via near_landmark ILIKE: city='Lisbon',
+    near_landmark='Chiado', max_price_eur=1100. find_rooms applies ILIKE
+    on h.zone, h.neighboorhood, h.description — this includes rooms whose
+    descriptions mention 'Chiado' even if the house zone is different.
+    Exact zone='Chiado' count at autumnprice<=1100: 24 rows.
+    ILIKE near_landmark='Chiado' at autumnprice<=1100: 59 rows
+    (DB 2026-06-22). DB zone names are ASCII (no accents): 'Chiado',
+    'Graca', 'Principe Real' etc. Tolerance ±10 rows due to description
+    text variability.
+  expected_answer_type: list
+  ground_truth: |
+    Verified ILIKE count: ≈59 rows (DB 2026-06-22).
+    Filters: city='Lisbon', near_landmark='Chiado' (→ ILIKE '%Chiado%' on
+    zone/neighbourhood/description), max_price_eur=1100 (→ autumnprice<=1100).
+    Note: exact zone='Chiado' at this price ceiling gives only 24 rooms;
+    the tool returns ~59 because ILIKE matches description text. Tolerance
+    ±10 rows is acceptable.
+    A correct answer must: (1) call find_rooms with city='Lisbon',
+    near_landmark='Chiado', max_price_eur=1100; (2) report total_matches
+    ≈ 59 (or ≈24 if the agent uses an exact zone interpretation, which
+    is acceptable with a note); (3) state the autumn/default rate.
+
+- id: constraint_satisfaction_04
+  category: constraint_satisfaction
+  language: en
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, metro_line, elevator]
+  availability_window: none
+  query: "I need a room in Porto close to the yellow metro line (line D),
+    and the building must have a lift."
+  notes: >
+    Metro line + amenity: city='Porto', metro_line='yellow' (= 'D' in Porto
+    letter coding; both are valid inputs). The static metro map (§C.3,
+    metro_lines.py) maps yellow/D in Porto exclusively to zone 'Paranhos'
+    (Pólo Universitário + Salgueiros stations). SQL filter: (h.zone IN
+    ('Paranhos') OR h.neighboorhood IN ('Paranhos')). must_have_elevator=True
+    → h.elevator='Y'.
+    SQL verified: ... WHERE r.status='Available' AND h.city='Porto'
+    AND (h.zone='Paranhos' OR h.neighboorhood='Paranhos')
+    AND h.elevator='Y' → 29 rows (DB 2026-06-22).
+    Foz do Douro, Ribeira, and Massarelos are not metro-served in Porto (§C.3).
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 29 rows (DB 2026-06-22).
+    Filters: city='Porto', metro_line='yellow' or 'D' (→ zone/neighbourhood
+    IN ('Paranhos')), must_have_elevator=True (→ house.elevator='Y').
+    A correct answer must: (1) call find_rooms with city='Porto',
+    metro_line='yellow' (or 'D'), must_have_elevator=True; (2) report
+    total_matches ≈ 29; (3) optionally note that yellow/D line in Porto
+    primarily serves the Paranhos area. Using only a near_landmark filter
+    instead of metro_line, or omitting the elevator filter, is an error.
+
+- id: constraint_satisfaction_05
+  category: constraint_satisfaction
+  language: en
+  difficulty: easy
+  hop_count: 1
+  constraint_set: [city, min_price, max_price]
+  availability_window: none
+  query: "Show me rooms in Porto priced between €500 and €700 per month."
+  notes: >
+    Price range with both bounds: city='Porto', min_price_eur=500,
+    max_price_eur=700. Column: autumnprice (default, no date given).
+    The dirty-data room (autumnprice=-20) is naturally excluded because
+    -20 < 500. Porto median autumnprice ≈ €895 (§B), so the €500-€700
+    band captures the lower-mid segment.
+    SQL verified: ... WHERE r.status='Available' AND h.city='Porto'
+    AND r.autumnprice>=500 AND r.autumnprice<=700 → 78 rows (DB 2026-06-22).
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 78 rows (DB 2026-06-22).
+    Filters: city='Porto', min_price_eur=500 AND max_price_eur=700
+    (→ autumnprice >= 500 AND autumnprice <= 700; default season).
+    A correct answer must: (1) call find_rooms with city='Porto',
+    min_price_eur=500, max_price_eur=700; (2) report total_matches ≈ 78;
+    (3) state that prices are the autumn/default rate (provide check-in
+    dates for a seasonal quote). Using only a single price bound
+    (max only or min only) is an error — both bounds are required.
+
+- id: constraint_satisfaction_06
+  category: constraint_satisfaction
+  language: en
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, max_distance_to_transport, max_price]
+  availability_window: none
+  query: "I want a room in Lisbon within 300 metres of public transport
+    and under €1,200 per month."
+  notes: >
+    Distance-to-transport + price: city='Lisbon',
+    max_distance_to_transport_m=300, max_price_eur=1200. Column:
+    house.distancepublictransport (meters to nearest public transport stop;
+    house-level, not per-room, not metro-specific). Price: autumnprice<=1200.
+    Total Lisbon rooms with distancepublictransport<=300: 104 (DB probe).
+    SQL verified: ... WHERE r.status='Available' AND h.city='Lisbon'
+    AND h.distancepublictransport<=300 AND r.autumnprice<=1200
+    → 64 rows (DB 2026-06-22).
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 64 rows (DB 2026-06-22).
+    Filters: city='Lisbon', max_distance_to_transport_m=300
+    (→ house.distancepublictransport <= 300 m), max_price_eur=1200
+    (→ autumnprice <= 1200, default season).
+    A correct answer must: (1) call find_rooms with city='Lisbon',
+    max_distance_to_transport_m=300, max_price_eur=1200; (2) report
+    total_matches ≈ 64; (3) clarify that the distance is to any public
+    transport stop (bus/tram/metro), not metro-specific.
+    Confusing distancepublictransport with a metro-specific distance, or
+    omitting either filter, is an error.
+
+- id: constraint_satisfaction_07
+  category: constraint_satisfaction
+  language: en
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, gender_preference, desk]
+  availability_window: none
+  query: "I'm a female student looking for a female-only flat in Porto
+    with a proper study desk in the room."
+  notes: >
+    Gender preference + amenity: city='Porto',
+    gender_preference='female_only', must_have_desk=True. Maps to
+    h.femalepreferred='Y' AND r.desk='Y'. Porto female-preferred room
+    rows total: 49; with desk filter: 42.
+    SQL verified: ... WHERE r.status='Available' AND h.city='Porto'
+    AND h.femalepreferred='Y' AND r.desk='Y' → 42 rows (DB 2026-06-22).
+    gender_preference='male_only' maps to malepreferred='Y'; 'any' = no
+    filter; 'female_only' = femalepreferred='Y'.
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 42 rows (DB 2026-06-22).
+    Filters: city='Porto', gender_preference='female_only'
+    (→ house.femalepreferred='Y'), must_have_desk=True (→ room.desk='Y').
+    A correct answer must: (1) call find_rooms with city='Porto',
+    gender_preference='female_only', must_have_desk=True; (2) report
+    total_matches ≈ 42; (3) clarify that the filter covers the whole
+    house preference (female-preferred building), not an individual room
+    designation. Omitting the gender filter or the desk filter is an error.
+
+- id: constraint_satisfaction_08
+  category: constraint_satisfaction
+  language: en
+  difficulty: hard
+  hop_count: 1
+  constraint_set: [city, min_contract_months, max_price]
+  availability_window: none
+  query: "I need a room in Lisbon for at least 6 months — I want listings
+    that require a 6-month minimum commitment. My budget is up to €900
+    per month. What's available?"
+  notes: >
+    Minimum contract + price: city='Lisbon', min_contract_months=6,
+    max_price_eur=900. Maps to r.minreservemonths>=6 AND r.autumnprice<=900.
+    DATA GAP: r.minreservemonths is NULL for ALL rooms in the catalogue
+    (both cities). Verified: SELECT DISTINCT r.minreservemonths FROM room r
+    WHERE r.status='Available' → single result: NULL (DB 2026-06-22).
+    NULL>=6 evaluates to NULL (not TRUE) in SQL WHERE, so every row is
+    excluded. Result count: 0. No threshold adjustment can fix this — the
+    column carries no data. This query tests whether the agent honestly
+    reports 0 total_matches and does not fabricate matches.
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 0 rows (DB 2026-06-22).
+    Filters: city='Lisbon', min_contract_months=6
+    (→ r.minreservemonths >= 6), max_price_eur=900 (→ autumnprice <= 900).
+    Root cause: room.minreservemonths is NULL for all rooms; NULL >= 6 is
+    NULL in SQL, excluding every row regardless of threshold.
+    A correct answer must: (1) call find_rooms with city='Lisbon',
+    min_contract_months=6, max_price_eur=900; (2) report total_matches=0;
+    (3) NOT fabricate any matching rooms; (4) may helpfully note that no
+    listings in the catalogue currently specify a minimum contract term, so
+    the user should enquire directly with landlords about commitment periods.
+    Reporting any non-zero match count is a hard factual failure.
+
+- id: constraint_satisfaction_09
+  category: constraint_satisfaction
+  language: en
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, availability_window_2026, max_price, balcony]
+  availability_window: "2026-09 to 2026-11 (no-op exclusion, autumn pricing)"
+  query: "I'm planning to move to Lisbon in September 2026 and need
+    accommodation through to the end of November 2026. I'd love a balcony
+    and my budget is €1,100 per month at most."
+  notes: >
+    2026 availability + price + amenity. Tool: find_available_rooms with
+    city='Lisbon', available_from=2026-09-01, available_to=2026-11-30,
+    max_price_eur=1100, must_have_balcony=True.
+    AVAILABILITY (§D): reservation table ends 2024-11-30; for any 2026
+    window, 0 rooms are blocked → find_available_rooms returns the same
+    result set as find_rooms (no exclusion). The window's purpose here is
+    season-aware PRICING: September = autumn → price filter uses
+    autumnprice. All three months (Sep, Oct, Nov) are autumn-rate.
+    SQL equivalent: ... WHERE r.status='Available' AND h.city='Lisbon'
+    AND r.autumnprice<=1100 AND r.autumnprice>0 AND r.balcony='Y'
+    → 41 rows (DB 2026-06-22). Tests season-aware pricing + multi-filter
+    handling; does NOT test reservation exclusion.
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 41 rows (DB 2026-06-22).
+    Filters: city='Lisbon', available_from=2026-09-01,
+    available_to=2026-11-30, max_price_eur=1100
+    (→ autumnprice <= 1100; September ∈ autumn season), must_have_balcony=True.
+    Availability exclusion is a no-op for this window: 0 rooms blocked
+    (reservation calendar ends 2024-11-30 per §D); total_matches equals
+    the find_rooms baseline.
+    A correct answer must: (1) call find_available_rooms (or find_rooms) with
+    the date window + balcony + price filters; (2) report total_matches ≈ 41;
+    (3) state that prices are at the autumn rate (Sep-Nov ∈ autumn); (4) NOT
+    claim rooms are excluded by availability conflicts for 2026 windows.
+    Reporting a lower count than 41 on grounds of "availability" is an error.
+
+- id: constraint_satisfaction_10
+  category: constraint_satisfaction
+  language: en
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, availability_window_2026_cross_season, max_price, private_bathroom]
+  availability_window: "2026-10 to 2027-03 (cross-season pricing, no-op exclusion)"
+  query: "I'm arriving in Porto in early October 2026 and planning to stay
+    until the end of March 2027. I need a private bathroom and my budget
+    is €900 per month at most. What are my options?"
+  notes: >
+    2026 cross-season availability + price + amenity. Tool:
+    find_available_rooms with city='Porto', available_from=2026-10-01,
+    available_to=2027-03-31, max_price_eur=900,
+    must_have_private_bathroom=True.
+    AVAILABILITY (§D): 0 reservation overlaps for any 2026/2027 window;
+    same result set as find_rooms.
+    CROSS-SEASON PRICING: available_from month=10 (October=autumn) →
+    autumnprice is the price FILTER column. Stay spans 6 calendar months:
+    Oct/Nov/Dec 2026, Jan/Feb 2027 = autumn (5 months); Mar 2027 = spring
+    (1 month). For fixed-price rooms, spring=autumn → flat price_label.
+    For seasonal rooms, price_label shows blended average:
+    (5xautumnprice + 1xspringprice) / 6.
+    SQL equivalent for count: ... WHERE r.status='Available'
+    AND h.city='Porto' AND r.autumnprice<=900 AND r.autumnprice>0
+    AND r.privatebathroom='Y' → 27 rows (DB 2026-06-22).
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 27 rows (DB 2026-06-22).
+    Filters: city='Porto', available_from=2026-10-01,
+    available_to=2027-03-31, max_price_eur=900
+    (→ autumnprice <= 900, October ∈ autumn; dirty-price row excluded),
+    must_have_private_bathroom=True (→ room.privatebathroom='Y').
+    0 rooms excluded by availability (reservation calendar ends 2024-11-30).
+    Cross-season pricing: 5 autumn months (Oct-Feb) + 1 spring month (Mar).
+    For seasonal rooms, price_label shows the monthly average across both
+    rates. For fixed-price rooms, the rate is flat.
+    A correct answer must: (1) report total_matches ≈ 27; (2) describe the
+    cross-season price composition (or note that fixed-price rooms show a
+    flat rate); (3) NOT claim any rooms are excluded by 2026/2027
+    availability conflicts.
+
+- id: constraint_satisfaction_11
+  category: constraint_satisfaction
+  language: en
+  difficulty: hard
+  hop_count: 1
+  constraint_set: [city, availability_2024_window]
+  availability_window: "2024-09 (mechanism-check)"
+  query: "Can you show me which rooms in Lisbon were actually available
+    in September 2024?"
+  notes: >
+    MECHANISM-CHECK — intentionally past date; not a realistic user
+    request. Verifies that find_available_rooms reservation-exclusion
+    path fires where data exists (§D). Tool: find_available_rooms with
+    city='Lisbon', available_from=2024-09-01, available_to=2024-09-30.
+    Overlap test (§D, _reservation.py): a room is excluded if any
+    reservation row satisfies blockeddatestart <= 2024-09-30 AND
+    blockeddataend >= 2024-09-01 for that (loc_idhouse, idroom).
+    SQL for occupied rooms (distinct pairs): COUNT(DISTINCT
+    (r.loc_idhouse, r.idroom)) with EXISTS overlap subquery → 279 distinct
+    room IDs occupied in Lisbon Sep 2024.
+    SQL for available (NOT EXISTS): 184 rows (DB 2026-06-22).
+    Baseline: find_rooms Lisbon baseline = 556 rows.
+    Diff: 556 - 184 = 372 rows excluded. This confirms the exclusion
+    path is operational. For contrast: any 2026 window yields 0 exclusions.
+  expected_answer_type: list
+  ground_truth: |
+    Verified counts (DB 2026-06-22), all on the DISTINCT (loc_idhouse, idroom) lens:
+      find_rooms(city='Lisbon') distinct baseline   → 435 rooms
+      find_available_rooms(Lisbon, 2024-09-01→2024-09-30) → 156 rooms
+      Excluded by reservation overlap (Sep 2024)     → 435 - 156 = 279 rooms
+    (Reservation table: 7260 rows, fully joined to rooms, covering 2023-01 to
+    2024-11. 483 distinct rooms occupied in Sep 2024 across both cities, of which
+    279 are in Lisbon.)
+    A correct answer must: (1) call find_available_rooms with city='Lisbon',
+    available_from=2024-09-01, available_to=2024-09-30; (2) return materially FEWER
+    rooms than the unfiltered baseline (≈156, not ≈435/556); (3) NOT report the full
+    catalogue as if no reservations existed. Reporting the baseline count for a
+    window with known occupancy means the exclusion path was bypassed — a hard
+    failure. Mechanism-check item: verifies the exclusion path works where
+    reservation data exists (§D); not a realistic user-facing date.
+
+- id: constraint_satisfaction_12
+  category: constraint_satisfaction
+  language: en
+  difficulty: hard
+  hop_count: 1
+  constraint_set: [city, accepts_couples_IGNORED, max_price, private_bathroom]
+  availability_window: none
+  query: "My partner and I are looking for a room together in Lisbon —
+    ideally with a private bathroom and under €1,100 per month. Do you
+    have rooms that accept couples?"
+  notes: >
+    IGNORED-FIELD TEST: accepts_couples is present in FindRoomsInput but
+    is IGNORED by the SQL builder — no column in the DB schema; a warning
+    is logged (§C.1). The SQL filters that actually apply are only:
+    city='Lisbon', autumnprice<=1100, privatebathroom='Y'.
+    SQL verified: ... WHERE r.status='Available' AND h.city='Lisbon'
+    AND r.autumnprice<=1100 AND r.autumnprice>0
+    AND r.privatebathroom='Y' → 63 rows (DB 2026-06-22).
+    A correct answer must NOT silently pretend that accepts_couples was
+    applied; it must be transparent that couple-suitability cannot be
+    structurally filtered and suggest the user verify with the landlord.
+  expected_answer_type: list
+  ground_truth: |
+    Verified count for the FILTERABLE constraints only: 63 rows (DB 2026-06-22).
+    Filters applied: city='Lisbon', max_price_eur=1100
+    (→ autumnprice <= 1100), must_have_private_bathroom=True
+    (→ room.privatebathroom='Y').
+    Filter IGNORED: accepts_couples=True — find_rooms has no DB column for
+    this; the parameter is silently dropped (with a logged warning). The
+    result set is the same as if accepts_couples had not been passed.
+    A correct answer must: (1) call find_rooms with city='Lisbon',
+    max_price_eur=1100, must_have_private_bathroom=True (accepts_couples
+    may be passed but has no filtering effect); (2) report total_matches
+    ≈ 63; (3) EXPLICITLY note that couple-suitability is NOT a structured
+    filter — the result set is not confirmed couple-friendly; (4) suggest
+    the user check individual listings or contact landlords.
+    Claiming the result set is couple-confirmed (i.e. pretending the filter
+    applied) is a failure. Reporting a count lower than 63 on the grounds
+    of filtering couples is also an error.
+
+- id: constraint_satisfaction_13
+  category: constraint_satisfaction
+  language: es
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, internet, private_bathroom, max_price]
+  availability_window: none
+  query: "Busco una habitación en Oporto con conexión a internet, baño
+    privado y un presupuesto máximo de 900 € al mes. ¿Qué tenéis disponible?"
+  notes: >
+    Spanish-language query. Three filters: city='Porto',
+    must_have_internet=True, must_have_private_bathroom=True,
+    max_price_eur=900. Maps to h.internet='Y', r.privatebathroom='Y',
+    r.autumnprice<=900, r.autumnprice>0 (excludes dirty-price row).
+    Internet is very widely available in Porto (all probed Paranhos rooms
+    have internet='Y'), so the binding constraints are the price cap and
+    private bathroom. SQL verified: ... WHERE r.status='Available'
+    AND h.city='Porto' AND h.internet='Y' AND r.privatebathroom='Y'
+    AND r.autumnprice<=900 AND r.autumnprice>0 → 27 rows (DB 2026-06-22).
+    Response must be in Spanish.
+  expected_answer_type: list
+  ground_truth: |
+    Verified count: 27 rows (DB 2026-06-22).
+    Filters: city='Porto', must_have_internet=True (→ house.internet='Y'),
+    must_have_private_bathroom=True (→ room.privatebathroom='Y'),
+    max_price_eur=900 (→ autumnprice <= 900, default autumn season;
+    dirty-price row naturally excluded).
+    A correct answer must: (1) respond in Spanish; (2) call find_rooms
+    with city='Porto', must_have_internet=True,
+    must_have_private_bathroom=True, max_price_eur=900; (3) report
+    total_matches ≈ 27; (4) state prices at the autumn/default rate.
+    Responding in English when queried in Spanish is a language-handling
+    failure. Omitting either the internet or the private-bathroom filter
+    is a factual error.
+
+- id: constraint_satisfaction_14
+  category: constraint_satisfaction
+  language: de
+  difficulty: medium
+  hop_count: 1
+  constraint_set: [city, near_landmark, max_price]
+  availability_window: none
+  query: "Ich suche ein Zimmer in Lissabon, am liebsten im Viertel Arroios,
+    maximal 1.100 € pro Monat. Was ist verfügbar?"
+  notes: >
+    German-language query. Two filters: city='Lisbon',
+    near_landmark='Arroios', max_price_eur=1100. find_rooms applies ILIKE
+    on h.zone, h.neighboorhood, h.description — returns rooms in the Arroios
+    zone AND rooms in other zones whose descriptions mention 'Arroios'.
+    DB zone name is 'Arroios' (ASCII, no accents). Exact zone='Arroios'
+    count at autumnprice<=1100: 22 rows. ILIKE count at autumnprice<=1100:
+    ≈48 rows (DB 2026-06-22). Tolerance ±10 rows due to description text.
+    Response must be in German.
+  expected_answer_type: list
+  ground_truth: |
+    Verified ILIKE count: ≈48 rows (DB 2026-06-22).
+    Filters: city='Lisbon', near_landmark='Arroios'
+    (→ ILIKE '%Arroios%' on zone/neighbourhood/description),
+    max_price_eur=1100 (→ autumnprice <= 1100, default autumn season).
+    Exact zone='Arroios' at ≤€1,100 gives 22 rooms; ILIKE returns ≈48
+    because descriptions mention the area. Tolerance ±10 rows acceptable.
+    A correct answer must: (1) respond in German; (2) call find_rooms with
+    city='Lisbon', near_landmark='Arroios', max_price_eur=1100;
+    (3) report total_matches ≈ 48 (or ≈22 if exact zone interpretation,
+    acceptable with a note); (4) state the autumn/default rate.
+    Responding in English when queried in German is a language-handling
+    failure.
