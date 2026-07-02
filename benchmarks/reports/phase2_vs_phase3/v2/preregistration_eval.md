@@ -264,3 +264,22 @@ production database was not granted). Consequences:
   multilingual handling) are real regardless of data realism.
 This positions the evaluation as a controlled architectural comparison on a
 domain-representative synthetic testbed, not a production-data study.
+
+### Addendum 2026-06-23 — Golden set frozen
+
+Phase A complete. The 8 cassettes were merged into a single artifact:
+- benchmarks/queries/golden_set_v2.yaml — 96 queries
+- Composition: out_of_scope 10, policy_rules 12, subjective_reviews 10,
+  subjective_descriptions 10, underspecified_ambiguous 12, factual_lookup 12,
+  constraint_satisfaction 14, quantitative_reasoning 16.
+- Languages: 82 EN + 14 non-EN (IT/PT/ES/DE 3 each, FR 2).
+- hop_count distribution: 0→22, 1→58, 2→8, 3→8. NB the ≥2-hop evidence for H2
+  rests on 16 queries (8 at hop-2, 8 at hop-3); the dose-response is reported
+  with the corresponding statistical uncertainty.
+- sha256: 17a9d590ff6b7d15e2ac5c87640a649581b1ba7d6f4a1cffdae64c0157d5849f
+- Merge script: benchmarks/queries/_merge_golden_set.py (deterministic order).
+- M2 ground-truth totals independently validated against the frozen
+  compute_total_cost implementation (all 16 quantitative queries match to ±1 EUR).
+
+From this commit the golden set is immutable. Any change requires a new dated
+addendum and re-hashing.
