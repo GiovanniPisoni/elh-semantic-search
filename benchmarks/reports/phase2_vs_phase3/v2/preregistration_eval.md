@@ -283,3 +283,24 @@ Phase A complete. The 8 cassettes were merged into a single artifact:
 
 From this commit the golden set is immutable. Any change requires a new dated
 addendum and re-hashing.
+
+### Addendum 2026-07-09 — Phase 2 generator model substitution
+
+Phase 2's frozen config (commit 34397f9) specifies generator model
+claude-sonnet-4-20250514, which reached end-of-life on 2026-06-15 and returns
+HTTP 404 at evaluation time. It cannot be called.
+
+Decision: run Phase 2's generator on claude-sonnet-4-5 — the same Sonnet-tier model
+the frozen Phase 3 agent uses. Phase 2's Haiku calls (rewriter, router) already use
+claude-haiku-4-5-20251001 (current, same Haiku tier as Phase 3) and are unchanged.
+Phase 3 runs entirely as-frozen (all its model strings are current).
+
+Rationale: the substitution is forced (frozen model uncallable), not discretionary.
+It holds the underlying LLM constant across both architectures (Sonnet 4.5 + Haiku
+4.5), so measured differences are attributable to architecture (pipeline vs agent),
+not model vintage — a cleaner architectural comparison than the original frozen
+pairing. The substituted model (4.5) is newer than Phase 2's frozen choice (4), so
+it can only strengthen Phase 2 relative to its frozen self (the conservative
+direction). No frozen source was modified; the model is injected via the runner.
+This is the only deviation from the frozen artifacts, and it is one-directional
+(Phase 2 only). Reported in Results and Discussion.
