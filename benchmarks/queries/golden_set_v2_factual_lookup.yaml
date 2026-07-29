@@ -126,7 +126,7 @@
   difficulty: medium
   hop_count: 1
   factual_type: attribute_lookup
-  query: "I found a room with ID HSE_E6069573|RM_HSE_E6069573_4|2020-11-18 in Mouraria — does it allow a second person moving in, and what's the extra monthly cost?"
+  query: "I found a room with ID HSE_E6069573|RM_HSE_E6069573_4|2020-11-18T00:00:00 in Mouraria — does it allow a second person moving in, and what's the extra monthly cost?"
   notes: >
     Single attribute lookup on anchor A3 (§J, Lisbon/Mouraria). Encoded id
     corrected from the data-reference typo: the actual house id is HSE_E6069573

@@ -15,12 +15,12 @@
   difficulty: easy
   hop_count: 2
   quantitative_type: fixed_room_cost
-  room_id: "HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17"
+  room_id: "HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17T00:00:00"
   check_in: "2026-10-01"
   check_out: "2026-12-31"
   extra_person: false
   query: >
-    I have room HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17 in Lisbon. What is the
+    I have room HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17T00:00:00 in Lisbon. What is the
     total cost for a 3-month stay checking in on 1 October 2026 and checking out
     on 31 December 2026?
   notes: |
@@ -56,12 +56,12 @@
   difficulty: medium
   hop_count: 2
   quantitative_type: fixed_room_cost
-  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22"
+  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00"
   check_in: "2026-09-01"
   check_out: "2027-01-31"
   extra_person: true
   query: >
-    I found room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22 in Porto and I'm
+    I found room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00 in Porto and I'm
     bringing a second occupant. What is the full cost of our stay from
     1 September 2026 to 31 January 2027?
   notes: |
@@ -98,12 +98,12 @@
   difficulty: medium
   hop_count: 2
   quantitative_type: fixed_room_cost
-  room_id: "HSE_90DB55C7|RM_HSE_90DB55C7_3|2022-07-04"
+  room_id: "HSE_90DB55C7|RM_HSE_90DB55C7_3|2022-07-04T00:00:00"
   check_in: "2026-04-01"
   check_out: "2026-07-31"
   extra_person: false
   query: >
-    What is the total cost to stay in room HSE_90DB55C7|RM_HSE_90DB55C7_3|2022-07-04
+    What is the total cost to stay in room HSE_90DB55C7|RM_HSE_90DB55C7_3|2022-07-04T00:00:00
     in Lisbon from 1 April to 31 July 2026? I'll be on my own.
   notes: |
     Cross-season stay (spring→summer) with last-month-advance mechanism (lastm=Y).
@@ -139,12 +139,12 @@
   difficulty: medium
   hop_count: 2
   quantitative_type: fixed_room_cost
-  room_id: "HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04"
+  room_id: "HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04T00:00:00"
   check_in: "2026-07-01"
   check_out: "2026-12-31"
   extra_person: false
   query: >
-    I'm considering a long stay in room HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04
+    I'm considering a long stay in room HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04T00:00:00
     in Lisbon, checking in 1 July and checking out 31 December 2026. What is my
     total financial exposure for the full 6-month period?
   notes: |
@@ -182,12 +182,12 @@
   difficulty: medium
   hop_count: 2
   quantitative_type: fixed_room_cost
-  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_6|2021-05-22"
+  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_6|2021-05-22T00:00:00"
   check_in: "2026-07-01"
   check_out: "2026-09-30"
   extra_person: true
   query: >
-    I want to rent room HSE_77C4AFBA|RM_HSE_77C4AFBA_6|2021-05-22 in Porto for
+    I want to rent room HSE_77C4AFBA|RM_HSE_77C4AFBA_6|2021-05-22T00:00:00 in Porto for
     3 months (July, August, September 2026) and I'll have a second occupant.
     What is the complete cost?
   notes: |
@@ -226,13 +226,13 @@
   difficulty: easy
   hop_count: 2
   quantitative_type: fixed_room_cost
-  room_id: "HSE_D1F41EC3|RM_HSE_D1F41EC3_15|2021-07-30"
+  room_id: "HSE_D1F41EC3|RM_HSE_D1F41EC3_15|2021-07-30T00:00:00"
   check_in: "2027-03-01"
   check_out: "2027-07-31"
   extra_person: false
   query: >
     Quanto custa ao todo ficar 5 meses no quarto
-    HSE_D1F41EC3|RM_HSE_D1F41EC3_15|2021-07-30 no Porto,
+    HSE_D1F41EC3|RM_HSE_D1F41EC3_15|2021-07-30T00:00:00 no Porto,
     de 1 de março a 31 de julho de 2027?
   notes: |
     [Portuguese] Fixed-price room, 5-month spring-to-summer stay, no extra person.
@@ -282,7 +282,7 @@
     3-hop: (1) find_rooms(city='Lisbon', available_from='2026-11-01') → cheapest by
     autumnprice; (2) get_property_details; (3) compute_total_cost.
     Cheapest Lisbon room by autumnprice (DB 2026-06-23):
-      HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17, aut=220 fixed=Y dep=Y/160 lastm=N admin=70.
+      HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17T00:00:00, aut=220 fixed=Y dep=Y/160 lastm=N admin=70.
     Arithmetic:
       months: Nov(220) Dec(220) Jan-2027(220) Feb-2027(220)  [4 months, fixed]
       total_rent = 220x4 = 880
@@ -299,7 +299,7 @@
   expected_answer_type: number
   ground_truth: |
     Cheapest Lisbon room (by autumnprice, DB 2026-06-23):
-      HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17 at €220/month fixed.
+      HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17T00:00:00 at €220/month fixed.
     total_stay_cost_eur = €1189.20 (±1 EUR tolerance).
     total_out_of_pocket_eur = €1029.20 (the €160 deposit is refunded at checkout).
     A correct answer must: (a) identify the cheapest Lisbon room via find_rooms;
@@ -324,7 +324,7 @@
   notes: |
     3-hop: (1) find_rooms(city='Porto', available_from='2026-07-01') → cheapest;
     Note: find_rooms selects summerprice column for July check-in. The cheapest Porto
-    room by summerprice is HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22 (sum=80),
+    room by summerprice is HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00 (sum=80),
     which is also cheapest by autumnprice (aut=135).
     Room fields: aut=135 spr=100 sum=80 fixed=N dep=Y/75 lastm=N admin=110.
     Arithmetic:
@@ -343,7 +343,7 @@
   expected_answer_type: number
   ground_truth: |
     Cheapest Porto room (by summer/autumn price, DB 2026-06-23):
-      HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22 at €80/month summer, €135/month autumn.
+      HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00 at €80/month summer, €135/month autumn.
     total_stay_cost_eur = €506.55 (±1 EUR tolerance).
     total_out_of_pocket_eur = €431.55.
     The cross-season aspect is essential: July and August bill at the summer rate
@@ -503,7 +503,7 @@
     cheapest by springprice (March check-in → spring price column);
     (2) get_property_details; (3) compute_total_cost.
     Cheapest Lisbon room by springprice (DB 2026-06-23):
-      HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04, spr=180 aut=240 sum=145 fixed=N
+      HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04T00:00:00, spr=180 aut=240 sum=145 fixed=N
       dep=N lastm=Y admin=75 xpa=N.
     IMPORTANT: this differs from the cheapest by autumnprice (RM_HSE_AB145FF2_5,
     aut=220). For a spring check-in, the correct tool call uses springprice ordering.
@@ -524,7 +524,7 @@
   expected_answer_type: number
   ground_truth: |
     Cheapest Lisbon room by springprice (DB 2026-06-23):
-      HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04 at €180/month spring.
+      HSE_90DB55C7|RM_HSE_90DB55C7_9|2022-07-04T00:00:00 at €180/month spring.
     total_stay_cost_eur = €663.60 (±1 EUR tolerance).
     total_out_of_pocket_eur = €663.60 (no refundable deposit).
     A CORRECT ANSWER MUST BE DELIVERED IN FRENCH. An English-only response is a
@@ -548,12 +548,12 @@
     which city is cheaper and by how much?
   notes: |
     Two cheapest-find passes (both autumn, autumnprice column) + two cost computations.
-    Lisbon cheapest (DB 2026-06-23): HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17
+    Lisbon cheapest (DB 2026-06-23): HSE_AB145FF2|RM_HSE_AB145FF2_5|2023-03-17T00:00:00
       aut=220 fixed=Y dep=Y/160 lastm=N admin=70.
     Arithmetic Lisbon (Sep-Nov, 3 months):
       total_rent=660, resv_fee=59.40, payable=279.40, one_time=230.00 (160+70),
       remaining=440, TOTAL=949.40, REFUND=160, OOP=789.40
-    Porto cheapest (DB 2026-06-23): HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22
+    Porto cheapest (DB 2026-06-23): HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00
       aut=135 spr=100 sum=80 fixed=N dep=Y/75 lastm=N admin=110.
     Arithmetic Porto (Sep-Nov, 3 months, all autumn):
       total_rent=135x3=405, resv_fee=round_half_up(36.45)=36.45,
@@ -613,9 +613,9 @@
   difficulty: medium
   hop_count: 2
   quantitative_type: cost_comparison
-  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22"
+  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00"
   query: >
-    I'm looking at room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22 in Porto.
+    I'm looking at room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00 in Porto.
     How much more would a 2-month autumn stay (October-November 2026) cost
     compared to a 2-month summer stay (July-August 2026) in the same room?
   notes: |
@@ -637,7 +637,7 @@
     since both stays have the same deposit).
   expected_answer_type: comparison
   ground_truth: |
-    For room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22 (Porto, DB 2026-06-23):
+    For room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00 (Porto, DB 2026-06-23):
     2-month summer stay (Jul-Aug 2026): total_stay_cost=€359.40, out_of_pocket=€284.40.
     2-month autumn stay (Oct-Nov 2026): total_stay_cost=€479.30, out_of_pocket=€404.30.
     Autumn costs €119.90 more in both total and net terms (the deposit is the same
@@ -652,9 +652,9 @@
   difficulty: medium
   hop_count: 2
   quantitative_type: cost_comparison
-  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22"
+  room_id: "HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00"
   query: >
-    I'm booking room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22 in Porto for
+    I'm booking room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00 in Porto for
     4 months from September to December 2026. How much extra would it cost to
     add a second occupant for the whole stay?
   notes: |
@@ -673,7 +673,7 @@
     Extra-person premium = 1133.60 - 773.60 = 360.00 (exactly 90x4 months, no rounding).
   expected_answer_type: comparison
   ground_truth: |
-    For room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22 (Porto, Sep-Dec 2026,
+    For room HSE_77C4AFBA|RM_HSE_77C4AFBA_15|2021-05-22T00:00:00 (Porto, Sep-Dec 2026,
     DB 2026-06-23):
     Solo stay:        total_stay_cost=€773.60, out_of_pocket=€698.60.
     With extra person: total_stay_cost=€1133.60, out_of_pocket=€1058.60.
