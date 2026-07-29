@@ -197,7 +197,7 @@ Weights are applied at aggregation time to the per-category means (which were me
 
 - Phase 3 commit: `62e28328ee468851dc6dc04a0b1d6c58626863e5` (v3.2.0, 2026-05-27)
 - Phase 2 commit: `34397f9` (v2-pipelined-RAG-archive)
-- `golden_set_v2.yaml` sha256: `__TO BE FILLED WHEN THE SET IS FROZEN__`
+- `golden_set_v2.yaml` sha256: d463920def3bd7d2b155fce76cc6ec6057afb6c2e458f0925f2553c2da7b24bd
 - This pre-registration commit hash: `__git records this automatically on commit__`
 
 ---

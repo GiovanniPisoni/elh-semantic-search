@@ -7,7 +7,8 @@ from pathlib import Path
 
 import yaml
 
-QDIR = Path("benchmarks/queries")
+QDIR = Path("benchmarks/queries/phase2_vs_phase3/v2")
+CDIR = QDIR / "cassettes"
 
 # Fixed concatenation order → the hash is reproducible.
 CASSETTES = [
@@ -26,7 +27,7 @@ REQUIRED = {"id", "category", "language", "hop_count", "query",
 merged, errors, seen_ids = [], [], set()
 
 for expected_cat, fname, expected_n in CASSETTES:
-    path = QDIR / fname
+    path = CDIR / fname
     if not path.exists():
         errors.append(f"MISSING FILE: {fname}")
         continue

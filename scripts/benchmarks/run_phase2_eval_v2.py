@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 _P2_ROOT = Path(__file__).resolve().parents[2]          # elh-rag-p2/
 _P3_ROOT = _P2_ROOT.parent / "elh-semantic-search"      # elh-semantic-search/
 
-DEFAULT_QUERIES_FILE = _P3_ROOT / "benchmarks" / "queries" / "golden_set_v2.yaml"
+DEFAULT_QUERIES_FILE = _P3_ROOT / "benchmarks" / "queries" / "phase2_vs_phase3" / "v2" / "golden_set_v2.yaml"
 DEFAULT_OUTPUT_DIR   = _P3_ROOT / "benchmarks" / "runs"
 MAX_RETRIES = 2
 

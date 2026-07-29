@@ -28,7 +28,7 @@ from elh_rag.logging_setup import setup_logging
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_QUERIES_FILE = Path("benchmarks/queries/golden_set_v2.yaml")
+DEFAULT_QUERIES_FILE = Path("benchmarks/queries/phase2_vs_phase3/v2/golden_set_v2.yaml")
 DEFAULT_OUTPUT_DIR = Path("benchmarks/runs")
 MAX_RETRIES = 2
 
