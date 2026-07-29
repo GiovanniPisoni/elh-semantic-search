@@ -65,6 +65,8 @@ class TrackingLLMClient(AgentLLMClient):
                 {
                     "input_tokens": getattr(usage, "input_tokens", 0) or 0,
                     "output_tokens": getattr(usage, "output_tokens", 0) or 0,
+                    "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0) or 0,
+                    "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0) or 0,
                 }
             )
         return response
@@ -84,6 +86,8 @@ class TrackingLLMClient(AgentLLMClient):
                         {
                             "input_tokens": getattr(usage, "input_tokens", 0) or 0,
                             "output_tokens": getattr(usage, "output_tokens", 0) or 0,
+                            "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0) or 0,
+                            "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0) or 0,
                         }
                     )
             yield chunk
@@ -180,9 +184,9 @@ def load_completed_ids(path: Path) -> set[str]:
     return seen
 
 
-def build_output_path(output_dir: Path, system: str, dry: bool) -> Path:
+def build_output_path(output_dir: Path, system: str, dry: bool, smoke: bool = False) -> Path:
     ts = datetime.now(UTC).strftime("%Y-%m-%d-%H%M%S")
-    suffix = "_dry" if dry else ""
+    suffix = "_dry" if dry else ("_smoke" if smoke else "")
     return output_dir / f"{system}_eval_v2_{ts}{suffix}.jsonl"
 
 
@@ -243,6 +247,8 @@ def _attempt_query(
                 "model": settings.agent_llm_model,
                 "input_tokens": u["input_tokens"],
                 "output_tokens": u["output_tokens"],
+                "cache_creation_input_tokens": u.get("cache_creation_input_tokens", 0),
+                "cache_read_input_tokens": u.get("cache_read_input_tokens", 0),
             }
         )
     if synthesis_tracker:
@@ -254,6 +260,8 @@ def _attempt_query(
                     "model": settings.agent_synthesis_model,
                     "input_tokens": u["input_tokens"],
                     "output_tokens": u["output_tokens"],
+                    "cache_creation_input_tokens": u.get("cache_creation_input_tokens", 0),
+                    "cache_read_input_tokens": u.get("cache_read_input_tokens", 0),
                 }
             )
 
@@ -434,6 +442,21 @@ def parse_args() -> argparse.Namespace:
         help="Run only the first N queries. Combine with --dry-run for zero-cost smoke-test.",
     )
     parser.add_argument(
+        "--ids",
+        type=str,
+        default=None,
+        metavar="ID1,ID2,...",
+        help=(
+            "Comma-separated list of query IDs to run (e.g. --ids out_of_scope_01,qr_07). "
+            "Overrides --limit. Use for stratified smoke samples."
+        ),
+    )
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Tag output file as a smoke run (adds _smoke suffix, prevents confusion with full runs).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help=(
@@ -451,15 +474,27 @@ def main() -> int:
 
     queries = load_queries(args.queries)
 
-    if args.limit is not None:
+    if args.ids is not None:
+        id_set = {s.strip() for s in args.ids.split(",") if s.strip()}
+        queries = [q for q in queries if q.id in id_set]
+        if not queries:
+            print(f"ERROR: --ids specified but none of {sorted(id_set)} found in queries file.")
+            return 1
+        # Preserve the order given by --ids
+        id_order = [s.strip() for s in args.ids.split(",") if s.strip()]
+        queries.sort(key=lambda q: id_order.index(q.id) if q.id in id_order else len(id_order))
+        print(f"--ids: running {len(queries)} selected queries: {[q.id for q in queries]}")
+    elif args.limit is not None:
         queries = queries[: args.limit]
         print(f"--limit {args.limit}: running first {len(queries)} queries.")
+
+    smoke = args.smoke or (args.ids is not None)
 
     # Determine output path
     if args.output is not None:
         output_path = args.output
     else:
-        output_path = build_output_path(args.output_dir, args.system, args.dry_run)
+        output_path = build_output_path(args.output_dir, args.system, args.dry_run, smoke=smoke)
 
     if args.dry_run:
         _print_dry_run_plan(queries, args.system, output_path)
@@ -520,7 +555,7 @@ def main() -> int:
     total_out = sum(r.get("output_tokens", 0) for r in records if r.get("status") == "success")
     print(
         f"\nDONE  queries={len(records)}  failures={failures}  "
-        f"tokens={total_in}in/{total_out}out  cost≈${cost:.3f}"
+        f"tokens={total_in}in/{total_out}out  cost~=${cost:.3f}"
     )
     print(f"Output: {output_path}")
     return 1 if failures > 0 else 0

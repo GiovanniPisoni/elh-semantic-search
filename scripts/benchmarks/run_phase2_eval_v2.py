@@ -230,9 +230,9 @@ def load_completed_ids(path: Path) -> set[str]:
     return seen
 
 
-def build_output_path(output_dir: Path, dry: bool) -> Path:
+def build_output_path(output_dir: Path, dry: bool, smoke: bool = False) -> Path:
     ts = datetime.now(UTC).strftime("%Y-%m-%d-%H%M%S")
-    suffix = "_dry" if dry else ""
+    suffix = "_dry" if dry else ("_smoke" if smoke else "")
     return output_dir / f"phase2_eval_v2_{ts}{suffix}.jsonl"
 
 
@@ -472,6 +472,21 @@ def parse_args() -> argparse.Namespace:
         help="Run only the first N queries.",
     )
     parser.add_argument(
+        "--ids",
+        type=str,
+        default=None,
+        metavar="ID1,ID2,...",
+        help=(
+            "Comma-separated list of query IDs to run (e.g. --ids out_of_scope_01,qr_07). "
+            "Overrides --limit. Use for stratified smoke samples."
+        ),
+    )
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Tag output file as a smoke run (adds _smoke suffix, prevents confusion with full runs).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Load + validate queries, print plan, exit without any API call.",
@@ -545,11 +560,22 @@ def main() -> int:
     args = parse_args()
 
     queries = load_queries(args.queries)
-    if args.limit is not None:
+
+    if args.ids is not None:
+        id_set = {s.strip() for s in args.ids.split(",") if s.strip()}
+        queries = [q for q in queries if q.id in id_set]
+        if not queries:
+            print(f"ERROR: --ids specified but none of {sorted(id_set)} found in queries file.")
+            return 1
+        id_order = [s.strip() for s in args.ids.split(",") if s.strip()]
+        queries.sort(key=lambda q: id_order.index(q.id) if q.id in id_order else len(id_order))
+        print(f"--ids: running {len(queries)} selected queries: {[q.id for q in queries]}")
+    elif args.limit is not None:
         queries = queries[: args.limit]
         print(f"--limit {args.limit}: running first {len(queries)} queries.")
 
-    output_path = args.output if args.output else build_output_path(args.output_dir, args.dry_run)
+    smoke = args.smoke or (args.ids is not None)
+    output_path = args.output if args.output else build_output_path(args.output_dir, args.dry_run, smoke=smoke)
 
     if args.dry_run:
         _print_dry_run_plan(queries, output_path)
