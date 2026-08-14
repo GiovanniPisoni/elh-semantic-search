@@ -304,3 +304,45 @@ it can only strengthen Phase 2 relative to its frozen self (the conservative
 direction). No frozen source was modified; the model is injected via the runner.
 This is the only deviation from the frozen artifacts, and it is one-directional
 (Phase 2 only). Reported in Results and Discussion.
+
+### Addendum 2026-07-31 — Pinecone index desynchronisation and repair
+
+**Defect.** During post-hoc verification of M6 it emerged that both Pinecone
+indexes predated a regeneration of the synthetic database. Audit (2026-07-31):
+0 of the 160 idhouse values in the current SQL database appeared in either index;
+69/80 idhouse values present in the indexes no longer existed in SQL. Vector
+counts were 366 (reviews) and 364 (descriptions) against 5,082 approved reviews
+and 890 description documents in SQL — the indexes held a population roughly
+fifteen times smaller and disjoint from the current catalogue.
+
+**Consequence for the 2026-07-28 runs.** Phase 2 retrieves exclusively from these
+indexes; the Phase 3 agent uses them for search_reviews / search_descriptions.
+Both systems therefore answered from a catalogue that no longer existed. This is
+an experimental-setup defect, not a property of either architecture: it inflates
+the apparent deficit of the retrieval-only system on structured queries and makes
+groundedness against the live database unmeasurable. Property names flagged as
+fabrications in the first M6 repair (e.g. "Residencia Nevogilde") were verified
+to be present in the stale indexes: they were retrieved, not invented.
+
+**Ground-truth validity confirmed before repair.** An alignment gate re-derived
+every pre-registered figure from the current SQL: all 9 §A/§B counts match
+exactly (556/435 Lisbon, 376/295 Porto, and the seven filtered counts); all 7 M2
+anchor rooms are unchanged field-for-field (prices, deposit flag and value,
+last-month flag, administrative tax, extra-person cost); the reservation calendar
+still spans 2023-01..2024-11 and the cs_11 mechanism check still yields 435 -> 156;
+all in-corpus themes remain covered and all gap themes remain absent in the SQL
+review/description text from which §G was derived. The golden set (sha256
+d463920d) therefore remains valid without modification.
+
+**Repair.** Both indexes were reset and rebuilt from the current SQL
+(run_indexer.py --source {reviews,descriptions} --reset): reviews 366 -> 5,082
+vectors, descriptions 364 -> 890, matching the SQL counts. Verification: the three
+stale property names return 0 hits in both indexes; five flatnames sampled from
+the current house table return hits in both. No frozen code was modified; the
+system commits are unchanged (Phase 3 62e2832, Phase 2 34397f9).
+
+**Reporting.** Both systems are re-run and re-judged on the repaired indexes. The
+stale-index runs, judge batches and judge results are retained. Results are
+reported from the repaired runs; the stale-index arm is reported separately as a
+measurement of how index freshness affects answer quality — an unplanned but
+informative comparison arising from this defect.
