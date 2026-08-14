@@ -1,0 +1,658 @@
+{"custom_id": "M1_strict_phase3_out_of_scope_01", "system": "phase3", "query_id": "out_of_scope_01", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_01", "system": "phase2", "query_id": "out_of_scope_01", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_out_of_scope_02", "system": "phase3", "query_id": "out_of_scope_02", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_02", "system": "phase2", "query_id": "out_of_scope_02", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_out_of_scope_03", "system": "phase3", "query_id": "out_of_scope_03", "metric": "M1_strict", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M1_strict_phase2_out_of_scope_03", "system": "phase2", "query_id": "out_of_scope_03", "metric": "M1_strict", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M1_strict_phase3_out_of_scope_04", "system": "phase3", "query_id": "out_of_scope_04", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_04", "system": "phase2", "query_id": "out_of_scope_04", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_out_of_scope_05", "system": "phase3", "query_id": "out_of_scope_05", "metric": "M1_strict", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M1_strict_phase2_out_of_scope_05", "system": "phase2", "query_id": "out_of_scope_05", "metric": "M1_strict", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M1_strict_phase3_out_of_scope_06", "system": "phase3", "query_id": "out_of_scope_06", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_06", "system": "phase2", "query_id": "out_of_scope_06", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_out_of_scope_07", "system": "phase3", "query_id": "out_of_scope_07", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_07", "system": "phase2", "query_id": "out_of_scope_07", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_out_of_scope_08", "system": "phase3", "query_id": "out_of_scope_08", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_08", "system": "phase2", "query_id": "out_of_scope_08", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_out_of_scope_09", "system": "phase3", "query_id": "out_of_scope_09", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_09", "system": "phase2", "query_id": "out_of_scope_09", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_out_of_scope_10", "system": "phase3", "query_id": "out_of_scope_10", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase2_out_of_scope_10", "system": "phase2", "query_id": "out_of_scope_10", "metric": "M1_strict", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_01", "system": "phase3", "query_id": "policy_rules_01", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_01", "system": "phase2", "query_id": "policy_rules_01", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_02", "system": "phase3", "query_id": "policy_rules_02", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_02", "system": "phase2", "query_id": "policy_rules_02", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_03", "system": "phase3", "query_id": "policy_rules_03", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_03", "system": "phase2", "query_id": "policy_rules_03", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_04", "system": "phase3", "query_id": "policy_rules_04", "metric": "M1_strict", "category": "policy_rules", "language": "es"}
+{"custom_id": "M1_strict_phase2_policy_rules_04", "system": "phase2", "query_id": "policy_rules_04", "metric": "M1_strict", "category": "policy_rules", "language": "es"}
+{"custom_id": "M1_strict_phase3_policy_rules_05", "system": "phase3", "query_id": "policy_rules_05", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_05", "system": "phase2", "query_id": "policy_rules_05", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_06", "system": "phase3", "query_id": "policy_rules_06", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_06", "system": "phase2", "query_id": "policy_rules_06", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_07", "system": "phase3", "query_id": "policy_rules_07", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_07", "system": "phase2", "query_id": "policy_rules_07", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_08", "system": "phase3", "query_id": "policy_rules_08", "metric": "M1_strict", "category": "policy_rules", "language": "de"}
+{"custom_id": "M1_strict_phase2_policy_rules_08", "system": "phase2", "query_id": "policy_rules_08", "metric": "M1_strict", "category": "policy_rules", "language": "de"}
+{"custom_id": "M1_strict_phase3_policy_rules_09", "system": "phase3", "query_id": "policy_rules_09", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_09", "system": "phase2", "query_id": "policy_rules_09", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_10", "system": "phase3", "query_id": "policy_rules_10", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_10", "system": "phase2", "query_id": "policy_rules_10", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_11", "system": "phase3", "query_id": "policy_rules_11", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_11", "system": "phase2", "query_id": "policy_rules_11", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_policy_rules_12", "system": "phase3", "query_id": "policy_rules_12", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase2_policy_rules_12", "system": "phase2", "query_id": "policy_rules_12", "metric": "M1_strict", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_01", "system": "phase3", "query_id": "subjective_reviews_01", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_01", "system": "phase2", "query_id": "subjective_reviews_01", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_02", "system": "phase3", "query_id": "subjective_reviews_02", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_02", "system": "phase2", "query_id": "subjective_reviews_02", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_03", "system": "phase3", "query_id": "subjective_reviews_03", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_03", "system": "phase2", "query_id": "subjective_reviews_03", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_04", "system": "phase3", "query_id": "subjective_reviews_04", "metric": "M1_strict", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_04", "system": "phase2", "query_id": "subjective_reviews_04", "metric": "M1_strict", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_05", "system": "phase3", "query_id": "subjective_reviews_05", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_05", "system": "phase2", "query_id": "subjective_reviews_05", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_06", "system": "phase3", "query_id": "subjective_reviews_06", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_06", "system": "phase2", "query_id": "subjective_reviews_06", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_07", "system": "phase3", "query_id": "subjective_reviews_07", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_07", "system": "phase2", "query_id": "subjective_reviews_07", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_08", "system": "phase3", "query_id": "subjective_reviews_08", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_08", "system": "phase2", "query_id": "subjective_reviews_08", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_09", "system": "phase3", "query_id": "subjective_reviews_09", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_09", "system": "phase2", "query_id": "subjective_reviews_09", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_reviews_10", "system": "phase3", "query_id": "subjective_reviews_10", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_reviews_10", "system": "phase2", "query_id": "subjective_reviews_10", "metric": "M1_strict", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_01", "system": "phase3", "query_id": "subjective_descriptions_01", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_01", "system": "phase2", "query_id": "subjective_descriptions_01", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_02", "system": "phase3", "query_id": "subjective_descriptions_02", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_02", "system": "phase2", "query_id": "subjective_descriptions_02", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_03", "system": "phase3", "query_id": "subjective_descriptions_03", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_03", "system": "phase2", "query_id": "subjective_descriptions_03", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_04", "system": "phase3", "query_id": "subjective_descriptions_04", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_04", "system": "phase2", "query_id": "subjective_descriptions_04", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_05", "system": "phase3", "query_id": "subjective_descriptions_05", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_05", "system": "phase2", "query_id": "subjective_descriptions_05", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_06", "system": "phase3", "query_id": "subjective_descriptions_06", "metric": "M1_strict", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_06", "system": "phase2", "query_id": "subjective_descriptions_06", "metric": "M1_strict", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_07", "system": "phase3", "query_id": "subjective_descriptions_07", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_07", "system": "phase2", "query_id": "subjective_descriptions_07", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_08", "system": "phase3", "query_id": "subjective_descriptions_08", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_08", "system": "phase2", "query_id": "subjective_descriptions_08", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_09", "system": "phase3", "query_id": "subjective_descriptions_09", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_09", "system": "phase2", "query_id": "subjective_descriptions_09", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_subjective_descriptions_10", "system": "phase3", "query_id": "subjective_descriptions_10", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase2_subjective_descriptions_10", "system": "phase2", "query_id": "subjective_descriptions_10", "metric": "M1_strict", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_strict_phase3_ambiguous_01", "system": "phase3", "query_id": "ambiguous_01", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M1_strict_phase2_ambiguous_01", "system": "phase2", "query_id": "ambiguous_01", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M1_strict_phase3_ambiguous_02", "system": "phase3", "query_id": "ambiguous_02", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M1_strict_phase2_ambiguous_02", "system": "phase2", "query_id": "ambiguous_02", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M1_strict_phase3_ambiguous_03", "system": "phase3", "query_id": "ambiguous_03", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M1_strict_phase2_ambiguous_03", "system": "phase2", "query_id": "ambiguous_03", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M1_strict_phase3_ambiguous_04", "system": "phase3", "query_id": "ambiguous_04", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M1_strict_phase2_ambiguous_04", "system": "phase2", "query_id": "ambiguous_04", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M1_strict_phase3_ambiguous_05", "system": "phase3", "query_id": "ambiguous_05", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M1_strict_phase2_ambiguous_05", "system": "phase2", "query_id": "ambiguous_05", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M1_strict_phase3_ambiguous_06", "system": "phase3", "query_id": "ambiguous_06", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M1_strict_phase2_ambiguous_06", "system": "phase2", "query_id": "ambiguous_06", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M1_strict_phase3_ambiguous_07", "system": "phase3", "query_id": "ambiguous_07", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M1_strict_phase2_ambiguous_07", "system": "phase2", "query_id": "ambiguous_07", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M1_strict_phase3_ambiguous_08", "system": "phase3", "query_id": "ambiguous_08", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M1_strict_phase2_ambiguous_08", "system": "phase2", "query_id": "ambiguous_08", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M1_strict_phase3_ambiguous_09", "system": "phase3", "query_id": "ambiguous_09", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M1_strict_phase2_ambiguous_09", "system": "phase2", "query_id": "ambiguous_09", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M1_strict_phase3_ambiguous_10", "system": "phase3", "query_id": "ambiguous_10", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_strict_phase2_ambiguous_10", "system": "phase2", "query_id": "ambiguous_10", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_strict_phase3_ambiguous_11", "system": "phase3", "query_id": "ambiguous_11", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_strict_phase2_ambiguous_11", "system": "phase2", "query_id": "ambiguous_11", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_strict_phase3_ambiguous_12", "system": "phase3", "query_id": "ambiguous_12", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_strict_phase2_ambiguous_12", "system": "phase2", "query_id": "ambiguous_12", "metric": "M1_strict", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_strict_phase3_factual_lookup_01", "system": "phase3", "query_id": "factual_lookup_01", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_01", "system": "phase2", "query_id": "factual_lookup_01", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_02", "system": "phase3", "query_id": "factual_lookup_02", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_02", "system": "phase2", "query_id": "factual_lookup_02", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_03", "system": "phase3", "query_id": "factual_lookup_03", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_03", "system": "phase2", "query_id": "factual_lookup_03", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_04", "system": "phase3", "query_id": "factual_lookup_04", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_04", "system": "phase2", "query_id": "factual_lookup_04", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_05", "system": "phase3", "query_id": "factual_lookup_05", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_05", "system": "phase2", "query_id": "factual_lookup_05", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_06", "system": "phase3", "query_id": "factual_lookup_06", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_06", "system": "phase2", "query_id": "factual_lookup_06", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_07", "system": "phase3", "query_id": "factual_lookup_07", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_07", "system": "phase2", "query_id": "factual_lookup_07", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_08", "system": "phase3", "query_id": "factual_lookup_08", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_08", "system": "phase2", "query_id": "factual_lookup_08", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_09", "system": "phase3", "query_id": "factual_lookup_09", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_09", "system": "phase2", "query_id": "factual_lookup_09", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_10", "system": "phase3", "query_id": "factual_lookup_10", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase2_factual_lookup_10", "system": "phase2", "query_id": "factual_lookup_10", "metric": "M1_strict", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_strict_phase3_factual_lookup_11", "system": "phase3", "query_id": "factual_lookup_11", "metric": "M1_strict", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M1_strict_phase2_factual_lookup_11", "system": "phase2", "query_id": "factual_lookup_11", "metric": "M1_strict", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M1_strict_phase3_factual_lookup_12", "system": "phase3", "query_id": "factual_lookup_12", "metric": "M1_strict", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M1_strict_phase2_factual_lookup_12", "system": "phase2", "query_id": "factual_lookup_12", "metric": "M1_strict", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_01", "system": "phase3", "query_id": "constraint_satisfaction_01", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_01", "system": "phase2", "query_id": "constraint_satisfaction_01", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_02", "system": "phase3", "query_id": "constraint_satisfaction_02", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_02", "system": "phase2", "query_id": "constraint_satisfaction_02", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_03", "system": "phase3", "query_id": "constraint_satisfaction_03", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_03", "system": "phase2", "query_id": "constraint_satisfaction_03", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_04", "system": "phase3", "query_id": "constraint_satisfaction_04", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_04", "system": "phase2", "query_id": "constraint_satisfaction_04", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_05", "system": "phase3", "query_id": "constraint_satisfaction_05", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_05", "system": "phase2", "query_id": "constraint_satisfaction_05", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_06", "system": "phase3", "query_id": "constraint_satisfaction_06", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_06", "system": "phase2", "query_id": "constraint_satisfaction_06", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_07", "system": "phase3", "query_id": "constraint_satisfaction_07", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_07", "system": "phase2", "query_id": "constraint_satisfaction_07", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_08", "system": "phase3", "query_id": "constraint_satisfaction_08", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_08", "system": "phase2", "query_id": "constraint_satisfaction_08", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_09", "system": "phase3", "query_id": "constraint_satisfaction_09", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_09", "system": "phase2", "query_id": "constraint_satisfaction_09", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_10", "system": "phase3", "query_id": "constraint_satisfaction_10", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_10", "system": "phase2", "query_id": "constraint_satisfaction_10", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_11", "system": "phase3", "query_id": "constraint_satisfaction_11", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_11", "system": "phase2", "query_id": "constraint_satisfaction_11", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_12", "system": "phase3", "query_id": "constraint_satisfaction_12", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_12", "system": "phase2", "query_id": "constraint_satisfaction_12", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_13", "system": "phase3", "query_id": "constraint_satisfaction_13", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_13", "system": "phase2", "query_id": "constraint_satisfaction_13", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M1_strict_phase3_constraint_satisfaction_14", "system": "phase3", "query_id": "constraint_satisfaction_14", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M1_strict_phase2_constraint_satisfaction_14", "system": "phase2", "query_id": "constraint_satisfaction_14", "metric": "M1_strict", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M1_strict_phase3_qr_01", "system": "phase3", "query_id": "qr_01", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_01", "system": "phase2", "query_id": "qr_01", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_02", "system": "phase3", "query_id": "qr_02", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_02", "system": "phase2", "query_id": "qr_02", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_03", "system": "phase3", "query_id": "qr_03", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_03", "system": "phase2", "query_id": "qr_03", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_04", "system": "phase3", "query_id": "qr_04", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_04", "system": "phase2", "query_id": "qr_04", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_05", "system": "phase3", "query_id": "qr_05", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_05", "system": "phase2", "query_id": "qr_05", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_06", "system": "phase3", "query_id": "qr_06", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M1_strict_phase2_qr_06", "system": "phase2", "query_id": "qr_06", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M1_strict_phase3_qr_07", "system": "phase3", "query_id": "qr_07", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_07", "system": "phase2", "query_id": "qr_07", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_08", "system": "phase3", "query_id": "qr_08", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_08", "system": "phase2", "query_id": "qr_08", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_09", "system": "phase3", "query_id": "qr_09", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_09", "system": "phase2", "query_id": "qr_09", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_10", "system": "phase3", "query_id": "qr_10", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_10", "system": "phase2", "query_id": "qr_10", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_11", "system": "phase3", "query_id": "qr_11", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_11", "system": "phase2", "query_id": "qr_11", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_12", "system": "phase3", "query_id": "qr_12", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M1_strict_phase2_qr_12", "system": "phase2", "query_id": "qr_12", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M1_strict_phase3_qr_13", "system": "phase3", "query_id": "qr_13", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_13", "system": "phase2", "query_id": "qr_13", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_14", "system": "phase3", "query_id": "qr_14", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_14", "system": "phase2", "query_id": "qr_14", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_15", "system": "phase3", "query_id": "qr_15", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_15", "system": "phase2", "query_id": "qr_15", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase3_qr_16", "system": "phase3", "query_id": "qr_16", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_strict_phase2_qr_16", "system": "phase2", "query_id": "qr_16", "metric": "M1_strict", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_01", "system": "phase3", "query_id": "out_of_scope_01", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_01", "system": "phase2", "query_id": "out_of_scope_01", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_02", "system": "phase3", "query_id": "out_of_scope_02", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_02", "system": "phase2", "query_id": "out_of_scope_02", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_03", "system": "phase3", "query_id": "out_of_scope_03", "metric": "M1_lenient", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_03", "system": "phase2", "query_id": "out_of_scope_03", "metric": "M1_lenient", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_04", "system": "phase3", "query_id": "out_of_scope_04", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_04", "system": "phase2", "query_id": "out_of_scope_04", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_05", "system": "phase3", "query_id": "out_of_scope_05", "metric": "M1_lenient", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_05", "system": "phase2", "query_id": "out_of_scope_05", "metric": "M1_lenient", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_06", "system": "phase3", "query_id": "out_of_scope_06", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_06", "system": "phase2", "query_id": "out_of_scope_06", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_07", "system": "phase3", "query_id": "out_of_scope_07", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_07", "system": "phase2", "query_id": "out_of_scope_07", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_08", "system": "phase3", "query_id": "out_of_scope_08", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_08", "system": "phase2", "query_id": "out_of_scope_08", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_09", "system": "phase3", "query_id": "out_of_scope_09", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_09", "system": "phase2", "query_id": "out_of_scope_09", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_out_of_scope_10", "system": "phase3", "query_id": "out_of_scope_10", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase2_out_of_scope_10", "system": "phase2", "query_id": "out_of_scope_10", "metric": "M1_lenient", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_01", "system": "phase3", "query_id": "policy_rules_01", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_01", "system": "phase2", "query_id": "policy_rules_01", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_02", "system": "phase3", "query_id": "policy_rules_02", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_02", "system": "phase2", "query_id": "policy_rules_02", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_03", "system": "phase3", "query_id": "policy_rules_03", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_03", "system": "phase2", "query_id": "policy_rules_03", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_04", "system": "phase3", "query_id": "policy_rules_04", "metric": "M1_lenient", "category": "policy_rules", "language": "es"}
+{"custom_id": "M1_lenient_phase2_policy_rules_04", "system": "phase2", "query_id": "policy_rules_04", "metric": "M1_lenient", "category": "policy_rules", "language": "es"}
+{"custom_id": "M1_lenient_phase3_policy_rules_05", "system": "phase3", "query_id": "policy_rules_05", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_05", "system": "phase2", "query_id": "policy_rules_05", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_06", "system": "phase3", "query_id": "policy_rules_06", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_06", "system": "phase2", "query_id": "policy_rules_06", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_07", "system": "phase3", "query_id": "policy_rules_07", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_07", "system": "phase2", "query_id": "policy_rules_07", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_08", "system": "phase3", "query_id": "policy_rules_08", "metric": "M1_lenient", "category": "policy_rules", "language": "de"}
+{"custom_id": "M1_lenient_phase2_policy_rules_08", "system": "phase2", "query_id": "policy_rules_08", "metric": "M1_lenient", "category": "policy_rules", "language": "de"}
+{"custom_id": "M1_lenient_phase3_policy_rules_09", "system": "phase3", "query_id": "policy_rules_09", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_09", "system": "phase2", "query_id": "policy_rules_09", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_10", "system": "phase3", "query_id": "policy_rules_10", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_10", "system": "phase2", "query_id": "policy_rules_10", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_11", "system": "phase3", "query_id": "policy_rules_11", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_11", "system": "phase2", "query_id": "policy_rules_11", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_policy_rules_12", "system": "phase3", "query_id": "policy_rules_12", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase2_policy_rules_12", "system": "phase2", "query_id": "policy_rules_12", "metric": "M1_lenient", "category": "policy_rules", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_01", "system": "phase3", "query_id": "subjective_reviews_01", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_01", "system": "phase2", "query_id": "subjective_reviews_01", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_02", "system": "phase3", "query_id": "subjective_reviews_02", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_02", "system": "phase2", "query_id": "subjective_reviews_02", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_03", "system": "phase3", "query_id": "subjective_reviews_03", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_03", "system": "phase2", "query_id": "subjective_reviews_03", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_04", "system": "phase3", "query_id": "subjective_reviews_04", "metric": "M1_lenient", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_04", "system": "phase2", "query_id": "subjective_reviews_04", "metric": "M1_lenient", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_05", "system": "phase3", "query_id": "subjective_reviews_05", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_05", "system": "phase2", "query_id": "subjective_reviews_05", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_06", "system": "phase3", "query_id": "subjective_reviews_06", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_06", "system": "phase2", "query_id": "subjective_reviews_06", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_07", "system": "phase3", "query_id": "subjective_reviews_07", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_07", "system": "phase2", "query_id": "subjective_reviews_07", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_08", "system": "phase3", "query_id": "subjective_reviews_08", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_08", "system": "phase2", "query_id": "subjective_reviews_08", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_09", "system": "phase3", "query_id": "subjective_reviews_09", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_09", "system": "phase2", "query_id": "subjective_reviews_09", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_reviews_10", "system": "phase3", "query_id": "subjective_reviews_10", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_reviews_10", "system": "phase2", "query_id": "subjective_reviews_10", "metric": "M1_lenient", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_01", "system": "phase3", "query_id": "subjective_descriptions_01", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_01", "system": "phase2", "query_id": "subjective_descriptions_01", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_02", "system": "phase3", "query_id": "subjective_descriptions_02", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_02", "system": "phase2", "query_id": "subjective_descriptions_02", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_03", "system": "phase3", "query_id": "subjective_descriptions_03", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_03", "system": "phase2", "query_id": "subjective_descriptions_03", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_04", "system": "phase3", "query_id": "subjective_descriptions_04", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_04", "system": "phase2", "query_id": "subjective_descriptions_04", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_05", "system": "phase3", "query_id": "subjective_descriptions_05", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_05", "system": "phase2", "query_id": "subjective_descriptions_05", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_06", "system": "phase3", "query_id": "subjective_descriptions_06", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_06", "system": "phase2", "query_id": "subjective_descriptions_06", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_07", "system": "phase3", "query_id": "subjective_descriptions_07", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_07", "system": "phase2", "query_id": "subjective_descriptions_07", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_08", "system": "phase3", "query_id": "subjective_descriptions_08", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_08", "system": "phase2", "query_id": "subjective_descriptions_08", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_09", "system": "phase3", "query_id": "subjective_descriptions_09", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_09", "system": "phase2", "query_id": "subjective_descriptions_09", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_subjective_descriptions_10", "system": "phase3", "query_id": "subjective_descriptions_10", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase2_subjective_descriptions_10", "system": "phase2", "query_id": "subjective_descriptions_10", "metric": "M1_lenient", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M1_lenient_phase3_ambiguous_01", "system": "phase3", "query_id": "ambiguous_01", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M1_lenient_phase2_ambiguous_01", "system": "phase2", "query_id": "ambiguous_01", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M1_lenient_phase3_ambiguous_02", "system": "phase3", "query_id": "ambiguous_02", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M1_lenient_phase2_ambiguous_02", "system": "phase2", "query_id": "ambiguous_02", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M1_lenient_phase3_ambiguous_03", "system": "phase3", "query_id": "ambiguous_03", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M1_lenient_phase2_ambiguous_03", "system": "phase2", "query_id": "ambiguous_03", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M1_lenient_phase3_ambiguous_04", "system": "phase3", "query_id": "ambiguous_04", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M1_lenient_phase2_ambiguous_04", "system": "phase2", "query_id": "ambiguous_04", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M1_lenient_phase3_ambiguous_05", "system": "phase3", "query_id": "ambiguous_05", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M1_lenient_phase2_ambiguous_05", "system": "phase2", "query_id": "ambiguous_05", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M1_lenient_phase3_ambiguous_06", "system": "phase3", "query_id": "ambiguous_06", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M1_lenient_phase2_ambiguous_06", "system": "phase2", "query_id": "ambiguous_06", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M1_lenient_phase3_ambiguous_07", "system": "phase3", "query_id": "ambiguous_07", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M1_lenient_phase2_ambiguous_07", "system": "phase2", "query_id": "ambiguous_07", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M1_lenient_phase3_ambiguous_08", "system": "phase3", "query_id": "ambiguous_08", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M1_lenient_phase2_ambiguous_08", "system": "phase2", "query_id": "ambiguous_08", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M1_lenient_phase3_ambiguous_09", "system": "phase3", "query_id": "ambiguous_09", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M1_lenient_phase2_ambiguous_09", "system": "phase2", "query_id": "ambiguous_09", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M1_lenient_phase3_ambiguous_10", "system": "phase3", "query_id": "ambiguous_10", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_lenient_phase2_ambiguous_10", "system": "phase2", "query_id": "ambiguous_10", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_lenient_phase3_ambiguous_11", "system": "phase3", "query_id": "ambiguous_11", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_lenient_phase2_ambiguous_11", "system": "phase2", "query_id": "ambiguous_11", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_lenient_phase3_ambiguous_12", "system": "phase3", "query_id": "ambiguous_12", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_lenient_phase2_ambiguous_12", "system": "phase2", "query_id": "ambiguous_12", "metric": "M1_lenient", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_01", "system": "phase3", "query_id": "factual_lookup_01", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_01", "system": "phase2", "query_id": "factual_lookup_01", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_02", "system": "phase3", "query_id": "factual_lookup_02", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_02", "system": "phase2", "query_id": "factual_lookup_02", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_03", "system": "phase3", "query_id": "factual_lookup_03", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_03", "system": "phase2", "query_id": "factual_lookup_03", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_04", "system": "phase3", "query_id": "factual_lookup_04", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_04", "system": "phase2", "query_id": "factual_lookup_04", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_05", "system": "phase3", "query_id": "factual_lookup_05", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_05", "system": "phase2", "query_id": "factual_lookup_05", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_06", "system": "phase3", "query_id": "factual_lookup_06", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_06", "system": "phase2", "query_id": "factual_lookup_06", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_07", "system": "phase3", "query_id": "factual_lookup_07", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_07", "system": "phase2", "query_id": "factual_lookup_07", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_08", "system": "phase3", "query_id": "factual_lookup_08", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_08", "system": "phase2", "query_id": "factual_lookup_08", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_09", "system": "phase3", "query_id": "factual_lookup_09", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_09", "system": "phase2", "query_id": "factual_lookup_09", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_10", "system": "phase3", "query_id": "factual_lookup_10", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_10", "system": "phase2", "query_id": "factual_lookup_10", "metric": "M1_lenient", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_11", "system": "phase3", "query_id": "factual_lookup_11", "metric": "M1_lenient", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_11", "system": "phase2", "query_id": "factual_lookup_11", "metric": "M1_lenient", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M1_lenient_phase3_factual_lookup_12", "system": "phase3", "query_id": "factual_lookup_12", "metric": "M1_lenient", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M1_lenient_phase2_factual_lookup_12", "system": "phase2", "query_id": "factual_lookup_12", "metric": "M1_lenient", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_01", "system": "phase3", "query_id": "constraint_satisfaction_01", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_01", "system": "phase2", "query_id": "constraint_satisfaction_01", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_02", "system": "phase3", "query_id": "constraint_satisfaction_02", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_02", "system": "phase2", "query_id": "constraint_satisfaction_02", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_03", "system": "phase3", "query_id": "constraint_satisfaction_03", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_03", "system": "phase2", "query_id": "constraint_satisfaction_03", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_04", "system": "phase3", "query_id": "constraint_satisfaction_04", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_04", "system": "phase2", "query_id": "constraint_satisfaction_04", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_05", "system": "phase3", "query_id": "constraint_satisfaction_05", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_05", "system": "phase2", "query_id": "constraint_satisfaction_05", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_06", "system": "phase3", "query_id": "constraint_satisfaction_06", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_06", "system": "phase2", "query_id": "constraint_satisfaction_06", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_07", "system": "phase3", "query_id": "constraint_satisfaction_07", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_07", "system": "phase2", "query_id": "constraint_satisfaction_07", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_08", "system": "phase3", "query_id": "constraint_satisfaction_08", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_08", "system": "phase2", "query_id": "constraint_satisfaction_08", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_09", "system": "phase3", "query_id": "constraint_satisfaction_09", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_09", "system": "phase2", "query_id": "constraint_satisfaction_09", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_10", "system": "phase3", "query_id": "constraint_satisfaction_10", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_10", "system": "phase2", "query_id": "constraint_satisfaction_10", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_11", "system": "phase3", "query_id": "constraint_satisfaction_11", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_11", "system": "phase2", "query_id": "constraint_satisfaction_11", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_12", "system": "phase3", "query_id": "constraint_satisfaction_12", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_12", "system": "phase2", "query_id": "constraint_satisfaction_12", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_13", "system": "phase3", "query_id": "constraint_satisfaction_13", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_13", "system": "phase2", "query_id": "constraint_satisfaction_13", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M1_lenient_phase3_constraint_satisfaction_14", "system": "phase3", "query_id": "constraint_satisfaction_14", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M1_lenient_phase2_constraint_satisfaction_14", "system": "phase2", "query_id": "constraint_satisfaction_14", "metric": "M1_lenient", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M1_lenient_phase3_qr_01", "system": "phase3", "query_id": "qr_01", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_01", "system": "phase2", "query_id": "qr_01", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_02", "system": "phase3", "query_id": "qr_02", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_02", "system": "phase2", "query_id": "qr_02", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_03", "system": "phase3", "query_id": "qr_03", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_03", "system": "phase2", "query_id": "qr_03", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_04", "system": "phase3", "query_id": "qr_04", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_04", "system": "phase2", "query_id": "qr_04", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_05", "system": "phase3", "query_id": "qr_05", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_05", "system": "phase2", "query_id": "qr_05", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_06", "system": "phase3", "query_id": "qr_06", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M1_lenient_phase2_qr_06", "system": "phase2", "query_id": "qr_06", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M1_lenient_phase3_qr_07", "system": "phase3", "query_id": "qr_07", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_07", "system": "phase2", "query_id": "qr_07", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_08", "system": "phase3", "query_id": "qr_08", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_08", "system": "phase2", "query_id": "qr_08", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_09", "system": "phase3", "query_id": "qr_09", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_09", "system": "phase2", "query_id": "qr_09", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_10", "system": "phase3", "query_id": "qr_10", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_10", "system": "phase2", "query_id": "qr_10", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_11", "system": "phase3", "query_id": "qr_11", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_11", "system": "phase2", "query_id": "qr_11", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_12", "system": "phase3", "query_id": "qr_12", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M1_lenient_phase2_qr_12", "system": "phase2", "query_id": "qr_12", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M1_lenient_phase3_qr_13", "system": "phase3", "query_id": "qr_13", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_13", "system": "phase2", "query_id": "qr_13", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_14", "system": "phase3", "query_id": "qr_14", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_14", "system": "phase2", "query_id": "qr_14", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_15", "system": "phase3", "query_id": "qr_15", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_15", "system": "phase2", "query_id": "qr_15", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase3_qr_16", "system": "phase3", "query_id": "qr_16", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M1_lenient_phase2_qr_16", "system": "phase2", "query_id": "qr_16", "metric": "M1_lenient", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_01", "system": "phase3", "query_id": "out_of_scope_01", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_01", "system": "phase2", "query_id": "out_of_scope_01", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_02", "system": "phase3", "query_id": "out_of_scope_02", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_02", "system": "phase2", "query_id": "out_of_scope_02", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_03", "system": "phase3", "query_id": "out_of_scope_03", "metric": "M3a_refusal", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_03", "system": "phase2", "query_id": "out_of_scope_03", "metric": "M3a_refusal", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_04", "system": "phase3", "query_id": "out_of_scope_04", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_04", "system": "phase2", "query_id": "out_of_scope_04", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_05", "system": "phase3", "query_id": "out_of_scope_05", "metric": "M3a_refusal", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_05", "system": "phase2", "query_id": "out_of_scope_05", "metric": "M3a_refusal", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_06", "system": "phase3", "query_id": "out_of_scope_06", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_06", "system": "phase2", "query_id": "out_of_scope_06", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_07", "system": "phase3", "query_id": "out_of_scope_07", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_07", "system": "phase2", "query_id": "out_of_scope_07", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_08", "system": "phase3", "query_id": "out_of_scope_08", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_08", "system": "phase2", "query_id": "out_of_scope_08", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_09", "system": "phase3", "query_id": "out_of_scope_09", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_09", "system": "phase2", "query_id": "out_of_scope_09", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase3_out_of_scope_10", "system": "phase3", "query_id": "out_of_scope_10", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3a_refusal_phase2_out_of_scope_10", "system": "phase2", "query_id": "out_of_scope_10", "metric": "M3a_refusal", "category": "out_of_scope", "language": "en"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_01", "system": "phase3", "query_id": "ambiguous_01", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_01", "system": "phase2", "query_id": "ambiguous_01", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_02", "system": "phase3", "query_id": "ambiguous_02", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_02", "system": "phase2", "query_id": "ambiguous_02", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_03", "system": "phase3", "query_id": "ambiguous_03", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_03", "system": "phase2", "query_id": "ambiguous_03", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_04", "system": "phase3", "query_id": "ambiguous_04", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_04", "system": "phase2", "query_id": "ambiguous_04", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_05", "system": "phase3", "query_id": "ambiguous_05", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_05", "system": "phase2", "query_id": "ambiguous_05", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_06", "system": "phase3", "query_id": "ambiguous_06", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_06", "system": "phase2", "query_id": "ambiguous_06", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_07", "system": "phase3", "query_id": "ambiguous_07", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_07", "system": "phase2", "query_id": "ambiguous_07", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_08", "system": "phase3", "query_id": "ambiguous_08", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_08", "system": "phase2", "query_id": "ambiguous_08", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_09", "system": "phase3", "query_id": "ambiguous_09", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_09", "system": "phase2", "query_id": "ambiguous_09", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_10", "system": "phase3", "query_id": "ambiguous_10", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_10", "system": "phase2", "query_id": "ambiguous_10", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_11", "system": "phase3", "query_id": "ambiguous_11", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_11", "system": "phase2", "query_id": "ambiguous_11", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M3b_clarification_phase3_ambiguous_12", "system": "phase3", "query_id": "ambiguous_12", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M3b_clarification_phase2_ambiguous_12", "system": "phase2", "query_id": "ambiguous_12", "metric": "M3b_clarification", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_01", "system": "phase3", "query_id": "policy_rules_01", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_01", "system": "phase2", "query_id": "policy_rules_01", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_02", "system": "phase3", "query_id": "policy_rules_02", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_02", "system": "phase2", "query_id": "policy_rules_02", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_03", "system": "phase3", "query_id": "policy_rules_03", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_03", "system": "phase2", "query_id": "policy_rules_03", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_04", "system": "phase3", "query_id": "policy_rules_04", "metric": "M6_groundedness", "category": "policy_rules", "language": "es"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_04", "system": "phase2", "query_id": "policy_rules_04", "metric": "M6_groundedness", "category": "policy_rules", "language": "es"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_05", "system": "phase3", "query_id": "policy_rules_05", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_05", "system": "phase2", "query_id": "policy_rules_05", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_06", "system": "phase3", "query_id": "policy_rules_06", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_06", "system": "phase2", "query_id": "policy_rules_06", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_07", "system": "phase3", "query_id": "policy_rules_07", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_07", "system": "phase2", "query_id": "policy_rules_07", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_08", "system": "phase3", "query_id": "policy_rules_08", "metric": "M6_groundedness", "category": "policy_rules", "language": "de"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_08", "system": "phase2", "query_id": "policy_rules_08", "metric": "M6_groundedness", "category": "policy_rules", "language": "de"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_09", "system": "phase3", "query_id": "policy_rules_09", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_09", "system": "phase2", "query_id": "policy_rules_09", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_10", "system": "phase3", "query_id": "policy_rules_10", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_10", "system": "phase2", "query_id": "policy_rules_10", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_11", "system": "phase3", "query_id": "policy_rules_11", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_11", "system": "phase2", "query_id": "policy_rules_11", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_policy_rules_12", "system": "phase3", "query_id": "policy_rules_12", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_policy_rules_12", "system": "phase2", "query_id": "policy_rules_12", "metric": "M6_groundedness", "category": "policy_rules", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_01", "system": "phase3", "query_id": "subjective_reviews_01", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_01", "system": "phase2", "query_id": "subjective_reviews_01", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_02", "system": "phase3", "query_id": "subjective_reviews_02", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_02", "system": "phase2", "query_id": "subjective_reviews_02", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_03", "system": "phase3", "query_id": "subjective_reviews_03", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_03", "system": "phase2", "query_id": "subjective_reviews_03", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_04", "system": "phase3", "query_id": "subjective_reviews_04", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_04", "system": "phase2", "query_id": "subjective_reviews_04", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_05", "system": "phase3", "query_id": "subjective_reviews_05", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_05", "system": "phase2", "query_id": "subjective_reviews_05", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_06", "system": "phase3", "query_id": "subjective_reviews_06", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_06", "system": "phase2", "query_id": "subjective_reviews_06", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_07", "system": "phase3", "query_id": "subjective_reviews_07", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_07", "system": "phase2", "query_id": "subjective_reviews_07", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_08", "system": "phase3", "query_id": "subjective_reviews_08", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_08", "system": "phase2", "query_id": "subjective_reviews_08", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_09", "system": "phase3", "query_id": "subjective_reviews_09", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_09", "system": "phase2", "query_id": "subjective_reviews_09", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_reviews_10", "system": "phase3", "query_id": "subjective_reviews_10", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_reviews_10", "system": "phase2", "query_id": "subjective_reviews_10", "metric": "M6_groundedness", "category": "subjective_reviews", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_01", "system": "phase3", "query_id": "subjective_descriptions_01", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_01", "system": "phase2", "query_id": "subjective_descriptions_01", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_02", "system": "phase3", "query_id": "subjective_descriptions_02", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_02", "system": "phase2", "query_id": "subjective_descriptions_02", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_03", "system": "phase3", "query_id": "subjective_descriptions_03", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_03", "system": "phase2", "query_id": "subjective_descriptions_03", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_04", "system": "phase3", "query_id": "subjective_descriptions_04", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_04", "system": "phase2", "query_id": "subjective_descriptions_04", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_05", "system": "phase3", "query_id": "subjective_descriptions_05", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_05", "system": "phase2", "query_id": "subjective_descriptions_05", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_06", "system": "phase3", "query_id": "subjective_descriptions_06", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_06", "system": "phase2", "query_id": "subjective_descriptions_06", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_07", "system": "phase3", "query_id": "subjective_descriptions_07", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_07", "system": "phase2", "query_id": "subjective_descriptions_07", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_08", "system": "phase3", "query_id": "subjective_descriptions_08", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_08", "system": "phase2", "query_id": "subjective_descriptions_08", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_09", "system": "phase3", "query_id": "subjective_descriptions_09", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_09", "system": "phase2", "query_id": "subjective_descriptions_09", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_subjective_descriptions_10", "system": "phase3", "query_id": "subjective_descriptions_10", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_subjective_descriptions_10", "system": "phase2", "query_id": "subjective_descriptions_10", "metric": "M6_groundedness", "category": "subjective_descriptions", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_01", "system": "phase3", "query_id": "ambiguous_01", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_01", "system": "phase2", "query_id": "ambiguous_01", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_city"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_02", "system": "phase3", "query_id": "ambiguous_02", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_02", "system": "phase2", "query_id": "ambiguous_02", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "location_university"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_03", "system": "phase3", "query_id": "ambiguous_03", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_03", "system": "phase2", "query_id": "ambiguous_03", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "time_semester"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_04", "system": "phase3", "query_id": "ambiguous_04", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_04", "system": "phase2", "query_id": "ambiguous_04", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_05", "system": "phase3", "query_id": "ambiguous_05", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_05", "system": "phase2", "query_id": "ambiguous_05", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_price"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_06", "system": "phase3", "query_id": "ambiguous_06", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_06", "system": "phase2", "query_id": "ambiguous_06", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "threshold_size"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_07", "system": "phase3", "query_id": "ambiguous_07", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_07", "system": "phase2", "query_id": "ambiguous_07", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "referent_missing"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_08", "system": "phase3", "query_id": "ambiguous_08", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_08", "system": "phase2", "query_id": "ambiguous_08", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_09", "system": "phase3", "query_id": "ambiguous_09", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_09", "system": "phase2", "query_id": "ambiguous_09", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "novel", "ambiguity_subtype": "criteria_conflict"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_10", "system": "phase3", "query_id": "ambiguous_10", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_10", "system": "phase2", "query_id": "ambiguous_10", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_11", "system": "phase3", "query_id": "ambiguous_11", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_11", "system": "phase2", "query_id": "ambiguous_11", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M6_groundedness_phase3_ambiguous_12", "system": "phase3", "query_id": "ambiguous_12", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M6_groundedness_phase2_ambiguous_12", "system": "phase2", "query_id": "ambiguous_12", "metric": "M6_groundedness", "category": "underspecified_ambiguous", "language": "en", "ambiguity_type": "entity_reference", "ambiguity_subtype": "entity_reference"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_01", "system": "phase3", "query_id": "factual_lookup_01", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_01", "system": "phase2", "query_id": "factual_lookup_01", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_02", "system": "phase3", "query_id": "factual_lookup_02", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_02", "system": "phase2", "query_id": "factual_lookup_02", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_03", "system": "phase3", "query_id": "factual_lookup_03", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_03", "system": "phase2", "query_id": "factual_lookup_03", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_04", "system": "phase3", "query_id": "factual_lookup_04", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_04", "system": "phase2", "query_id": "factual_lookup_04", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_05", "system": "phase3", "query_id": "factual_lookup_05", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_05", "system": "phase2", "query_id": "factual_lookup_05", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_06", "system": "phase3", "query_id": "factual_lookup_06", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_06", "system": "phase2", "query_id": "factual_lookup_06", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_07", "system": "phase3", "query_id": "factual_lookup_07", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_07", "system": "phase2", "query_id": "factual_lookup_07", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_08", "system": "phase3", "query_id": "factual_lookup_08", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_08", "system": "phase2", "query_id": "factual_lookup_08", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_09", "system": "phase3", "query_id": "factual_lookup_09", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_09", "system": "phase2", "query_id": "factual_lookup_09", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_10", "system": "phase3", "query_id": "factual_lookup_10", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_10", "system": "phase2", "query_id": "factual_lookup_10", "metric": "M6_groundedness", "category": "factual_lookup", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_11", "system": "phase3", "query_id": "factual_lookup_11", "metric": "M6_groundedness", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_11", "system": "phase2", "query_id": "factual_lookup_11", "metric": "M6_groundedness", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M6_groundedness_phase3_factual_lookup_12", "system": "phase3", "query_id": "factual_lookup_12", "metric": "M6_groundedness", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M6_groundedness_phase2_factual_lookup_12", "system": "phase2", "query_id": "factual_lookup_12", "metric": "M6_groundedness", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_01", "system": "phase3", "query_id": "constraint_satisfaction_01", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_01", "system": "phase2", "query_id": "constraint_satisfaction_01", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_02", "system": "phase3", "query_id": "constraint_satisfaction_02", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_02", "system": "phase2", "query_id": "constraint_satisfaction_02", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_03", "system": "phase3", "query_id": "constraint_satisfaction_03", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_03", "system": "phase2", "query_id": "constraint_satisfaction_03", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_04", "system": "phase3", "query_id": "constraint_satisfaction_04", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_04", "system": "phase2", "query_id": "constraint_satisfaction_04", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_05", "system": "phase3", "query_id": "constraint_satisfaction_05", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_05", "system": "phase2", "query_id": "constraint_satisfaction_05", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_06", "system": "phase3", "query_id": "constraint_satisfaction_06", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_06", "system": "phase2", "query_id": "constraint_satisfaction_06", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_07", "system": "phase3", "query_id": "constraint_satisfaction_07", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_07", "system": "phase2", "query_id": "constraint_satisfaction_07", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_08", "system": "phase3", "query_id": "constraint_satisfaction_08", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_08", "system": "phase2", "query_id": "constraint_satisfaction_08", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_09", "system": "phase3", "query_id": "constraint_satisfaction_09", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_09", "system": "phase2", "query_id": "constraint_satisfaction_09", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_10", "system": "phase3", "query_id": "constraint_satisfaction_10", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_10", "system": "phase2", "query_id": "constraint_satisfaction_10", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_11", "system": "phase3", "query_id": "constraint_satisfaction_11", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_11", "system": "phase2", "query_id": "constraint_satisfaction_11", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_12", "system": "phase3", "query_id": "constraint_satisfaction_12", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_12", "system": "phase2", "query_id": "constraint_satisfaction_12", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_13", "system": "phase3", "query_id": "constraint_satisfaction_13", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_13", "system": "phase2", "query_id": "constraint_satisfaction_13", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M6_groundedness_phase3_constraint_satisfaction_14", "system": "phase3", "query_id": "constraint_satisfaction_14", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M6_groundedness_phase2_constraint_satisfaction_14", "system": "phase2", "query_id": "constraint_satisfaction_14", "metric": "M6_groundedness", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M6_groundedness_phase3_qr_01", "system": "phase3", "query_id": "qr_01", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_01", "system": "phase2", "query_id": "qr_01", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_02", "system": "phase3", "query_id": "qr_02", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_02", "system": "phase2", "query_id": "qr_02", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_03", "system": "phase3", "query_id": "qr_03", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_03", "system": "phase2", "query_id": "qr_03", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_04", "system": "phase3", "query_id": "qr_04", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_04", "system": "phase2", "query_id": "qr_04", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_05", "system": "phase3", "query_id": "qr_05", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_05", "system": "phase2", "query_id": "qr_05", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_06", "system": "phase3", "query_id": "qr_06", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M6_groundedness_phase2_qr_06", "system": "phase2", "query_id": "qr_06", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M6_groundedness_phase3_qr_07", "system": "phase3", "query_id": "qr_07", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_07", "system": "phase2", "query_id": "qr_07", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_08", "system": "phase3", "query_id": "qr_08", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_08", "system": "phase2", "query_id": "qr_08", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_09", "system": "phase3", "query_id": "qr_09", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_09", "system": "phase2", "query_id": "qr_09", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_10", "system": "phase3", "query_id": "qr_10", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_10", "system": "phase2", "query_id": "qr_10", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_11", "system": "phase3", "query_id": "qr_11", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_11", "system": "phase2", "query_id": "qr_11", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_12", "system": "phase3", "query_id": "qr_12", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M6_groundedness_phase2_qr_12", "system": "phase2", "query_id": "qr_12", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M6_groundedness_phase3_qr_13", "system": "phase3", "query_id": "qr_13", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_13", "system": "phase2", "query_id": "qr_13", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_14", "system": "phase3", "query_id": "qr_14", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_14", "system": "phase2", "query_id": "qr_14", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_15", "system": "phase3", "query_id": "qr_15", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_15", "system": "phase2", "query_id": "qr_15", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase3_qr_16", "system": "phase3", "query_id": "qr_16", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M6_groundedness_phase2_qr_16", "system": "phase2", "query_id": "qr_16", "metric": "M6_groundedness", "category": "quantitative_reasoning", "language": "en"}
+{"custom_id": "M7_multilingual_phase3_out_of_scope_03", "system": "phase3", "query_id": "out_of_scope_03", "metric": "M7_multilingual", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M7_multilingual_phase2_out_of_scope_03", "system": "phase2", "query_id": "out_of_scope_03", "metric": "M7_multilingual", "category": "out_of_scope", "language": "it"}
+{"custom_id": "M7_multilingual_phase3_out_of_scope_05", "system": "phase3", "query_id": "out_of_scope_05", "metric": "M7_multilingual", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M7_multilingual_phase2_out_of_scope_05", "system": "phase2", "query_id": "out_of_scope_05", "metric": "M7_multilingual", "category": "out_of_scope", "language": "pt"}
+{"custom_id": "M7_multilingual_phase3_policy_rules_04", "system": "phase3", "query_id": "policy_rules_04", "metric": "M7_multilingual", "category": "policy_rules", "language": "es"}
+{"custom_id": "M7_multilingual_phase2_policy_rules_04", "system": "phase2", "query_id": "policy_rules_04", "metric": "M7_multilingual", "category": "policy_rules", "language": "es"}
+{"custom_id": "M7_multilingual_phase3_policy_rules_08", "system": "phase3", "query_id": "policy_rules_08", "metric": "M7_multilingual", "category": "policy_rules", "language": "de"}
+{"custom_id": "M7_multilingual_phase2_policy_rules_08", "system": "phase2", "query_id": "policy_rules_08", "metric": "M7_multilingual", "category": "policy_rules", "language": "de"}
+{"custom_id": "M7_multilingual_phase3_subjective_reviews_04", "system": "phase3", "query_id": "subjective_reviews_04", "metric": "M7_multilingual", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M7_multilingual_phase2_subjective_reviews_04", "system": "phase2", "query_id": "subjective_reviews_04", "metric": "M7_multilingual", "category": "subjective_reviews", "language": "pt"}
+{"custom_id": "M7_multilingual_phase3_subjective_descriptions_06", "system": "phase3", "query_id": "subjective_descriptions_06", "metric": "M7_multilingual", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M7_multilingual_phase2_subjective_descriptions_06", "system": "phase2", "query_id": "subjective_descriptions_06", "metric": "M7_multilingual", "category": "subjective_descriptions", "language": "it"}
+{"custom_id": "M7_multilingual_phase3_ambiguous_04", "system": "phase3", "query_id": "ambiguous_04", "metric": "M7_multilingual", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M7_multilingual_phase2_ambiguous_04", "system": "phase2", "query_id": "ambiguous_04", "metric": "M7_multilingual", "category": "underspecified_ambiguous", "language": "de", "ambiguity_type": "novel", "ambiguity_subtype": "time_duration"}
+{"custom_id": "M7_multilingual_phase3_ambiguous_08", "system": "phase3", "query_id": "ambiguous_08", "metric": "M7_multilingual", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M7_multilingual_phase2_ambiguous_08", "system": "phase2", "query_id": "ambiguous_08", "metric": "M7_multilingual", "category": "underspecified_ambiguous", "language": "es", "ambiguity_type": "novel", "ambiguity_subtype": "quantity_group"}
+{"custom_id": "M7_multilingual_phase3_factual_lookup_11", "system": "phase3", "query_id": "factual_lookup_11", "metric": "M7_multilingual", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M7_multilingual_phase2_factual_lookup_11", "system": "phase2", "query_id": "factual_lookup_11", "metric": "M7_multilingual", "category": "factual_lookup", "language": "it"}
+{"custom_id": "M7_multilingual_phase3_factual_lookup_12", "system": "phase3", "query_id": "factual_lookup_12", "metric": "M7_multilingual", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M7_multilingual_phase2_factual_lookup_12", "system": "phase2", "query_id": "factual_lookup_12", "metric": "M7_multilingual", "category": "factual_lookup", "language": "fr"}
+{"custom_id": "M7_multilingual_phase3_constraint_satisfaction_13", "system": "phase3", "query_id": "constraint_satisfaction_13", "metric": "M7_multilingual", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M7_multilingual_phase2_constraint_satisfaction_13", "system": "phase2", "query_id": "constraint_satisfaction_13", "metric": "M7_multilingual", "category": "constraint_satisfaction", "language": "es"}
+{"custom_id": "M7_multilingual_phase3_constraint_satisfaction_14", "system": "phase3", "query_id": "constraint_satisfaction_14", "metric": "M7_multilingual", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M7_multilingual_phase2_constraint_satisfaction_14", "system": "phase2", "query_id": "constraint_satisfaction_14", "metric": "M7_multilingual", "category": "constraint_satisfaction", "language": "de"}
+{"custom_id": "M7_multilingual_phase3_qr_06", "system": "phase3", "query_id": "qr_06", "metric": "M7_multilingual", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M7_multilingual_phase2_qr_06", "system": "phase2", "query_id": "qr_06", "metric": "M7_multilingual", "category": "quantitative_reasoning", "language": "pt"}
+{"custom_id": "M7_multilingual_phase3_qr_12", "system": "phase3", "query_id": "qr_12", "metric": "M7_multilingual", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M7_multilingual_phase2_qr_12", "system": "phase2", "query_id": "qr_12", "metric": "M7_multilingual", "category": "quantitative_reasoning", "language": "fr"}
+{"custom_id": "M1_strict_agree_phase2_qr_02", "system": "phase2", "query_id": "qr_02", "metric": "M1_strict_agree", "category": "quantitative_reasoning", "language": "en", "source_cid": "M1_strict_phase2_qr_02"}
+{"custom_id": "M1_strict_agree_phase3_policy_rules_05", "system": "phase3", "query_id": "policy_rules_05", "metric": "M1_strict_agree", "category": "policy_rules", "language": "en", "source_cid": "M1_strict_phase3_policy_rules_05"}
+{"custom_id": "M1_strict_agree_phase3_out_of_scope_04", "system": "phase3", "query_id": "out_of_scope_04", "metric": "M1_strict_agree", "category": "out_of_scope", "language": "en", "source_cid": "M1_strict_phase3_out_of_scope_04"}
+{"custom_id": "M1_strict_agree_phase3_subjective_descriptions_04", "system": "phase3", "query_id": "subjective_descriptions_04", "metric": "M1_strict_agree", "category": "subjective_descriptions", "language": "en", "source_cid": "M1_strict_phase3_subjective_descriptions_04"}
+{"custom_id": "M1_strict_agree_phase3_subjective_reviews_10", "system": "phase3", "query_id": "subjective_reviews_10", "metric": "M1_strict_agree", "category": "subjective_reviews", "language": "en", "source_cid": "M1_strict_phase3_subjective_reviews_10"}
+{"custom_id": "M1_strict_agree_phase2_subjective_reviews_07", "system": "phase2", "query_id": "subjective_reviews_07", "metric": "M1_strict_agree", "category": "subjective_reviews", "language": "en", "source_cid": "M1_strict_phase2_subjective_reviews_07"}
+{"custom_id": "M1_strict_agree_phase2_policy_rules_08", "system": "phase2", "query_id": "policy_rules_08", "metric": "M1_strict_agree", "category": "policy_rules", "language": "de", "source_cid": "M1_strict_phase2_policy_rules_08"}
+{"custom_id": "M1_strict_agree_phase3_policy_rules_04", "system": "phase3", "query_id": "policy_rules_04", "metric": "M1_strict_agree", "category": "policy_rules", "language": "es", "source_cid": "M1_strict_phase3_policy_rules_04"}
+{"custom_id": "M1_strict_agree_phase2_qr_07", "system": "phase2", "query_id": "qr_07", "metric": "M1_strict_agree", "category": "quantitative_reasoning", "language": "en", "source_cid": "M1_strict_phase2_qr_07"}
+{"custom_id": "M1_strict_agree_phase2_constraint_satisfaction_04", "system": "phase2", "query_id": "constraint_satisfaction_04", "metric": "M1_strict_agree", "category": "constraint_satisfaction", "language": "en", "source_cid": "M1_strict_phase2_constraint_satisfaction_04"}
+{"custom_id": "M1_strict_agree_phase3_policy_rules_02", "system": "phase3", "query_id": "policy_rules_02", "metric": "M1_strict_agree", "category": "policy_rules", "language": "en", "source_cid": "M1_strict_phase3_policy_rules_02"}
+{"custom_id": "M1_strict_agree_phase2_constraint_satisfaction_10", "system": "phase2", "query_id": "constraint_satisfaction_10", "metric": "M1_strict_agree", "category": "constraint_satisfaction", "language": "en", "source_cid": "M1_strict_phase2_constraint_satisfaction_10"}
+{"custom_id": "M1_strict_agree_phase3_factual_lookup_01", "system": "phase3", "query_id": "factual_lookup_01", "metric": "M1_strict_agree", "category": "factual_lookup", "language": "en", "source_cid": "M1_strict_phase3_factual_lookup_01"}
+{"custom_id": "M1_strict_agree_phase3_out_of_scope_05", "system": "phase3", "query_id": "out_of_scope_05", "metric": "M1_strict_agree", "category": "out_of_scope", "language": "pt", "source_cid": "M1_strict_phase3_out_of_scope_05"}
+{"custom_id": "M1_strict_agree_phase2_out_of_scope_04", "system": "phase2", "query_id": "out_of_scope_04", "metric": "M1_strict_agree", "category": "out_of_scope", "language": "en", "source_cid": "M1_strict_phase2_out_of_scope_04"}
+{"custom_id": "M1_strict_agree_phase2_policy_rules_02", "system": "phase2", "query_id": "policy_rules_02", "metric": "M1_strict_agree", "category": "policy_rules", "language": "en", "source_cid": "M1_strict_phase2_policy_rules_02"}
+{"custom_id": "M1_strict_agree_phase2_subjective_reviews_06", "system": "phase2", "query_id": "subjective_reviews_06", "metric": "M1_strict_agree", "category": "subjective_reviews", "language": "en", "source_cid": "M1_strict_phase2_subjective_reviews_06"}
+{"custom_id": "M1_strict_agree_phase2_subjective_reviews_08", "system": "phase2", "query_id": "subjective_reviews_08", "metric": "M1_strict_agree", "category": "subjective_reviews", "language": "en", "source_cid": "M1_strict_phase2_subjective_reviews_08"}
+{"custom_id": "M1_strict_agree_phase2_factual_lookup_11", "system": "phase2", "query_id": "factual_lookup_11", "metric": "M1_strict_agree", "category": "factual_lookup", "language": "it", "source_cid": "M1_strict_phase2_factual_lookup_11"}
+{"custom_id": "M1_strict_agree_phase3_constraint_satisfaction_12", "system": "phase3", "query_id": "constraint_satisfaction_12", "metric": "M1_strict_agree", "category": "constraint_satisfaction", "language": "en", "source_cid": "M1_strict_phase3_constraint_satisfaction_12"}
+{"custom_id": "M1_strict_agree_phase2_qr_15", "system": "phase2", "query_id": "qr_15", "metric": "M1_strict_agree", "category": "quantitative_reasoning", "language": "en", "source_cid": "M1_strict_phase2_qr_15"}
+{"custom_id": "M1_strict_agree_phase2_constraint_satisfaction_06", "system": "phase2", "query_id": "constraint_satisfaction_06", "metric": "M1_strict_agree", "category": "constraint_satisfaction", "language": "en", "source_cid": "M1_strict_phase2_constraint_satisfaction_06"}
+{"custom_id": "M1_strict_agree_phase3_subjective_reviews_04", "system": "phase3", "query_id": "subjective_reviews_04", "metric": "M1_strict_agree", "category": "subjective_reviews", "language": "pt", "source_cid": "M1_strict_phase3_subjective_reviews_04"}
+{"custom_id": "M1_strict_agree_phase3_qr_04", "system": "phase3", "query_id": "qr_04", "metric": "M1_strict_agree", "category": "quantitative_reasoning", "language": "en", "source_cid": "M1_strict_phase3_qr_04"}
+{"custom_id": "M1_strict_agree_phase3_qr_12", "system": "phase3", "query_id": "qr_12", "metric": "M1_strict_agree", "category": "quantitative_reasoning", "language": "fr", "source_cid": "M1_strict_phase3_qr_12"}
+{"custom_id": "M1_strict_agree_phase2_ambiguous_12", "system": "phase2", "query_id": "ambiguous_12", "metric": "M1_strict_agree", "category": "underspecified_ambiguous", "language": "en", "source_cid": "M1_strict_phase2_ambiguous_12"}
+{"custom_id": "M1_strict_agree_phase3_subjective_reviews_07", "system": "phase3", "query_id": "subjective_reviews_07", "metric": "M1_strict_agree", "category": "subjective_reviews", "language": "en", "source_cid": "M1_strict_phase3_subjective_reviews_07"}
+{"custom_id": "M1_strict_agree_phase3_factual_lookup_04", "system": "phase3", "query_id": "factual_lookup_04", "metric": "M1_strict_agree", "category": "factual_lookup", "language": "en", "source_cid": "M1_strict_phase3_factual_lookup_04"}
+{"custom_id": "M1_strict_agree_phase3_constraint_satisfaction_10", "system": "phase3", "query_id": "constraint_satisfaction_10", "metric": "M1_strict_agree", "category": "constraint_satisfaction", "language": "en", "source_cid": "M1_strict_phase3_constraint_satisfaction_10"}
+{"custom_id": "M1_strict_agree_phase2_subjective_descriptions_04", "system": "phase2", "query_id": "subjective_descriptions_04", "metric": "M1_strict_agree", "category": "subjective_descriptions", "language": "en", "source_cid": "M1_strict_phase2_subjective_descriptions_04"}
