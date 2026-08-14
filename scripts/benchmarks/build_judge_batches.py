@@ -233,6 +233,7 @@ def make_batch_record(custom_id: str, model: str,
         "params": {
             "model":      model,
             "max_tokens": MAX_OUT_TOKENS,
+            "temperature": 0,
             "system":     system_prompt,
             "messages":   [{"role": "user", "content": user_message}],
         },
