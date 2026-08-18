@@ -57,7 +57,7 @@ LIST_IN = {MODEL_HAIKU: 1.00}
 LIST_OUT = {MODEL_HAIKU: 5.00}
 BATCH_DISCOUNT = 0.50
 MAX_OUT_TOKENS = 256
-MAX_ROWS_IN_PROMPT = 15
+MAX_ROWS_IN_PROMPT = None  # v2: no cap -- truth table includes every matching room
 
 BAR = "=" * 72
 THIN = "-" * 72
@@ -101,7 +101,9 @@ ROOM_LIST_COLUMNS = """
     r.idroom, r.loc_idhouse, r.dateupdate AS r_dateupdate,
     h.idhouse, h.dateupdate AS h_dateupdate,
     h.flatname, r.roomname, h.city, h.zone, h.neighboorhood AS neighborhood,
-    r.autumnprice AS price_eur,
+    r.autumnprice AS price_eur, r.springprice, r.summerprice, r.fixedprice,
+    r.area, r.singlebed, r.doublebed, r.kingbed, r.queenbed, r.couchbed, r.secondbed,
+    r.deposit, r.depositvalue,
     r.privatebathroom, r.balcony, r.desk, r.minreservemonths,
     r.extrapersonallowed, r.extrapersoncost,
     h.elevator, h.distancepublictransport, h.femalepreferred, h.malepreferred,
@@ -112,6 +114,22 @@ ROOM_LIST_FROM = """
     FROM room r
     JOIN house h ON h.idhouse = r.loc_idhouse AND h.dateupdate = r.loc_dateupdate
 """
+
+
+def _bed_type_label(row: dict[str, Any]) -> str:
+    primary = None
+    for col, label in (
+        ("kingbed", "king"), ("queenbed", "queen"), ("doublebed", "double"),
+        ("singlebed", "single"), ("couchbed", "couch"),
+    ):
+        if row.get(col) == "Y":
+            primary = label
+            break
+    if primary is None:
+        return "?"
+    if row.get("secondbed") == "Y":
+        return f"{primary}+second"
+    return primary
 
 
 def _room_row_to_dict(row: dict[str, Any]) -> dict[str, Any]:
@@ -126,6 +144,13 @@ def _room_row_to_dict(row: dict[str, Any]) -> dict[str, Any]:
         "zone": (row["zone"] or "").strip(),
         "neighborhood": (row.get("neighborhood") or "").strip() or None,
         "price_eur": float(row["price_eur"]) if row["price_eur"] is not None else None,
+        "spring_price": float(row["springprice"]) if row.get("springprice") is not None else None,
+        "summer_price": float(row["summerprice"]) if row.get("summerprice") is not None else None,
+        "fixed_price": row.get("fixedprice") == "Y",
+        "area_m2": float(row["area"]) if row.get("area") is not None else None,
+        "bed_type": _bed_type_label(row),
+        "deposit": row.get("deposit") == "Y",
+        "deposit_value": float(row["depositvalue"]) if row.get("depositvalue") is not None else None,
         "attrs": {
             "private_bathroom": row.get("privatebathroom") == "Y",
             "balcony": row.get("balcony") == "Y",
@@ -272,9 +297,9 @@ def build_truth_table(cur, spec: QuerySpec) -> dict[str, Any]:
         "preregistered_count": spec["preregistered"],
         "tolerance": spec.get("tolerance", 0),
         "relevant_attrs": spec.get("relevant_attrs", []),
-        "rooms": rooms[:MAX_ROWS_IN_PROMPT],
+        "rooms": rooms,
         "rooms_full": rooms,
-        "n_more": max(0, total - MAX_ROWS_IN_PROMPT),
+        "n_more": 0,
         "note": spec.get("note"),
         "count_only": spec.get("count_only", False),
     }
@@ -328,9 +353,9 @@ def build_metro_blue_truth_table(cur) -> dict[str, Any]:
             f"tool-exact room set."
         ),
         "relevant_attrs": [],
-        "rooms": rooms_tool[:MAX_ROWS_IN_PROMPT],
+        "rooms": rooms_tool,
         "rooms_full": rooms_tool,
-        "n_more": max(0, total_tool - MAX_ROWS_IN_PROMPT),
+        "n_more": 0,
         "count_only": False,
     }
 
@@ -447,9 +472,9 @@ def build_availability_2024_truth_table(cur) -> dict[str, Any]:
         "preregistered_baseline": 435,
         "kind": "availability_2024",
         "relevant_attrs": [],
-        "rooms": rooms[:MAX_ROWS_IN_PROMPT],
+        "rooms": rooms,
         "rooms_full": rooms,
-        "n_more": max(0, len(available_keys) - MAX_ROWS_IN_PROMPT),
+        "n_more": 0,
         "note": (
             f"Mechanism-check item (intentionally past date, Sep 2024). Distinct-room lens: "
             f"baseline={len(baseline)} Lisbon rooms, occupied-by-reservation={len(baseline) - len(available_keys)}, "
@@ -538,10 +563,76 @@ def _fetch_global_registries(cur) -> dict[str, Any]:
         name = (r["flatname"] or "").strip()
         if name:
             norm_to_orig.setdefault(_normalize(name), name)
+
+    # Room-level registry (flatname -> every zone/price combination that
+    # flatname genuinely has, anywhere in the DB) for attribute-tuple checks.
+    room_rows = q(
+        cur,
+        """SELECT h.flatname, h.zone, r.autumnprice, r.springprice, r.summerprice
+           FROM room r JOIN house h ON h.idhouse = r.loc_idhouse AND h.dateupdate = r.loc_dateupdate
+           WHERE r.status = 'Available' AND h.flatname IS NOT NULL""",
+    )
+    room_registry: dict[str, list[dict[str, Any]]] = {}
+    for r in room_rows:
+        fn = (r["flatname"] or "").strip()
+        if not fn:
+            continue
+        room_registry.setdefault(_normalize(fn), []).append({
+            "zone_norm": _normalize((r["zone"] or "").strip()),
+            "zone_orig": (r["zone"] or "").strip(),
+            "prices": [
+                float(p) for p in (r["autumnprice"], r["springprice"], r["summerprice"]) if p is not None
+            ],
+        })
+
     return {
         "flatnames_norm_to_orig": norm_to_orig,
         "house_ids": {h["idhouse"] for h in houses},
+        "room_registry": room_registry,
     }
+
+
+def _extract_nearby_zone_and_price(answer: str, start: int, end: int) -> tuple[str | None, float | None]:
+    """Look in a window right after a flatname mention for a stated zone and/or price."""
+    window = answer[max(0, start - 40): min(len(answer), end + 300)]
+    window_norm = f" {_normalize(window)} "
+    zone: str | None = None
+    zone_terms = sorted(
+        (t for t in GEO_TERMS_NORM if t not in {"lisbon", "porto", "lisboa"} and len(t) >= 4),
+        key=len, reverse=True,
+    )
+    for term in zone_terms:
+        if f" {term} " in window_norm:
+            zone = term
+            break
+    price: float | None = None
+    pm = _EUR_RE.search(window)
+    if pm:
+        raw = pm.group(1) or pm.group(2)
+        try:
+            price = float(raw.replace(",", ""))
+        except ValueError:
+            price = None
+    return zone, price
+
+
+def _attribute_match(
+    flatname_norm: str, zone: str | None, price: float | None,
+    room_registry: dict[str, list[dict[str, Any]]], price_tol: float = 3.0,
+) -> bool:
+    """True if nothing to check, or a real row for this flatname matches the
+    stated zone AND/OR price (whichever were extractable from the text)."""
+    if zone is None and price is None:
+        return True
+    candidates = room_registry.get(flatname_norm, [])
+    if not candidates:
+        return True  # global flatname existence already checked elsewhere
+    for c in candidates:
+        zone_ok = zone is None or c["zone_norm"] == zone
+        price_ok = price is None or any(abs(p - price) <= price_tol for p in c["prices"])
+        if zone_ok and price_ok:
+            return True
+    return False
 
 
 def _room_exists_in_db(cur, house_id: str, room_id: str, dateupdate) -> bool:
@@ -662,7 +753,12 @@ class Claim:
     kind: str  # "room_id" | "flatname" | "total_matches"
     raw: str
     resolved_name: str | None
-    classification: str  # VERIFIED | FILTER_VIOLATION | FABRICATED
+    classification: str  # VERIFIED | FILTER_VIOLATION | FABRICATED | ATTRIBUTE_MISMATCH
+    classification_loose: str = ""  # pre-tightening classification (v1 rule), for diffing
+
+    def __post_init__(self) -> None:
+        if not self.classification_loose:
+            self.classification_loose = self.classification
 
 
 def extract_claims(
@@ -751,7 +847,15 @@ def extract_claims(
 
         if resolved is not None:
             seen_raw.add(span)
-            claims.append(Claim("flatname", span, resolved[1], resolved[0]))
+            cls, matched_variant = resolved
+            if cls == "VERIFIED":
+                zone, price = _extract_nearby_zone_and_price(answer, m.start(1), m.end(1))
+                if not _attribute_match(
+                    _normalize(matched_variant), zone, price, registries["room_registry"]
+                ):
+                    claims.append(Claim("flatname", span, matched_variant, "ATTRIBUTE_MISMATCH", "VERIFIED"))
+                    continue
+            claims.append(Claim("flatname", span, matched_variant, cls))
             continue
 
         # Rule (b): structurally looks like a property name -> candidate, unresolved = FABRICATED
@@ -770,7 +874,14 @@ def extract_claims(
         if len(fn_norm) < 6 or fn_norm in already_matched:
             continue
         if f" {fn_norm} " in f" {answer_norm} ":
-            claims.append(Claim("flatname", fn_orig, fn_orig, "VERIFIED"))
+            pm = re.search(re.escape(fn_orig), answer, re.IGNORECASE)
+            zone, price = (None, None)
+            if pm:
+                zone, price = _extract_nearby_zone_and_price(answer, pm.start(), pm.end())
+            if not _attribute_match(fn_norm, zone, price, registries["room_registry"]):
+                claims.append(Claim("flatname", fn_orig, fn_orig, "ATTRIBUTE_MISMATCH", "VERIFIED"))
+            else:
+                claims.append(Claim("flatname", fn_orig, fn_orig, "VERIFIED"))
             already_matched.add(fn_norm)
 
     # -- total_matches claim (skip for zone-enumeration / non-filterable /
@@ -818,6 +929,36 @@ def classify_no_claims(query_id: str, truth: dict[str, Any], answer: str) -> str
     return "VAGUE"
 
 
+UNVERIFIABLE_FIELDS_NOTE = (
+    "Fields NOT captured in this table (heating/AC, closet, window, cable TV, "
+    "specific views, exact floor/building number, photos, review sentiment, "
+    "and any amenity not listed in the columns below) are UNVERIFIABLE -- their "
+    "presence in the answer is neither confirmed nor denied by this table. "
+    "Do not treat a mention of them as fabrication."
+)
+
+
+def _price_str(r: dict[str, Any]) -> str:
+    a, s, u = r.get("price_eur"), r.get("spring_price"), r.get("summer_price")
+    if r.get("fixed_price") or (a == s == u):
+        return f"EUR{a:.0f}(fixed)" if a is not None else "EUR?"
+    parts = []
+    if a is not None:
+        parts.append(f"aut={a:.0f}")
+    if s is not None:
+        parts.append(f"spr={s:.0f}")
+    if u is not None:
+        parts.append(f"sum={u:.0f}")
+    return "EUR[" + ",".join(parts) + "]" if parts else "EUR?"
+
+
+def _deposit_str(r: dict[str, Any]) -> str:
+    if not r.get("deposit"):
+        return "deposit=N"
+    v = r.get("deposit_value")
+    return f"deposit=Y(EUR{v:.0f})" if v is not None else "deposit=Y"
+
+
 def format_truth_table(truth: dict[str, Any]) -> str:
     lines: list[str] = [f"City: {truth.get('city')}"]
     if truth.get("total_matches") is not None:
@@ -836,20 +977,29 @@ def format_truth_table(truth: dict[str, Any]) -> str:
         )
     rooms = truth.get("rooms", [])
     if rooms:
-        lines.append(f"Matching rooms (showing {len(rooms)} of {truth.get('total_matches')}):")
+        lines.append(
+            f"Matching rooms -- COMPLETE list, all {len(rooms)} rooms satisfying the filters "
+            f"(no rows omitted). Absence of a room/property from this list IS evidence it does "
+            f"not exist in the catalogue matching these filters."
+        )
+        lines.append(
+            "Columns: room_id | flatname (roomname) | zone [neighbourhood] | price | "
+            "area_m2 | bed | bathroom | deposit | filter-relevant attrs"
+        )
         rel = truth.get("relevant_attrs", [])
         for r in rooms:
             attrs_str = ""
             if rel:
                 attrs_str = " [" + ", ".join(f"{k}={r['attrs'].get(k)}" for k in rel) + "]"
-            price = r.get("price_eur")
-            price_str = f"EUR{price:.0f}" if price is not None else "EUR?"
+            nbhd = f" [{r['neighborhood']}]" if r.get("neighborhood") else ""
+            bath = "private" if r["attrs"].get("private_bathroom") else "shared"
+            area = f"{r['area_m2']:.0f}m2" if r.get("area_m2") is not None else "?m2"
             lines.append(
                 f"  - {r['room_id']} | {r['flatname']} ({r['roomname']}) | "
-                f"{r['zone']} | {price_str}{attrs_str}"
+                f"{r['zone']}{nbhd} | {_price_str(r)} | {area} | bed={r.get('bed_type')} | "
+                f"bath={bath} | {_deposit_str(r)}{attrs_str}"
             )
-        if truth.get("n_more"):
-            lines.append(f"  ... and {truth['n_more']} more rooms (all match the filters)")
+    lines.append(UNVERIFIABLE_FIELDS_NOTE)
     return "\n".join(lines)
 
 
@@ -888,22 +1038,45 @@ def _blind(text: str) -> str:
 SYS_M6_REPAIR = """\
 You are an evaluation judge for a student housing assistant.
 Score the (query, answer) pair for GROUNDEDNESS using the DATABASE TRUTH TABLE
-provided below the query. The truth table lists the rooms that genuinely exist
-in the database and satisfy this query's filters, plus an automated fact-check
-summary of the answer's claims against that truth table.
+provided below the query, plus an automated fact-check summary of the answer's
+claims against that truth table.
 
-Rubric (0.0 / 0.5 / 1.0):
-1.0 - every factual claim (room names, ids, counts, prices) is supported by
-      the truth table.
-0.5 - mostly grounded: one unsupported or incorrect claim among otherwise
-      correct ones.
-0.0 - fabricates entities (rooms/properties that do not exist), fabricates
-      prices, or states a total_matches count that contradicts the truth
-      table.
+THE TRUTH TABLE IS COMPLETE (v2): it lists EVERY room in the database that
+satisfies this query's filters -- no rows are omitted or sampled. This was not
+true in an earlier version of this evaluation (which capped the list at 15
+rows and caused real rooms to look fabricated); it is fixed now. Because the
+list is complete, a room or property genuinely absent from it IS evidence of
+fabrication -- but only for the columns the table actually carries.
+
+For every specific factual claim the answer makes (room/property name, id,
+zone, price, area, bed type, bathroom type, deposit, count), classify it one
+of three ways:
+  - CONTRADICTED: the truth table shows something DIFFERENT from what the
+    answer states for that same room/property (wrong price for a listed room,
+    a room/property not present anywhere in the table, a total_matches count
+    that contradicts the true total). This is fabrication -- penalise it.
+  - SUPPORTED: the claim matches a row in the truth table exactly (or within
+    normal rounding). Correct -- do NOT penalise specificity for this.
+  - UNVERIFIABLE: the claim is about an attribute the truth table does not
+    carry at all (see the table's own "Fields NOT captured" note -- e.g.
+    heating/AC, closet, exact floor, photos, review sentiment). Do NOT treat
+    this as fabrication. Note it in your rationale as unverifiable and score
+    based only on the claims you CAN verify.
+
+Rubric (0.0 / 0.5 / 1.0), based only on CONTRADICTED vs SUPPORTED claims
+(ignore UNVERIFIABLE claims when scoring):
+1.0 - every verifiable claim is SUPPORTED. No CONTRADICTED claims.
+0.5 - mostly grounded: exactly one CONTRADICTED claim among otherwise
+      SUPPORTED ones.
+0.0 - two or more CONTRADICTED claims, or a CONTRADICTED claim about the core
+      entity/count of the answer (a fabricated room, a wrong price for a real
+      room, or a count that contradicts the true total).
 
 IMPORTANT: Listing a room that genuinely exists in the truth table, with
 correct attributes, is CORRECT behaviour -- do NOT penalise specificity.
-An answer that lists many real, correctly-filtered rooms should score 1.0.
+An answer that lists many real, correctly-filtered rooms should score 1.0
+even if it also mentions UNVERIFIABLE attributes (e.g. "has A/C") that the
+table cannot confirm or deny.
 The automated fact-check summary is a helper signal, not a verdict -- use
 your own judgement of the truth table if you believe it is mistaken.
 
@@ -963,13 +1136,20 @@ def check_blinding_violations(records: list[dict]) -> list[tuple[str, str, str]]
 def measure_tokens_sample(records: list[dict], model: str, sample_n: int = 15) -> tuple[float, int]:
     """Real (not heuristic) input-token count via the Anthropic count_tokens API,
     averaged over a sample. Returns (mean_input_tokens, n_sampled)."""
+    mean, _max, n = measure_tokens_all(records, sample_n=sample_n)
+    return mean, n
+
+
+def measure_tokens_all(records: list[dict], sample_n: int | None = None) -> tuple[float, int, int]:
+    """Real (not heuristic) input-token count via the Anthropic count_tokens API.
+    sample_n=None measures every record. Returns (mean, max, n_measured)."""
     load_env()
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
-        return (float("nan"), 0)
+        return (float("nan"), 0, 0)
     import anthropic
     client = anthropic.Anthropic(api_key=key)
-    sample = records[: min(sample_n, len(records))]
+    sample = records if sample_n is None else records[: min(sample_n, len(records))]
     totals: list[int] = []
     for r in sample:
         p = r["params"]
@@ -977,7 +1157,9 @@ def measure_tokens_sample(records: list[dict], model: str, sample_n: int = 15) -
             model=p["model"], system=p["system"], messages=p["messages"]
         )
         totals.append(result.input_tokens)
-    return (sum(totals) / len(totals), len(totals)) if totals else (float("nan"), 0)
+    if not totals:
+        return (float("nan"), 0, 0)
+    return (sum(totals) / len(totals), max(totals), len(totals))
 
 
 # ---------------------------------------------------------------------------
@@ -1090,8 +1272,43 @@ def run(p3_path: Path, p2_path: Path, qs_path: Path, out_dir: Path) -> None:
     for qid, sysname, kind, raw in residual_fabricated:
         print(f"    {qid:<30}{sysname:<8}[{kind}] {raw!r}")
 
+    # ---- STEP B.5 -- stricter flatname rule (attribute-tuple check) ----
+    print(f"\n{BAR}\n  STEP B.5 -- STRICTER FLATNAME RULE (price+zone must match a real row)\n{BAR}")
+    flips: list[tuple[str, str, str, str]] = []
+    for (qid, sysname), claims in all_claims.items():
+        for c in claims:
+            if c.classification != c.classification_loose:
+                flips.append((qid, sysname, c.raw, f"{c.classification_loose} -> {c.classification}"))
+    print(f"  Claims that changed classification under the stricter rule: {len(flips)}")
+    for qid, sysname, raw, change in flips:
+        print(f"    {qid:<30}{sysname:<8}{raw!r:<55}{change}")
+    target = ("constraint_satisfaction_06", "phase2")
+    target_flipped = any(f[0] == target[0] and f[1] == target[1] for f in flips)
+    print(f"\n  cs_06/phase2 'Cosy Home Lisbon in Graca EUR525' flips: {target_flipped}")
+
+    print(f"\n  Mean m6_det -- LOOSE rule (v1, as before) vs STRICT rule (v2, this run):")
+    for sysname in ("phase3", "phase2"):
+        loose_scores, strict_scores = [], []
+        for qid in ALL_26_IDS:
+            claims = all_claims.get((qid, sysname))
+            if not claims:
+                continue
+            n = len(claims)
+            n_v_strict = sum(1 for c in claims if c.classification == "VERIFIED")
+            n_v_loose = sum(1 for c in claims if c.classification_loose == "VERIFIED")
+            strict_scores.append(n_v_strict / n)
+            loose_scores.append(n_v_loose / n)
+        lm = sum(loose_scores) / len(loose_scores) if loose_scores else float("nan")
+        sm = sum(strict_scores) / len(strict_scores) if strict_scores else float("nan")
+        print(f"    {sysname}: loose={lm:.3f}  strict={sm:.3f}  n={len(strict_scores)}")
+
+    n_attr_mismatch = sum(
+        1 for claims in all_claims.values() for c in claims if c.classification == "ATTRIBUTE_MISMATCH"
+    )
+    print(f"\n  Total ATTRIBUTE_MISMATCH claims: {n_attr_mismatch}")
+
     # ---- STEP C ----
-    print(f"\n{BAR}\n  STEP C -- BUILD JUDGE BATCH (M6_repaired, 52 requests, build only)\n{BAR}")
+    print(f"\n{BAR}\n  STEP C -- BUILD JUDGE BATCH v2 (M6_repaired_v2, 52 requests, build only)\n{BAR}")
     records: list[dict] = []
     mapping: list[dict] = []
     for qid in ALL_26_IDS:
@@ -1124,26 +1341,28 @@ def run(p3_path: Path, p2_path: Path, qs_path: Path, out_dir: Path) -> None:
         print(f"    {v}")
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    batch_path = out_dir / "batch_M6_repaired.jsonl"
+    # v1 files (batch_M6_repaired.jsonl, id_mapping_M6_repaired.jsonl,
+    # m6_repair_truth_tables.json) are NOT touched -- kept as capping-defect evidence.
+    batch_path = out_dir / "batch_M6_repaired_v2.jsonl"
     write_jsonl(batch_path, records)
     print(f"  Wrote {batch_path.name}")
-    mapping_path = out_dir / "id_mapping_M6_repaired.jsonl"
+    mapping_path = out_dir / "id_mapping_M6_repaired_v2.jsonl"
     write_jsonl(mapping_path, mapping)
     print(f"  Wrote {mapping_path.name}")
 
-    truth_tables_path = out_dir / "m6_repair_truth_tables.json"
+    truth_tables_path = out_dir / "m6_repair_truth_tables_v2.json"
     truth_tables_path.write_text(json.dumps(tables, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
     print(f"  Wrote {truth_tables_path.name}")
 
-    # ---- Cost (this batch only; combined 8-batch gate is Step 4) ----
-    print(f"\n{THIN}\n  M6_repaired COST ESTIMATE (measured tokens, 50% batch discount)\n{THIN}")
-    mean_tok, n_sampled = measure_tokens_sample(records, MODEL_HAIKU, sample_n=15)
-    if n_sampled:
+    # ---- Cost (this batch only; combined gate is a separate step) ----
+    print(f"\n{THIN}\n  M6_repaired_v2 COST ESTIMATE (MEASURED tokens, every one of 52 records, 50% batch discount)\n{THIN}")
+    mean_tok, max_tok, n_measured = measure_tokens_all(records, sample_n=None)
+    if n_measured:
         total_in = mean_tok * len(records)
         total_out = MAX_OUT_TOKENS * len(records)
         cost = (total_in * LIST_IN[MODEL_HAIKU] * (1 - BATCH_DISCOUNT)
                 + total_out * LIST_OUT[MODEL_HAIKU] * (1 - BATCH_DISCOUNT)) / 1_000_000
-        print(f"  MEASURED mean input tokens (sampled n={n_sampled}): {mean_tok:.0f}")
+        print(f"  MEASURED input tokens (n={n_measured}/52): mean={mean_tok:.0f}  max={max_tok}")
         print(f"  requests={len(records)}  total_in~{total_in:,.0f}  total_out~{total_out:,}  cost=${cost:.4f}")
     else:
         print("  ANTHROPIC_API_KEY not set -- could not measure real token counts.")
@@ -1151,7 +1370,7 @@ def run(p3_path: Path, p2_path: Path, qs_path: Path, out_dir: Path) -> None:
     cur.close()
     conn.close()
 
-    print(f"\n{BAR}\n  DONE. Batches written to: {out_dir}\n  No batch was submitted.\n{BAR}\n")
+    print(f"\n{BAR}\n  DONE. v2 batch written to: {out_dir}\n  v1 files untouched. No batch was submitted.\n{BAR}\n")
 
 
 def parse_args() -> argparse.Namespace:
